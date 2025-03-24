@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.augmentedrealityglasses.weather.network.RetroInstance
 import com.example.augmentedrealityglasses.weather.network.RetroService
-import com.example.augmentedrealityglasses.weather.state.Location
 import com.example.augmentedrealityglasses.weather.state.Main
 import com.example.augmentedrealityglasses.weather.state.Weather
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
+import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +31,7 @@ class WeatherViewModel : ViewModel() {
 
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
-    var location by mutableStateOf(Location("45.27", "9.09", "", false))
+    var location by mutableStateOf(WeatherLocation("", "45.27", "9.09"))
         private set
 
     //business logic functions
@@ -51,18 +51,18 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    fun updateLocation(query: String, gpsLocation: Boolean) {
-        location = location.copy(location.lat, location.lon, query, gpsLocation)
+    fun updateLocation(query: String) {
+        location = location.copy(name = query, lat = location.lat, lon = location.lon)
     }
 
     fun findByQuery() {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
             val response = retroInstance.getLatLon(
-                location.query
+                location.name
             )
 
-            location.query = response[0].name
+            location.name = response[0].name
             location.lat = response[0].lat
             location.lon = response[0].lon
 

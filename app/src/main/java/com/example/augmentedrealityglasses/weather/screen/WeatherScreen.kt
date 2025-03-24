@@ -47,8 +47,8 @@ fun WeatherScreen(
         )
         Row {
             TextField(
-                value = location.query,
-                onValueChange = { viewModel.updateLocation(it, false) },
+                value = location.name,
+                onValueChange = { viewModel.updateLocation(it) },
                 label = { Text("Query") }
             )
             Button(onClick = { findWeatherByQuery(viewModel) }) {
@@ -58,7 +58,7 @@ fun WeatherScreen(
             }
         }
         Text(
-            text = "Query: ${location.query}"
+            text = "Query: ${location.name}"
         )
     }
 }
