@@ -1,13 +1,19 @@
 package com.example.augmentedrealityglasses.weather.state
 
+import com.google.gson.annotations.SerializedName
+
 data class WeatherUiState(
     val condition: WeatherCondition
 )
 
 data class WeatherCondition(
-    val weather: List<Weather>,
+    @SerializedName("weather")
+    private val _weather: List<Weather>,
     val main: Main
-)
+){
+    val weather : Weather
+        get() = _weather[0]
+}
 
 data class Weather(
     val main: String,

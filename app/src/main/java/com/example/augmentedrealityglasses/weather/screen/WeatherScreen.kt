@@ -34,10 +34,10 @@ fun WeatherScreen(
             text = "Longitude: ${location.lon}"
         )
         Text(
-            text = "Info: ${uiStateCondition.condition.weather[0].main}"
+            text = "Info: ${uiStateCondition.condition.weather.main}"
         )
         Text(
-            text = "Description: ${uiStateCondition.condition.weather[0].description}"
+            text = "Description: ${uiStateCondition.condition.weather.description}"
         )
         Text(
             text = "Temperature: ${uiStateCondition.condition.main.temp}"
