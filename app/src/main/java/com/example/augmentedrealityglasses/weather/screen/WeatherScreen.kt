@@ -89,5 +89,7 @@ fun updateWeatherInfo(viewModel: WeatherViewModel) {
 }
 
 fun findWeatherByQuery(query: String, viewModel: WeatherViewModel) {
-    viewModel.findByQuery(query)
+    if(query.isNotEmpty() && query.isNotBlank()){
+        viewModel.findByQuery(query)
+    }
 }
