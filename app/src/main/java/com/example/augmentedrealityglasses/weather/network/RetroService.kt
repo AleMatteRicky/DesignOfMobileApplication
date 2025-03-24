@@ -19,7 +19,7 @@ interface RetroService {
     @GET("geo/1.0/direct")
     suspend fun getLatLon(
         @Query("q") q: String,
-        @Query("limit") limit: String = "1",
+        @Query("limit") limit: String = "5",
         @Query("appid") appId: String = Constants.WEATHER_APIKEY
     ): List<WeatherLocation>
 }

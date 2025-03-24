@@ -28,5 +28,11 @@ data class Main(
 data class WeatherLocation(
     var name: String,
     var lat: String,
-    var lon: String
-)
+    var lon: String,
+    var country: String,
+    var state: String? //FIXME: this could be "null" from API
+){
+    fun getFullName(): String{
+        return this.name + ", " + this.state + "(" + this.country + ")"
+    }
+}

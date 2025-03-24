@@ -1,6 +1,7 @@
 package com.example.augmentedrealityglasses.weather.viewmodel
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -31,8 +32,12 @@ class WeatherViewModel : ViewModel() {
 
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
-    var location by mutableStateOf(WeatherLocation("", "45.27", "9.09"))
+    var location by mutableStateOf(WeatherLocation("", "45.27", "9.09", "", ""))
         private set
+
+    private var _searchedLocations = mutableStateListOf<WeatherLocation>()
+
+    val searchedLocations: List<WeatherLocation> get() = _searchedLocations
 
     //business logic functions
     fun updateInfos() {
@@ -51,22 +56,23 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    fun updateLocation(query: String) {
-        location = location.copy(name = query, lat = location.lat, lon = location.lon)
-    }
-
-    fun findByQuery() {
+    fun findByQuery(query: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
             val response = retroInstance.getLatLon(
-                location.name
+                query
             )
 
-            location.name = response[0].name
-            location.lat = response[0].lat
-            location.lon = response[0].lon
+            if(response.isNotEmpty()){
+                val firstResult = response[0]
 
-            updateInfos()
+                location = location.copy(name = firstResult.name, lat = firstResult.lat, lon = firstResult.lon, country = firstResult.country, state = firstResult.state)
+
+                _searchedLocations.clear()
+                _searchedLocations.addAll(response)
+
+                updateInfos()
+            } //TODO: handle the case of empty response
         }
     }
 }
