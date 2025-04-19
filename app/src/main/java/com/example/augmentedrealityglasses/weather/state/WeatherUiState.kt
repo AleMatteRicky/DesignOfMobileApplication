@@ -10,8 +10,8 @@ data class WeatherCondition(
     @SerializedName("weather")
     private val _weather: List<Weather>,
     val main: Main
-){
-    val weather : Weather
+) {
+    val weather: Weather
         get() = _weather[0]
 }
 
@@ -31,13 +31,18 @@ data class WeatherLocation(
     var lon: String,
     var country: String,
     var state: String?
-){
-    fun getFullName(): String{
-        return if (this.state.isNullOrEmpty()){
+) {
+    fun getFullName(): String {
+        return if (this.state.isNullOrEmpty()) {
             this.name + " (" + this.country + ")"
-        }else{
+        } else {
             this.name + ", " + this.state.orEmpty() + " (" + this.country + ")"
         }
 
     }
 }
+
+data class Geolocation(
+    val lat: String,
+    val lon: String
+)
