@@ -1,11 +1,9 @@
 package com.example.augmentedrealityglasses.weather.screen
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,7 +30,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.augmentedrealityglasses.weather.state.Geolocation
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -92,18 +89,21 @@ fun WeatherScreen(
         LocationServices.getFusedLocationProviderClient((context))
     }
 
-    val geolocation = remember { mutableStateOf(Geolocation("0", "0")) }
-    LaunchedEffect(Unit) {
+    val geolocation = viewModel.geolocation.value
+
+    LaunchedEffect(hasCoarseLocationPermission.value, hasFineLocationPermission.value) {
+        if (!hasCoarseLocationPermission.value && !hasFineLocationPermission.value) {
+            //request permissions
+            requestPermissionsLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
+        }
+
         if (hasCoarseLocationPermission.value || hasFineLocationPermission.value) {
-            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                if (location != null) {
-                    geolocation.value =
-                        Geolocation(location.latitude.toString(), location.longitude.toString())
-                } else {
-                    Toast.makeText(context, "Current position unavailable", Toast.LENGTH_SHORT)
-                        .show()
-                }
-            }
+            viewModel.fetchCurrentLocation(context, fusedLocationClient)
         }
     }
 
@@ -127,7 +127,7 @@ fun WeatherScreen(
                     hasFineLocationPermission,
                     hasCoarseLocationPermission,
                     fusedLocationClient,
-                    geolocation
+                    viewModel
                 )
             }) {
                 Text(
@@ -136,7 +136,7 @@ fun WeatherScreen(
             }
         }
         Text(
-            text = "Geolocation: lat ${geolocation.value.lat} / lon ${geolocation.value.lon}"
+            text = "Geolocation: lat ${geolocation.lat} / lon ${geolocation.lon}"
         )
         Text(
             text = "Permission fine: ${hasFineLocationPermission.value}"
@@ -186,31 +186,18 @@ fun WeatherScreen(
     }
 }
 
-@SuppressLint("MissingPermission")
 fun getGeolocation(
     context: Context,
     requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>,
     hasFineLocationPermission: MutableState<Boolean>,
     hasCoarseLocationPermission: MutableState<Boolean>,
     fusedLocationClient: FusedLocationProviderClient,
-    geolocation: MutableState<Geolocation>
+    viewModel: WeatherViewModel
 ) {
     when {
         hasCoarseLocationPermission.value || hasFineLocationPermission.value -> {
             //fetch the position
-
-            if (hasCoarseLocationPermission.value || hasFineLocationPermission.value) {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                    if (location != null) {
-                        geolocation.value =
-                            Geolocation(location.latitude.toString(), location.longitude.toString())
-                    } else {
-                        Toast.makeText(context, "Current position unavailable", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }
-            }
-
+            viewModel.fetchCurrentLocation(context, fusedLocationClient)
         }
 
         ActivityCompat.shouldShowRequestPermissionRationale(
