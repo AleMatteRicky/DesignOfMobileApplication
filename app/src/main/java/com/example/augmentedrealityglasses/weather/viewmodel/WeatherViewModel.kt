@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.widget.Toast
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -12,8 +13,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.augmentedrealityglasses.weather.network.RetroInstance
 import com.example.augmentedrealityglasses.weather.network.RetroService
-import com.example.augmentedrealityglasses.weather.state.Geolocation
 import com.example.augmentedrealityglasses.weather.state.Main
+import com.example.augmentedrealityglasses.weather.state.Sys
 import com.example.augmentedrealityglasses.weather.state.Weather
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
@@ -31,7 +32,9 @@ class WeatherViewModel : ViewModel() {
         WeatherUiState(
             WeatherCondition(
                 listOf<Weather>(Weather("null", "null")),
-                Main("null", "null")
+                Main("null", "null"),
+                Sys(""),
+                ""
             )
         )
     )
@@ -45,26 +48,37 @@ class WeatherViewModel : ViewModel() {
 
     val searchedLocations: List<WeatherLocation> get() = _searchedLocations
 
-    val geolocation = mutableStateOf(Geolocation("0", "0"))
 
     //business logic functions
-    fun updateInfos() {
+    fun updateInfos(
+        lat: String = location.lat,
+        lon: String = location.lon,
+        state: String = location.state.orEmpty()
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
             val response = retroInstance.getWeatherInfo(
-                location.lat,
-                location.lon
+                lat,
+                lon
             )
 
             _uiState.update { currentState ->
                 currentState.copy(
-                    condition = response,
+                    condition = response
                 )
             }
+
+            location = location.copy(
+                name = response.name,
+                lat = lat,
+                lon = lon,
+                country = response.sys.country,
+                state = state
+            )
         }
     }
 
-    fun findByQuery(query: String) {
+    fun findByQuery(query: String, geolocationEnabled: MutableState<Boolean>) {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
             val response = retroInstance.getLatLon(
@@ -72,6 +86,9 @@ class WeatherViewModel : ViewModel() {
             )
 
             if (response.isNotEmpty()) {
+
+                geolocationEnabled.value = false
+
                 val firstResult = response[0]
 
                 location = location.copy(
@@ -91,11 +108,22 @@ class WeatherViewModel : ViewModel() {
     }
 
     @SuppressLint("MissingPermission")
-    fun fetchCurrentLocation(context: Context, fusedLocationClient: FusedLocationProviderClient) {
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            if (location != null) {
-                geolocation.value =
-                    Geolocation(location.latitude.toString(), location.longitude.toString())
+    fun fetchCurrentLocation(
+        context: Context,
+        fusedLocationClient: FusedLocationProviderClient,
+        geolocationEnabled: MutableState<Boolean>
+    ) {
+        fusedLocationClient.lastLocation.addOnSuccessListener { fetchedLocation: Location? ->
+            if (fetchedLocation != null) {
+
+                val lat = fetchedLocation.latitude.toString()
+                val lon = fetchedLocation.longitude.toString()
+
+                //call weather API
+                updateInfos(lat, lon, "")
+
+                geolocationEnabled.value = true
+                
             } else {
                 Toast.makeText(context, "Current position unavailable", Toast.LENGTH_SHORT)
                     .show()

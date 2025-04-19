@@ -9,7 +9,9 @@ data class WeatherUiState(
 data class WeatherCondition(
     @SerializedName("weather")
     private val _weather: List<Weather>,
-    val main: Main
+    val main: Main,
+    val sys: Sys,
+    val name: String
 ) {
     val weather: Weather
         get() = _weather[0]
@@ -23,6 +25,10 @@ data class Weather(
 data class Main(
     val temp: String,
     val pressure: String
+)
+
+data class Sys(
+    val country: String
 )
 
 data class WeatherLocation(
@@ -41,8 +47,3 @@ data class WeatherLocation(
 
     }
 }
-
-data class Geolocation(
-    val lat: String,
-    val lon: String
-)
