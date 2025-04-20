@@ -11,7 +11,7 @@ class RetroInstance {
         fun getRetroInstance(): Retrofit {
 
             return Retrofit.Builder()
-                .baseUrl(Constants.BASE_URL_WEATHER)
+                .baseUrl(Constants.WEATHER_API_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         }

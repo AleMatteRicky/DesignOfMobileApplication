@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,11 @@ plugins {
 android {
     namespace = "com.example.augmentedrealityglasses"
     compileSdk = 35
+
+    //For local parameters (API keys)
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.example.augmentedrealityglasses"
@@ -18,6 +25,17 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        //Weather's API key
+        val localProperties = Properties().apply {
+            load(rootProject.file("local.properties").inputStream())
+        }
+        val apiKey = localProperties.getProperty("API_KEY") ?: ""
+        buildConfigField(
+            type = "String",
+            name = "API_KEY",
+            value = "\"$apiKey\""
+        )
     }
 
     buildTypes {
