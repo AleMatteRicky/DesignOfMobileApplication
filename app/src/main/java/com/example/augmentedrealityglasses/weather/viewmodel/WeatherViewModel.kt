@@ -33,8 +33,8 @@ class WeatherViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(
         WeatherUiState(
             WeatherCondition(
-                listOf<Weather>(Weather("null", "null")),
-                Main("null", "null"),
+                listOf(Weather("", "")),
+                Main("", ""),
                 Sys(""),
                 ""
             )
@@ -55,7 +55,8 @@ class WeatherViewModel : ViewModel() {
         lat: String = location.lat,
         lon: String = location.lon,
         state: String = location.state.orEmpty(),
-        geolocationEnabled: MutableState<Boolean>
+        geolocationEnabledState: MutableState<Boolean>,
+        geolocationEnabled: Boolean = geolocationEnabledState.value
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
@@ -70,7 +71,7 @@ class WeatherViewModel : ViewModel() {
                 )
             }
 
-            if (geolocationEnabled.value) {
+            if (geolocationEnabled) {
                 location = location.copy(
                     name = response.name,
                     lat = lat,
@@ -87,6 +88,8 @@ class WeatherViewModel : ViewModel() {
                     state = state
                 )
             }
+
+            geolocationEnabledState.value = geolocationEnabled
         }
     }
 
@@ -103,9 +106,13 @@ class WeatherViewModel : ViewModel() {
                 val lon = fetchedLocation.longitude.toString()
 
                 //call weather API
-                updateInfos(lat, lon, "", geolocationEnabled)
-
-                geolocationEnabled.value = true
+                updateInfos(
+                    lat,
+                    lon,
+                    "",
+                    geolocationEnabledState = geolocationEnabled,
+                    geolocationEnabled = true
+                )
             } else {
                 Toast.makeText(context, "Current position unavailable", Toast.LENGTH_SHORT)
                     .show()
@@ -136,14 +143,13 @@ class WeatherViewModel : ViewModel() {
         geolocationEnabled: MutableState<Boolean>
     ) {
         location = loc
-        updateInfos(geolocationEnabled = geolocationEnabled)
-        geolocationEnabled.value = false
+        updateInfos(geolocationEnabledState = geolocationEnabled, geolocationEnabled = false)
     }
 
     fun getWeatherOfFirstResult(geolocationEnabled: MutableState<Boolean>) {
         if (searchedLocations.isNotEmpty()) {
             location = searchedLocations[0]
-            updateInfos(geolocationEnabled = geolocationEnabled)
+            updateInfos(geolocationEnabledState = geolocationEnabled, geolocationEnabled = false)
             geolocationEnabled.value = false
         }
     }

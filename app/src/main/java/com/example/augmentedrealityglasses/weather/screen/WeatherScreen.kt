@@ -162,7 +162,7 @@ fun WeatherScreen(
                         viewModel
                     )
                 }
-                viewModel.updateInfos(geolocationEnabled = geolocationEnabled)
+                viewModel.updateInfos(geolocationEnabledState = geolocationEnabled)
             }) {
                 Text(
                     text = "Update weather info"
