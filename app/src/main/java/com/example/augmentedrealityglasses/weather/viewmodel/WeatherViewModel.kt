@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class WeatherViewModel : ViewModel() {
+
+    //Main UI state
     private val _uiState = MutableStateFlow(
         WeatherUiState(
             WeatherCondition(
@@ -38,18 +40,17 @@ class WeatherViewModel : ViewModel() {
             )
         )
     )
-
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
-    var location by mutableStateOf(WeatherLocation("", "45.27", "9.09", "", ""))
+    //Weather location
+    var location by mutableStateOf(WeatherLocation("", "0", "0", "", ""))
         private set
 
+    //List of all the locations found by the API
     private var _searchedLocations = mutableStateListOf<WeatherLocation>()
-
     val searchedLocations: List<WeatherLocation> get() = _searchedLocations
 
-
-    //business logic functions
+    //Logic functions
     fun updateInfos(
         lat: String = location.lat,
         lon: String = location.lon,
@@ -123,22 +124,19 @@ class WeatherViewModel : ViewModel() {
                 query
             )
 
-            //FIXME: really useful this check?
-            if (response.isNotEmpty()) {
-
-                _searchedLocations.clear()
-                _searchedLocations.addAll(response)
-            } //TODO: handle the case of empty response
+            _searchedLocations.clear()
+            _searchedLocations.addAll(response)
+            //TODO: handle the case of empty response
         }
     }
 
-    fun findWeatherByLocation(loc: WeatherLocation, geolocationEnabled: MutableState<Boolean>) {
+    fun findWeatherInfosByLocation(loc: WeatherLocation, geolocationEnabled: MutableState<Boolean>) {
         location = loc
         updateInfos(geolocationEnabled = geolocationEnabled)
         geolocationEnabled.value = false
     }
 
-    fun findFirstResultWeather(geolocationEnabled: MutableState<Boolean>) {
+    fun getWeatherOfFirstResult(geolocationEnabled: MutableState<Boolean>) {
         if (searchedLocations.isNotEmpty()) {
             location = searchedLocations[0]
             updateInfos(geolocationEnabled = geolocationEnabled)

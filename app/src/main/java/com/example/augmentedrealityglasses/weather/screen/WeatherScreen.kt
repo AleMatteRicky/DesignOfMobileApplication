@@ -38,7 +38,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.augmentedrealityglasses.weather.state.WeatherLocation
+import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -118,35 +118,41 @@ fun WeatherScreen(
         }
     }
 
+    //Main UI state (current weather conditions)
     val uiStateCondition by viewModel.uiState.collectAsStateWithLifecycle()
 
+    //Selected location to display the weather conditions for
     val location by remember { derivedStateOf { viewModel.location } }
 
+    //Input for searching the location
     var query by remember { mutableStateOf("") }
-    //TODO: make this a constant
-    val debounceDelay = 500L
+
     LaunchedEffect(query) {
         if (query.isBlank()) {
             viewModel.clearSearchedLocationList()
             return@LaunchedEffect
         }
 
-        delay(debounceDelay)
+        delay(Constants.DEBOUNCE_DELAY)
         viewModel.findLocationsByQuery(query)
     }
 
+    // ----  UI  ----
     Column {
         Row {
             Button(onClick = {
-                updateWeatherInfo(
-                    viewModel,
-                    geolocationEnabled,
-                    context,
-                    requestPermissionsLauncher,
-                    hasFineLocationPermission,
-                    hasCoarseLocationPermission,
-                    fusedLocationClient
-                )
+                if (geolocationEnabled.value) {
+                    getGeolocation(
+                        context,
+                        requestPermissionsLauncher,
+                        hasFineLocationPermission,
+                        hasCoarseLocationPermission,
+                        fusedLocationClient,
+                        geolocationEnabled,
+                        viewModel
+                    )
+                }
+                viewModel.updateInfos(geolocationEnabled = geolocationEnabled)
             }) {
                 Text(
                     text = "Update weather info"
@@ -206,7 +212,7 @@ fun WeatherScreen(
             Button(
                 onClick = {
                     query = ""
-                    viewModel.findFirstResultWeather(geolocationEnabled)
+                    viewModel.getWeatherOfFirstResult(geolocationEnabled)
                 },
                 enabled = viewModel.searchedLocations.isNotEmpty(),
                 modifier = Modifier.weight(0.25f)
@@ -224,7 +230,8 @@ fun WeatherScreen(
                     modifier = Modifier
                         .clickable {
                             query = ""
-                            selectLocation(viewModel, location, geolocationEnabled)
+                            viewModel.findWeatherInfosByLocation(location, geolocationEnabled)
+                            viewModel.clearSearchedLocationList()
                         }
                         .padding(5.dp)
                         .background(
@@ -238,15 +245,8 @@ fun WeatherScreen(
     }
 }
 
-fun selectLocation(
-    viewModel: WeatherViewModel,
-    location: WeatherLocation,
-    geolocationEnabled: MutableState<Boolean>
-) {
-    viewModel.findWeatherByLocation(location, geolocationEnabled)
-    viewModel.clearSearchedLocationList()
-}
 
+//Logic functions
 fun getGeolocation(
     context: Context,
     requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>,
@@ -289,27 +289,4 @@ fun getGeolocation(
             )
         }
     }
-}
-
-fun updateWeatherInfo(
-    viewModel: WeatherViewModel,
-    geolocationEnabled: MutableState<Boolean>,
-    context: Context,
-    requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, Boolean>>,
-    hasFineLocationPermission: MutableState<Boolean>,
-    hasCoarseLocationPermission: MutableState<Boolean>,
-    fusedLocationClient: FusedLocationProviderClient
-) {
-    if (geolocationEnabled.value) {
-        getGeolocation(
-            context,
-            requestPermissionsLauncher,
-            hasFineLocationPermission,
-            hasCoarseLocationPermission,
-            fusedLocationClient,
-            geolocationEnabled,
-            viewModel
-        )
-    }
-    viewModel.updateInfos(geolocationEnabled = geolocationEnabled)
 }
