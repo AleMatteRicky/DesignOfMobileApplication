@@ -127,14 +127,18 @@ fun WeatherScreen(
     //Input for searching the location
     var query by remember { mutableStateOf("") }
 
+    //For managing the visibility of the Text "no results found"
+    val showNoResults = remember { mutableStateOf(false) }
+
     LaunchedEffect(query) {
+        showNoResults.value = false
         if (query.isBlank()) {
             viewModel.clearSearchedLocationList()
             return@LaunchedEffect
         }
 
         delay(Constants.DEBOUNCE_DELAY)
-        viewModel.findLocationsByQuery(query)
+        viewModel.findLocationsByQuery(query, showNoResults)
     }
 
     // ----  UI  ----
@@ -241,7 +245,11 @@ fun WeatherScreen(
                 )
             }
         }
-
+        if (viewModel.searchedLocations.isEmpty() && query.isNotBlank() && showNoResults.value) {
+            Text(
+                text = "No results found"
+            )
+        }
     }
 }
 

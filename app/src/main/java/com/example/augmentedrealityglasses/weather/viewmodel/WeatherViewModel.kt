@@ -117,7 +117,7 @@ class WeatherViewModel : ViewModel() {
         _searchedLocations.clear()
     }
 
-    fun findLocationsByQuery(query: String) {
+    fun findLocationsByQuery(query: String, showNoResults: MutableState<Boolean>) {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
             val response = retroInstance.getLatLon(
@@ -126,11 +126,15 @@ class WeatherViewModel : ViewModel() {
 
             _searchedLocations.clear()
             _searchedLocations.addAll(response)
-            //TODO: handle the case of empty response
+
+            showNoResults.value = true
         }
     }
 
-    fun findWeatherInfosByLocation(loc: WeatherLocation, geolocationEnabled: MutableState<Boolean>) {
+    fun findWeatherInfosByLocation(
+        loc: WeatherLocation,
+        geolocationEnabled: MutableState<Boolean>
+    ) {
         location = loc
         updateInfos(geolocationEnabled = geolocationEnabled)
         geolocationEnabled.value = false
