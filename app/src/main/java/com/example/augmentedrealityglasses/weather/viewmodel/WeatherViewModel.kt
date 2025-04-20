@@ -53,7 +53,8 @@ class WeatherViewModel : ViewModel() {
     fun updateInfos(
         lat: String = location.lat,
         lon: String = location.lon,
-        state: String = location.state.orEmpty()
+        state: String = location.state.orEmpty(),
+        geolocationEnabled: MutableState<Boolean>
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
@@ -68,42 +69,23 @@ class WeatherViewModel : ViewModel() {
                 )
             }
 
-            location = location.copy(
-                name = response.name,
-                lat = lat,
-                lon = lon,
-                country = response.sys.country,
-                state = state
-            )
-        }
-    }
-
-    fun findByQuery(query: String, geolocationEnabled: MutableState<Boolean>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
-            val response = retroInstance.getLatLon(
-                query
-            )
-
-            if (response.isNotEmpty()) {
-
-                geolocationEnabled.value = false
-
-                val firstResult = response[0]
-
+            if (geolocationEnabled.value) {
                 location = location.copy(
-                    name = firstResult.name,
-                    lat = firstResult.lat,
-                    lon = firstResult.lon,
-                    country = firstResult.country,
-                    state = firstResult.state
+                    name = response.name,
+                    lat = lat,
+                    lon = lon,
+                    country = response.sys.country,
+                    state = state
                 )
-
-                _searchedLocations.clear()
-                _searchedLocations.addAll(response)
-
-                updateInfos()
-            } //TODO: handle the case of empty response
+            } else {
+                location = location.copy(
+                    name = location.name,
+                    lat = lat,
+                    lon = lon,
+                    country = response.sys.country,
+                    state = state
+                )
+            }
         }
     }
 
@@ -120,14 +102,47 @@ class WeatherViewModel : ViewModel() {
                 val lon = fetchedLocation.longitude.toString()
 
                 //call weather API
-                updateInfos(lat, lon, "")
+                updateInfos(lat, lon, "", geolocationEnabled)
 
                 geolocationEnabled.value = true
-                
             } else {
                 Toast.makeText(context, "Current position unavailable", Toast.LENGTH_SHORT)
                     .show()
             }
+        }
+    }
+
+    fun clearSearchedLocationList() {
+        _searchedLocations.clear()
+    }
+
+    fun findLocationsByQuery(query: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
+            val response = retroInstance.getLatLon(
+                query
+            )
+
+            //FIXME: really useful this check?
+            if (response.isNotEmpty()) {
+
+                _searchedLocations.clear()
+                _searchedLocations.addAll(response)
+            } //TODO: handle the case of empty response
+        }
+    }
+
+    fun findWeatherByLocation(loc: WeatherLocation, geolocationEnabled: MutableState<Boolean>) {
+        location = loc
+        updateInfos(geolocationEnabled = geolocationEnabled)
+        geolocationEnabled.value = false
+    }
+
+    fun findFirstResultWeather(geolocationEnabled: MutableState<Boolean>) {
+        if (searchedLocations.isNotEmpty()) {
+            location = searchedLocations[0]
+            updateInfos(geolocationEnabled = geolocationEnabled)
+            geolocationEnabled.value = false
         }
     }
 }

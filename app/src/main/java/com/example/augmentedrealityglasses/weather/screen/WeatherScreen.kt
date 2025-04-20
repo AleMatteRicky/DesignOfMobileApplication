@@ -8,10 +8,17 @@ import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -31,10 +38,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-
+import kotlinx.coroutines.delay
 
 @Composable
 fun WeatherScreen(
@@ -115,6 +123,17 @@ fun WeatherScreen(
     val location by remember { derivedStateOf { viewModel.location } }
 
     var query by remember { mutableStateOf("") }
+    //TODO: make this a constant
+    val debounceDelay = 500L
+    LaunchedEffect(query) {
+        if (query.isBlank()) {
+            viewModel.clearSearchedLocationList()
+            return@LaunchedEffect
+        }
+
+        delay(debounceDelay)
+        viewModel.findLocationsByQuery(query)
+    }
 
     Column {
         Row {
@@ -135,6 +154,7 @@ fun WeatherScreen(
             }
             Button(
                 onClick = {
+                    query = ""
                     getGeolocation(
                         context,
                         requestPermissionsLauncher,
@@ -175,26 +195,56 @@ fun WeatherScreen(
         Text(
             text = "Pressure: ${uiStateCondition.condition.main.pressure}"
         )
-        Row {
+        Row(modifier = Modifier.fillMaxWidth()) {
             TextField(
                 value = query,
                 onValueChange = { query = it },
-                label = { Text("Query") }
+                label = { Text("Query") },
+                modifier = Modifier
+                    .weight(0.75f)
             )
-            Button(onClick = { findWeatherByQuery(query, viewModel, geolocationEnabled) }) {
+            Button(
+                onClick = {
+                    query = ""
+                    viewModel.findFirstResultWeather(geolocationEnabled)
+                },
+                enabled = viewModel.searchedLocations.isNotEmpty(),
+                modifier = Modifier.weight(0.25f)
+            ) {
                 Text(
-                    text = "Search"
+                    text = "Find"
                 )
             }
         }
-        if (!geolocationEnabled.value) {
-            viewModel.searchedLocations.forEach { el ->
+
+        LazyColumn {
+            items(viewModel.searchedLocations) { location ->
                 Text(
-                    text = el.getFullName()
+                    text = location.getFullName(),
+                    modifier = Modifier
+                        .clickable {
+                            query = ""
+                            selectLocation(viewModel, location, geolocationEnabled)
+                        }
+                        .padding(5.dp)
+                        .background(
+                            color = Color.LightGray.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
                 )
             }
         }
+
     }
+}
+
+fun selectLocation(
+    viewModel: WeatherViewModel,
+    location: WeatherLocation,
+    geolocationEnabled: MutableState<Boolean>
+) {
+    viewModel.findWeatherByLocation(location, geolocationEnabled)
+    viewModel.clearSearchedLocationList()
 }
 
 fun getGeolocation(
@@ -261,15 +311,5 @@ fun updateWeatherInfo(
             viewModel
         )
     }
-    viewModel.updateInfos()
-}
-
-fun findWeatherByQuery(
-    query: String,
-    viewModel: WeatherViewModel,
-    geolocationEnabled: MutableState<Boolean>
-) {
-    if (query.isNotEmpty() && query.isNotBlank()) {
-        viewModel.findByQuery(query, geolocationEnabled)
-    }
+    viewModel.updateInfos(geolocationEnabled = geolocationEnabled)
 }
