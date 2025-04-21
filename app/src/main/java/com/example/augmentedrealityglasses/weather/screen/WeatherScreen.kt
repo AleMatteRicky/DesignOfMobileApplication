@@ -75,24 +75,9 @@ fun WeatherScreen(
         val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
-        if (fineLocationGranted) {
-            Toast.makeText(context, "Fine location granted", Toast.LENGTH_SHORT).show()
-        } else if (coarseLocationGranted) {
-            Toast.makeText(context, "Approximate location granted", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(context, "No permissions granted", Toast.LENGTH_SHORT).show()
-        }
-
         //update the state
-        hasCoarseLocationPermission.value = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        hasFineLocationPermission.value = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        hasCoarseLocationPermission.value = coarseLocationGranted
+        hasFineLocationPermission.value = fineLocationGranted
     }
 
     //Client for fetching the geolocation infos
