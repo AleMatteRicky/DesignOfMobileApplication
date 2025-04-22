@@ -1,10 +1,6 @@
 package com.example.augmentedrealityglasses.weather.screen
 
 import android.Manifest
-import android.app.Activity
-import android.content.Context
-import android.widget.Toast
-import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -32,12 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 
@@ -80,7 +74,7 @@ fun WeatherScreen(
     }
 
     //Main UI state (current weather conditions)
-    val uiStateCondition by viewModel.uiState.collectAsStateWithLifecycle()
+    val weatherUiState by viewModel.weatherState.collectAsStateWithLifecycle()
 
     //Input for searching the location
     var query by remember { mutableStateOf("") }
@@ -105,15 +99,11 @@ fun WeatherScreen(
             horizontalArrangement = Arrangement.Center
         ) {
             Button(onClick = {
-                if (viewModel.geolocationEnabled) {
-                    getGeolocation(
-                        context,
-                        requestPermissionsLauncher,
-                        fusedLocationClient,
-                        viewModel
-                    )
-                }
-                viewModel.updateInfos()
+                viewModel.updateWeatherInfos(
+                    context,
+                    requestPermissionsLauncher,
+                    fusedLocationClient
+                )
             }) {
                 Text(
                     text = "Update weather info"
@@ -122,11 +112,10 @@ fun WeatherScreen(
             Button(
                 onClick = {
                     query = ""
-                    getGeolocation(
+                    viewModel.getGeolocationWeather(
                         context,
                         requestPermissionsLauncher,
-                        fusedLocationClient,
-                        viewModel
+                        fusedLocationClient
                     )
                 },
                 enabled = !viewModel.geolocationEnabled
@@ -148,16 +137,16 @@ fun WeatherScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Info: ${uiStateCondition.condition.weather.main}"
+            text = "Info: ${weatherUiState.condition.weather.main}"
         )
         Text(
-            text = "Description: ${uiStateCondition.condition.weather.description}"
+            text = "Description: ${weatherUiState.condition.weather.description}"
         )
         Text(
-            text = "Temperature: ${uiStateCondition.condition.main.temp}"
+            text = "Temperature: ${weatherUiState.condition.main.temp}"
         )
         Text(
-            text = "Pressure: ${uiStateCondition.condition.main.pressure}"
+            text = "Pressure: ${weatherUiState.condition.main.pressure}"
         )
         Row(modifier = Modifier.fillMaxWidth()) {
             TextField(
@@ -202,49 +191,6 @@ fun WeatherScreen(
         if (viewModel.searchedLocations.isEmpty() && query.isNotBlank() && viewModel.showNoResults) {
             Text(
                 text = "No results found"
-            )
-        }
-    }
-}
-
-
-//Logic functions
-fun getGeolocation(
-    context: Context,
-    requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>,
-    fusedLocationClient: FusedLocationProviderClient,
-    viewModel: WeatherViewModel
-) {
-    when {
-        viewModel.hasCoarseLocationPermission || viewModel.hasFineLocationPermission -> {
-            //fetch the position
-            viewModel.fetchCurrentLocation(context, fusedLocationClient)
-        }
-
-        ActivityCompat.shouldShowRequestPermissionRationale(
-            context as Activity,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-                || ActivityCompat.shouldShowRequestPermissionRationale(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) -> {
-            Toast.makeText(context, "Explain", Toast.LENGTH_SHORT).show()
-
-            requestPermissionsLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            )
-        }
-
-        else -> {
-            requestPermissionsLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
             )
         }
     }

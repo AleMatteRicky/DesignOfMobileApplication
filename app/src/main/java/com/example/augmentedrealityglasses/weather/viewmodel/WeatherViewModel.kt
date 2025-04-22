@@ -1,13 +1,17 @@
 package com.example.augmentedrealityglasses.weather.viewmodel
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.location.Location
 import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.augmentedrealityglasses.weather.network.RetroInstance
@@ -29,7 +33,7 @@ import kotlinx.coroutines.launch
 class WeatherViewModel : ViewModel() {
 
     //Main UI state
-    private val _uiState = MutableStateFlow(
+    private val _weatherState = MutableStateFlow(
         WeatherUiState(
             WeatherCondition(
                 listOf(Weather("", "")),
@@ -39,7 +43,7 @@ class WeatherViewModel : ViewModel() {
             )
         )
     )
-    val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
+    val weatherState: StateFlow<WeatherUiState> = _weatherState.asStateFlow()
 
     //Selected location to display the weather conditions for
     var location by mutableStateOf(WeatherLocation("", "0", "0", "", ""))
@@ -65,7 +69,7 @@ class WeatherViewModel : ViewModel() {
 
     //Logic functions
 
-    fun setGeolocationPermissions(coarse: Boolean, fine: Boolean){
+    fun setGeolocationPermissions(coarse: Boolean, fine: Boolean) {
         hasCoarseLocationPermission = coarse
         hasFineLocationPermission = fine
     }
@@ -85,7 +89,7 @@ class WeatherViewModel : ViewModel() {
                 loc.lon
             )
 
-            _uiState.update { currentState ->
+            _weatherState.update { currentState ->
                 currentState.copy(
                     condition = response
                 )
@@ -168,5 +172,73 @@ class WeatherViewModel : ViewModel() {
             )
             geolocationEnabled = false
         }
+    }
+
+    fun updateWeatherInfos(
+        context: Context,
+        requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, Boolean>>,
+        fusedLocationClient: FusedLocationProviderClient
+    ) {
+        if (geolocationEnabled) {
+            getGeolocation(
+                context,
+                requestPermissionsLauncher,
+                fusedLocationClient
+            )
+        }
+        updateInfos()
+    }
+
+    fun getGeolocation(
+        context: Context,
+        requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>,
+        fusedLocationClient: FusedLocationProviderClient
+    ) {
+        when {
+            hasCoarseLocationPermission || hasFineLocationPermission -> {
+
+                //Fetch the position
+                fetchCurrentLocation(context, fusedLocationClient)
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                context as Activity,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+                    || ActivityCompat.shouldShowRequestPermissionRationale(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) -> {
+                Toast.makeText(context, "Explain", Toast.LENGTH_SHORT).show()
+
+                requestPermissionsLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
+            }
+
+            else -> {
+                requestPermissionsLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                )
+            }
+        }
+    }
+
+    fun getGeolocationWeather(
+        context: Context,
+        requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, Boolean>>,
+        fusedLocationClient: FusedLocationProviderClient
+    ) {
+        getGeolocation(
+            context,
+            requestPermissionsLauncher,
+            fusedLocationClient
+        )
     }
 }
