@@ -57,6 +57,7 @@ class WeatherViewModel : ViewModel() {
 
     //Geolocation state
     var geolocationEnabled by mutableStateOf(false)
+        private set
 
     //For managing the visibility of the Text "no results found"
     var showNoResults by mutableStateOf(false)
