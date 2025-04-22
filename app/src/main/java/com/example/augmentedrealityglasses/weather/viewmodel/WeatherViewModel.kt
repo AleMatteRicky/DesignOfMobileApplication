@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.widget.Toast
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,11 +49,33 @@ class WeatherViewModel : ViewModel() {
     private var _searchedLocations = mutableStateListOf<WeatherLocation>()
     val searchedLocations: List<WeatherLocation> get() = _searchedLocations
 
+    //Geolocation Permissions
+    var hasCoarseLocationPermission by mutableStateOf(false)
+        private set
+    var hasFineLocationPermission by mutableStateOf(false)
+        private set
+
+    //Geolocation state
+    var geolocationEnabled by mutableStateOf(false)
+
+    //For managing the visibility of the Text "no results found"
+    var showNoResults by mutableStateOf(false)
+        private set
+
     //Logic functions
+
+    fun setGeolocationPermissions(coarse: Boolean, fine: Boolean){
+        hasCoarseLocationPermission = coarse
+        hasFineLocationPermission = fine
+    }
+
+    fun setShowNoResultsState(show: Boolean) {
+        showNoResults = show
+    }
+
     fun updateInfos(
         loc: WeatherLocation = location,
-        geolocationEnabledState: MutableState<Boolean>,
-        geolocationEnabled: Boolean = geolocationEnabledState.value
+        enabled: Boolean = geolocationEnabled
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
@@ -69,7 +90,7 @@ class WeatherViewModel : ViewModel() {
                 )
             }
 
-            geolocationEnabledState.value = geolocationEnabled
+            geolocationEnabled = enabled
 
             if (geolocationEnabled) {
                 location = location.copy(
@@ -95,7 +116,6 @@ class WeatherViewModel : ViewModel() {
     fun fetchCurrentLocation(
         context: Context,
         fusedLocationClient: FusedLocationProviderClient,
-        geolocationEnabled: MutableState<Boolean>
     ) {
         fusedLocationClient.lastLocation.addOnSuccessListener { fetchedLocation: Location? ->
             if (fetchedLocation != null) {
@@ -106,8 +126,7 @@ class WeatherViewModel : ViewModel() {
                 //call weather API
                 updateInfos(
                     WeatherLocation("", lat, lon, "", ""),
-                    geolocationEnabledState = geolocationEnabled,
-                    geolocationEnabled = true
+                    enabled = true
                 )
             } else {
                 Toast.makeText(context, "Current position unavailable", Toast.LENGTH_SHORT)
@@ -120,7 +139,7 @@ class WeatherViewModel : ViewModel() {
         _searchedLocations.clear()
     }
 
-    fun findLocationsByQuery(query: String, showNoResults: MutableState<Boolean>) {
+    fun findLocationsByQuery(query: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
             val response = retroInstance.getLatLon(
@@ -130,25 +149,23 @@ class WeatherViewModel : ViewModel() {
             _searchedLocations.clear()
             _searchedLocations.addAll(response)
 
-            showNoResults.value = true
+            showNoResults = true
         }
     }
 
     fun findWeatherInfosByLocation(
-        loc: WeatherLocation,
-        geolocationEnabled: MutableState<Boolean>
+        loc: WeatherLocation
     ) {
-        updateInfos(loc, geolocationEnabledState = geolocationEnabled, geolocationEnabled = false)
+        updateInfos(loc, enabled = false)
     }
 
-    fun getWeatherOfFirstResult(geolocationEnabled: MutableState<Boolean>) {
+    fun getWeatherOfFirstResult() {
         if (searchedLocations.isNotEmpty()) {
             updateInfos(
                 loc = searchedLocations[0],
-                geolocationEnabledState = geolocationEnabled,
-                geolocationEnabled = false
+                enabled = false
             )
-            geolocationEnabled.value = false
+            geolocationEnabled = false
         }
     }
 }
