@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,9 +82,6 @@ fun WeatherScreen(
     //Main UI state (current weather conditions)
     val uiStateCondition by viewModel.uiState.collectAsStateWithLifecycle()
 
-    //Selected location to display the weather conditions for
-    val location by remember { derivedStateOf { viewModel.location } }
-
     //Input for searching the location
     var query by remember { mutableStateOf("") }
 
@@ -141,14 +137,14 @@ fun WeatherScreen(
             }
         }
         Text(
-            text = if (viewModel.geolocationEnabled) "Current location: ${location.getFullName()}" else "Searched location: ${location.getFullName()}",
+            text = if (viewModel.geolocationEnabled) "Current location: ${viewModel.location.getFullName()}" else "Searched location: ${viewModel.location.getFullName()}",
             color = if (viewModel.geolocationEnabled) Color.Red else Color.Black
         )
         Text(
-            text = "Latitude: ${location.lat}"
+            text = "Latitude: ${viewModel.location.lat}"
         )
         Text(
-            text = "Longitude: ${location.lon}"
+            text = "Longitude: ${viewModel.location.lon}"
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(

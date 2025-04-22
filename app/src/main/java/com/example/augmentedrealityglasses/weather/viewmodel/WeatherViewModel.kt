@@ -41,7 +41,7 @@ class WeatherViewModel : ViewModel() {
     )
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
-    //Weather location
+    //Selected location to display the weather conditions for
     var location by mutableStateOf(WeatherLocation("", "0", "0", "", ""))
         private set
 
