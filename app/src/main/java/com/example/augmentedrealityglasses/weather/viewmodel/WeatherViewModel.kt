@@ -185,8 +185,9 @@ class WeatherViewModel : ViewModel() {
                 requestPermissionsLauncher,
                 fusedLocationClient
             )
+        } else {
+            updateInfos()
         }
-        updateInfos()
     }
 
     fun getGeolocation(
