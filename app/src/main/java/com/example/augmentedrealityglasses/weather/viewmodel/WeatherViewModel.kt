@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.RetroInstance
 import com.example.augmentedrealityglasses.weather.network.RetroService
 import com.example.augmentedrealityglasses.weather.state.Main
@@ -29,6 +30,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 
 class WeatherViewModel : ViewModel() {
 
@@ -46,7 +49,15 @@ class WeatherViewModel : ViewModel() {
     val weatherState: StateFlow<WeatherUiState> = _weatherState.asStateFlow()
 
     //Selected location to display the weather conditions for
-    var location by mutableStateOf(WeatherLocation("", "0", "0", "", ""))
+    var location by mutableStateOf(
+        WeatherLocation(
+            "",
+            Constants.INITIAL_VALUE,
+            Constants.INITIAL_VALUE,
+            "",
+            ""
+        )
+    )
         private set
 
     //List of all the locations found by the API
@@ -70,6 +81,13 @@ class WeatherViewModel : ViewModel() {
     //Interface for the API
     private val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
 
+    //Error message
+    private val _errorVisible = MutableStateFlow(false)
+    val errorVisible: StateFlow<Boolean> = _errorVisible
+
+    private val _errorMessage = MutableStateFlow("")
+    val errorMessage: StateFlow<String> = _errorMessage
+
     //Logic functions
 
     fun setGeolocationPermissions(coarse: Boolean, fine: Boolean) {
@@ -77,8 +95,17 @@ class WeatherViewModel : ViewModel() {
         hasFineLocationPermission = fine
     }
 
-    fun setShowNoResultsState(show: Boolean) {
-        showNoResults = show
+    fun hideNoResult() {
+        showNoResults = false
+    }
+
+    private fun showErrorMessage(errorMsg: String) {
+        _errorMessage.value = errorMsg
+        _errorVisible.value = true
+    }
+
+    fun hideErrorMessage() {
+        _errorVisible.value = false
     }
 
     fun updateInfos(
@@ -86,35 +113,48 @@ class WeatherViewModel : ViewModel() {
         enabled: Boolean = geolocationEnabled
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = retroInstance.getWeatherInfo(
-                loc.lat,
-                loc.lon
-            )
+            try {
+                if (loc.lat != Constants.INITIAL_VALUE && loc.lon != Constants.INITIAL_VALUE) {
+                    val response = retroInstance.getWeatherInfo(
+                        loc.lat,
+                        loc.lon
+                    )
 
-            _weatherState.update { currentState ->
-                currentState.copy(
-                    condition = response
-                )
-            }
+                    _weatherState.update { currentState ->
+                        currentState.copy(
+                            condition = response
+                        )
+                    }
 
-            geolocationEnabled = enabled
+                    geolocationEnabled = enabled
 
-            if (geolocationEnabled) {
-                location = location.copy(
-                    name = response.name,
-                    lat = loc.lat,
-                    lon = loc.lon,
-                    country = response.sys.country,
-                    state = ""
-                )
-            } else {
-                location = location.copy(
-                    name = loc.name,
-                    lat = loc.lat,
-                    lon = loc.lon,
-                    country = response.sys.country,
-                    state = loc.state.orEmpty()
-                )
+                    if (geolocationEnabled) {
+                        location = location.copy(
+                            name = response.name,
+                            lat = loc.lat,
+                            lon = loc.lon,
+                            country = response.sys.country,
+                            state = ""
+                        )
+                    } else {
+                        location = location.copy(
+                            name = loc.name,
+                            lat = loc.lat,
+                            lon = loc.lon,
+                            country = response.sys.country,
+                            state = loc.state.orEmpty()
+                        )
+                    }
+                }
+            } catch (e: IOException) {
+                //network error
+                showErrorMessage("Network error. Please try again later")
+            } catch (e: HttpException) {
+                //http error
+                showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
+            } catch (e: Exception) {
+                //generic error
+                showErrorMessage("Something went wrong. Please try again later")
             }
         }
     }
@@ -148,14 +188,29 @@ class WeatherViewModel : ViewModel() {
 
     fun findLocationsByQuery(query: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = retroInstance.getLatLon(
-                query
-            )
+            try {
+                val response = retroInstance.getLatLon(
+                    query
+                )
 
-            _searchedLocations.clear()
-            _searchedLocations.addAll(response)
+                _searchedLocations.clear()
+                _searchedLocations.addAll(response)
 
-            showNoResults = true
+                showNoResults = true
+
+            } catch (e: IOException) {
+                //network error
+                clearSearchedLocationList()
+                showErrorMessage("Network error. Please try again later")
+            } catch (e: HttpException) {
+                //http error
+                clearSearchedLocationList()
+                showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
+            } catch (e: Exception) {
+                //generic error
+                clearSearchedLocationList()
+                showErrorMessage("Something went wrong. Please try again later")
+            }
         }
     }
 
@@ -171,7 +226,6 @@ class WeatherViewModel : ViewModel() {
                 loc = searchedLocations[0],
                 enabled = false
             )
-            geolocationEnabled = false
         }
     }
 

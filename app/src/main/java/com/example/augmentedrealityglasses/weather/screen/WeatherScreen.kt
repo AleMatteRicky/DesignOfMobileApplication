@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,11 +77,15 @@ fun WeatherScreen(
     //Main UI state (current weather conditions)
     val weatherUiState by viewModel.weatherState.collectAsStateWithLifecycle()
 
+    //Error message state
+    val errorVisible = viewModel.errorVisible.collectAsState().value
+    val errorMessage = viewModel.errorMessage.collectAsState().value
+
     //Input for searching the location
     var query by remember { mutableStateOf("") }
 
     LaunchedEffect(query) {
-        viewModel.setShowNoResultsState(false)
+        viewModel.hideNoResult()
         if (query.isBlank()) {
             viewModel.clearSearchedLocationList()
             return@LaunchedEffect
@@ -88,6 +93,14 @@ fun WeatherScreen(
 
         delay(Constants.DEBOUNCE_DELAY)
         viewModel.findLocationsByQuery(query)
+    }
+
+    //To make the error message disappear after time
+    LaunchedEffect(errorVisible) {
+        if (errorVisible) {
+            delay(Constants.ERROR_DISPLAY_TIME)
+            viewModel.hideErrorMessage()
+        }
     }
 
     // ----  UI  ----
@@ -191,6 +204,13 @@ fun WeatherScreen(
         if (viewModel.searchedLocations.isEmpty() && query.isNotBlank() && viewModel.showNoResults) {
             Text(
                 text = "No results found"
+            )
+        }
+
+        if (errorVisible) {
+            Text(
+                color = Color.Red,
+                text = errorMessage
             )
         }
     }
