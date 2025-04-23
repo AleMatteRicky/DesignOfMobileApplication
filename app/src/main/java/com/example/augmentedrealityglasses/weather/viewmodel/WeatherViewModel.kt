@@ -67,6 +67,9 @@ class WeatherViewModel : ViewModel() {
     var showNoResults by mutableStateOf(false)
         private set
 
+    //Interface for the API
+    private val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
+
     //Logic functions
 
     fun setGeolocationPermissions(coarse: Boolean, fine: Boolean) {
@@ -83,7 +86,6 @@ class WeatherViewModel : ViewModel() {
         enabled: Boolean = geolocationEnabled
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
             val response = retroInstance.getWeatherInfo(
                 loc.lat,
                 loc.lon
@@ -146,7 +148,6 @@ class WeatherViewModel : ViewModel() {
 
     fun findLocationsByQuery(query: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
             val response = retroInstance.getLatLon(
                 query
             )
