@@ -30,11 +30,27 @@ class TranslationViewModel(
         null //used to keep track of started recordJob in order to cancel them if the user starts a new recordJob before the old one finishes
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+    fun startRecording(){
+        recordJob?.cancel()
+        initializeSpeechRecognizer()
+        uiState = uiState.copy(isRecording = true, recognizedText = "")
+        recordJob = viewModelScope.launch {
+            recorder?.startListening(createIntent())
+        }
+    }
+
+    fun stopRecording(){
+        recorder?.stopListening()
+        recorder?.destroy()
+        recordJob?.cancel()
+        uiState = uiState.copy(isRecording = false)
+    }
+
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun initializeSpeechRecognizer() {
         recorder = createSpeechRecognizer(getApplication())
 
         recorder?.setRecognitionListener(createRecognitionListener())
-
 
     }
 
