@@ -1,10 +1,11 @@
 package com.example.augmentedrealityglasses.translation
 
-import com.google.mlkit.nl.translate.TranslateLanguage
-
 data class TranslationUiState(
-    val fromLanguage: TranslateLanguage? = null,
-    val toLanguage: TranslateLanguage? = null,
-    val recognizeLanguage: Boolean = true
+    val fromLanguage: String? = null,
+    val toLanguage: String? = null,
+    val recognizeLanguage: Boolean = true,
+    val isRecording: Boolean = false,
+    val recognizedText: String = "",
+    val translatedText: String = ""
 )
 
