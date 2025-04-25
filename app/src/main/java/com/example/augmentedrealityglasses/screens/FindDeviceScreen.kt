@@ -49,9 +49,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.augmentedrealityglasses.TAG
 import com.example.augmentedrealityglasses.ble.device.SERVICE_UUID
 import kotlinx.coroutines.delay
+
+private val TAG = "FindDeviceScreen"
 
 @Composable
 fun FindDeviceScreen(onError: () -> Unit, onConnect: (BluetoothDevice) -> Unit) {

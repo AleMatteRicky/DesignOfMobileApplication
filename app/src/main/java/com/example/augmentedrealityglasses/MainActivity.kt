@@ -21,6 +21,7 @@ import com.example.augmentedrealityglasses.screens.TranslationViewModel
 import com.example.augmentedrealityglasses.screens.WeatherScreen
 
 class MainActivity : ComponentActivity() {
+    private val TAG = "myapp"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
