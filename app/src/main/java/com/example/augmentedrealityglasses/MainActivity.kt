@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,12 +18,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
+import com.example.augmentedrealityglasses.translation.ui.SelectLanguageButton
 import com.google.mlkit.nl.translate.TranslateLanguage
 
 class MainActivity : ComponentActivity() {
@@ -38,8 +41,7 @@ class MainActivity : ComponentActivity() {
                             navController.navigate(
                                 route = ScreenName.TRANSLATION.name
                             )
-                        },
-                        audioPermissionGranted = audioPermissionGranted()
+                        }
                     )
                 }
 
@@ -51,7 +53,10 @@ class MainActivity : ComponentActivity() {
                                 route = ScreenName.HOME.name
                             )
                         },
-                        TranslationViewModel(systemLanguage = TranslateLanguage.ITALIAN, application)
+                        TranslationViewModel(
+                            systemLanguage = TranslateLanguage.ITALIAN,
+                            application
+                        )
                     ) //todo update with system language from settings
                 }
             }
@@ -80,7 +85,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun HomeScreen(onNavigateToTranslation: () -> Unit, audioPermissionGranted: Boolean) {
+fun HomeScreen(onNavigateToTranslation: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
@@ -121,8 +126,20 @@ fun TranslationScreen(onNavigateToHome: () -> Unit, viewModel: TranslationViewMo
             text = viewModel.uiState.translatedText,
             modifier = Modifier.align(Alignment.BottomStart)
         )
+        Box(
+            modifier = Modifier.offset(x = 0.dp, y = 150.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            SelectLanguageButton(true, viewModel)
+        }
+
+        Button(
+            onClick = { viewModel.translate() },
+            modifier = Modifier.offset(x = 0.dp, y = 105.dp)
+        ) {
+            Text("Translate")
+        }
     }
 
 }
-
 
