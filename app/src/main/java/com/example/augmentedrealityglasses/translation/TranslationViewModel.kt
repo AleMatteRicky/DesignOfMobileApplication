@@ -15,6 +15,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.nl.languageid.LanguageIdentification
+import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.Translator
+import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -29,8 +35,13 @@ class TranslationViewModel(
     var recordJob: Job? =
         null //used to keep track of started recordJob in order to cancel them if the user starts a new recordJob before the old one finishes
 
+    var translator: Translator? = null
+
+    var translatorJob: Job? = null
+
+
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    fun startRecording(){
+    fun startRecording() {
         recordJob?.cancel()
         initializeSpeechRecognizer()
         uiState = uiState.copy(isRecording = true, recognizedText = "")
@@ -39,12 +50,18 @@ class TranslationViewModel(
         }
     }
 
-    fun stopRecording(){
+    fun stopRecording() { //todo the recorder stops automatically after few seconds during which it does not receive audio input, change it
         recorder?.stopListening()
         recorder?.destroy()
         recordJob?.cancel()
         uiState = uiState.copy(isRecording = false)
     }
+
+    fun selectTargetLanguage(targetLanguage: String) {
+        uiState = uiState.copy(targetLanguage = targetLanguage)
+    }
+
+
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun initializeSpeechRecognizer() {
