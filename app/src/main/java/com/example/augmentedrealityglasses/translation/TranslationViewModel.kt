@@ -61,7 +61,63 @@ class TranslationViewModel(
         uiState = uiState.copy(targetLanguage = targetLanguage)
     }
 
+    fun translate() {
 
+        if(uiState.isRecording){
+            stopRecording()
+        }
+
+        translatorJob?.cancel()
+
+        translatorJob = viewModelScope.launch{
+            if (uiState.targetLanguage != null) {
+                identifySourceLanguage() //todo check if could ever happen that the initialization do not wait for the identification
+            }
+        }
+    }
+
+    fun initializeTranslator() {
+        val options = TranslatorOptions.Builder()
+            .setSourceLanguage(uiState.sourceLanguage!!)
+            .setTargetLanguage(uiState.targetLanguage!!)
+            .build()
+
+        translator = Translation.getClient(options)
+
+        var conditions = DownloadConditions.Builder()
+            .requireWifi()
+            .build()
+        translator?.downloadModelIfNeeded(conditions)
+            ?.addOnSuccessListener {
+                Log.d("Correct", "Download Succeeded")
+            }
+            ?.addOnFailureListener { exception ->
+                Log.d("Error", "Translate, Download Failed")
+            }
+    }
+
+    private fun identifySourceLanguage() {
+        val languageIdentification = LanguageIdentification.getClient()
+        languageIdentification.identifyLanguage(uiState.recognizedText)
+            .addOnSuccessListener { tag ->
+                if (tag == "und") {
+                    Log.e("Undefined Language", "Exception")
+                } else {
+                    uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
+                    //todo tag could be not supported by mlkit translate
+                }
+
+                initializeTranslator()
+                translator?.translate(uiState.recognizedText)
+                    ?.addOnSuccessListener { translatedText ->
+                        Log.d("Translation succeeded", translatedText)
+                        uiState = uiState.copy(translatedText = translatedText)
+                    }
+                    ?.addOnFailureListener { exception ->
+                        Log.e("Translation failed", exception.toString())
+                    }
+            }
+    }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun initializeSpeechRecognizer() {
