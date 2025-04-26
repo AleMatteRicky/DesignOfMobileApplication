@@ -49,14 +49,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 composable(ScreenName.CONNECT_SCREEN.name) {
-                    val viewModel = ConnectViewModel(bleManager)
-                    viewModel.connect(LocalContext.current)
-
                     ConnectScreen(
-                        viewModel,
-                        onClickFeature = {
-                            screen ->
-                                navController.navigate(screen)
+                        viewModel = viewModel(
+                            factory = ConnectViewModel.provideFactory(
+                                bleManager,
+                                owner = LocalSavedStateRegistryOwner.current
+                            )
+                        ),
+                        onNavigateToFeature = { screen ->
+                            navController.navigate(screen)
                         }
                     ) {
                         Log.d(TAG, "Connection closed")

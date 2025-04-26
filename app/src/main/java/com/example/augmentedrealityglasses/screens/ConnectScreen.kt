@@ -55,6 +55,32 @@ class ConnectViewModel(
                 }
         }
     }
+
+
+    // Define ViewModel factory in a companion object
+    companion object {
+        fun provideFactory(
+            bleManager: BleManager,
+            owner: SavedStateRegistryOwner,
+            defaultArgs: Bundle? = null,
+        ): AbstractSavedStateViewModelFactory =
+            object : AbstractSavedStateViewModelFactory(owner, defaultArgs) {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(
+                    key: String,
+                    modelClass: Class<T>,
+                    handle: SavedStateHandle
+                ): T {
+                    return ConnectViewModel(bleManager) as T
+                }
+            }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.d(TAG, "connect view model cleared")
+    }
+
 }
 
 @Composable
