@@ -9,6 +9,7 @@ data class WeatherUiState(
 data class WeatherCondition(
     @SerializedName("weather")
     private val _weather: List<Weather>,
+    val coord: Coord,
     val main: Main,
     val sys: Sys,
     val name: String
@@ -20,6 +21,11 @@ data class WeatherCondition(
 data class Weather(
     val main: String,
     val description: String
+)
+
+data class Coord(
+    val lat: String,
+    val lon: String
 )
 
 data class Main(

@@ -17,6 +17,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.RetroInstance
 import com.example.augmentedrealityglasses.weather.network.RetroService
+import com.example.augmentedrealityglasses.weather.state.Coord
 import com.example.augmentedrealityglasses.weather.state.Main
 import com.example.augmentedrealityglasses.weather.state.Sys
 import com.example.augmentedrealityglasses.weather.state.Weather
@@ -30,8 +31,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import retrofit2.HttpException
 import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class WeatherViewModel : ViewModel() {
 
@@ -40,6 +44,7 @@ class WeatherViewModel : ViewModel() {
         WeatherUiState(
             WeatherCondition(
                 listOf(Weather("", "")),
+                Coord("", ""),
                 Main("", ""),
                 Sys(""),
                 ""
@@ -297,4 +302,123 @@ class WeatherViewModel : ViewModel() {
             fusedLocationClient
         )
     }
+
+
+    //New functions
+
+    suspend fun refreshWeatherInfos(fusedLocationClient: FusedLocationProviderClient) {
+        if (geolocationEnabled) {
+            //fetch geolocation
+            try {
+                val geo = fetchGeolocation(fusedLocationClient)
+
+                if (geo != null) {
+
+                    //update weather conditions and location
+                    val newWeatherCondition =
+                        fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())
+
+                    if (newWeatherCondition != null) {
+                        _weatherState.update { currentState ->
+                            currentState.copy(
+                                condition = newWeatherCondition
+                            )
+                        }
+
+                        location = location.copy(
+                            name = newWeatherCondition.name,
+                            lat = newWeatherCondition.coord.lat,
+                            lon = newWeatherCondition.coord.lon,
+                            country = newWeatherCondition.sys.country,
+                            state = "" //not available with this API call
+                        )
+                    }
+                } else {
+                    showErrorMessage("Position unavailable! Please try again")
+                }
+            } catch (e: Exception) {
+                //TODO: handle
+                showErrorMessage("An error has occurred!")
+            }
+        } else {
+            val newWeatherCondition = fetchWeatherInfo(location.lat, location.lon)
+
+            if (newWeatherCondition != null) {
+                _weatherState.update { currentState ->
+                    currentState.copy(
+                        condition = newWeatherCondition
+                    )
+                }
+            }
+        }
+    }
+
+    suspend fun fetchWeatherInfo(lat: String, lon: String): WeatherCondition? {
+        if (lat != Constants.INITIAL_VALUE && lon != Constants.INITIAL_VALUE) {
+            return try {
+                retroInstance.getWeatherInfo(
+                    lat,
+                    lon
+                )
+            } catch (e: IOException) {
+                //network error
+                showErrorMessage("Network error. Please try again later")
+                null
+            } catch (e: HttpException) {
+                //http error
+                showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
+                null
+            } catch (e: Exception) {
+                //generic error
+                showErrorMessage("Something went wrong. Please try again later")
+                null
+            }
+        }
+
+        return null
+    }
+
+    suspend fun fetchLatLonByQuery(query: String): List<WeatherLocation>? {
+        return try {
+            retroInstance.getLatLon(
+                query
+            )
+        } catch (e: IOException) {
+            //network error
+            showErrorMessage("Network error. Please try again later")
+            null
+        } catch (e: HttpException) {
+            //http error
+            showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
+            null
+        } catch (e: Exception) {
+            //generic error
+            showErrorMessage("Something went wrong. Please try again later")
+            null
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    suspend fun fetchGeolocation(
+        fusedLocationClient: FusedLocationProviderClient
+    ): Location? {
+        return suspendCancellableCoroutine { continuation ->
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { location: Location? ->
+                    if (location != null) {
+                        continuation.resume(location)
+                    } else {
+                        //TODO: handle
+                        continuation.resume(null)
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    if (continuation.isActive) {
+                        //TODO: handle
+                        continuation.resumeWithException(exception)
+                    }
+                }
+        }
+    }
+
 }

@@ -24,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +36,7 @@ import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun WeatherScreen(
@@ -42,6 +44,9 @@ fun WeatherScreen(
 ) {
     //Context
     val context = LocalContext.current
+
+    //Coroutine
+    val coroutineScope = rememberCoroutineScope()
 
     val requestPermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -112,11 +117,9 @@ fun WeatherScreen(
             horizontalArrangement = Arrangement.Center
         ) {
             Button(onClick = {
-                viewModel.updateWeatherInfos(
-                    context,
-                    requestPermissionsLauncher,
-                    fusedLocationClient
-                )
+                coroutineScope.launch {
+                    viewModel.refreshWeatherInfos(fusedLocationClient)
+                }
             }) {
                 Text(
                     text = "Update weather info"
