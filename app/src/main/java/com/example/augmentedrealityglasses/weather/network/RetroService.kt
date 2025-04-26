@@ -17,7 +17,7 @@ interface RetroService {
     ): WeatherCondition
 
     @GET("geo/1.0/direct")
-    suspend fun getLatLon(
+    suspend fun getLocations(
         @Query("q") q: String,
         @Query("limit") limit: String = "5",
         @Query("appid") appId: String = BuildConfig.API_KEY

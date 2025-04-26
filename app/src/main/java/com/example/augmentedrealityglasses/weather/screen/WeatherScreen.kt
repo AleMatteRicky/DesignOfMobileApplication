@@ -75,7 +75,7 @@ fun WeatherScreen(
         }
 
         if (viewModel.hasCoarseLocationPermission || viewModel.hasFineLocationPermission) {
-            viewModel.fetchCurrentLocation(context, fusedLocationClient)
+            viewModel.getGeolocationWeather(fusedLocationClient)
         }
     }
 
@@ -97,7 +97,7 @@ fun WeatherScreen(
         }
 
         delay(Constants.DEBOUNCE_DELAY)
-        viewModel.findLocationsByQuery(query)
+        viewModel.searchLocations(query)
     }
 
     //To make the error message disappear after time
