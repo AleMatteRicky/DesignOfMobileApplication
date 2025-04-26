@@ -173,7 +173,9 @@ fun WeatherScreen(
             Button(
                 onClick = {
                     query = ""
-                    viewModel.getWeatherOfFirstResult()
+                    coroutineScope.launch {
+                        viewModel.getWeatherOfFirstResult()
+                    }
                 },
                 enabled = viewModel.searchedLocations.isNotEmpty(),
                 modifier = Modifier.weight(0.25f)

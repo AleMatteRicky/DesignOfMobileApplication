@@ -249,14 +249,14 @@ class WeatherViewModel : ViewModel() {
         updateInfos(loc, enabled = false)
     }
 
-    fun getWeatherOfFirstResult() {
-        if (searchedLocations.isNotEmpty()) {
-            updateInfos(
-                loc = searchedLocations[0],
-                enabled = false
-            )
-        }
-    }
+//    fun getWeatherOfFirstResult() {
+//        if (searchedLocations.isNotEmpty()) {
+//            updateInfos(
+//                loc = searchedLocations[0],
+//                enabled = false
+//            )
+//        }
+//    }
 
     fun updateWeatherInfos(
         context: Context,
@@ -474,6 +474,32 @@ class WeatherViewModel : ViewModel() {
             showErrorMessage("An error has occurred!")
         }
 
+    }
+
+    suspend fun getWeatherOfFirstResult() {
+        if (searchedLocations.isNotEmpty()) {
+            //get weather infos of first result
+            val firstResult = searchedLocations[0]
+
+            val newWeatherCondition = fetchWeatherInfo(firstResult.lat, firstResult.lon)
+
+            if (newWeatherCondition != null) {
+
+                //update weather and location states
+                updateWeatherState(newWeatherCondition)
+
+                updateLocationState(
+                    newWeatherCondition.name,
+                    newWeatherCondition.coord.lat,
+                    newWeatherCondition.coord.lon,
+                    newWeatherCondition.sys.country,
+                    firstResult.state.orEmpty()
+                )
+
+                //disable geolocationEnabled
+                geolocationEnabled = false
+            }
+        }
     }
 
 }
