@@ -131,7 +131,10 @@ fun WeatherScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
-                        onClick = { viewModel.refreshWeatherInfos(fusedLocationClient) },
+                        onClick = {
+                            viewModel.hideErrorMessage()
+                            viewModel.refreshWeatherInfos(fusedLocationClient)
+                        },
                         enabled = viewModel.location.lat.isNotEmpty() && viewModel.location.lon.isNotEmpty()
                     ) {
                         Text(
@@ -141,6 +144,7 @@ fun WeatherScreen(
                     Button(
                         onClick = {
                             query = ""
+                            viewModel.hideErrorMessage()
                             viewModel.getGeolocationWeather(fusedLocationClient)
                         },
                         enabled = !viewModel.geolocationEnabled
@@ -184,6 +188,7 @@ fun WeatherScreen(
                     Button(
                         onClick = {
                             query = ""
+                            viewModel.hideErrorMessage()
                             viewModel.getWeatherOfFirstResult()
                         },
                         enabled = viewModel.searchedLocations.isNotEmpty(),
@@ -202,6 +207,7 @@ fun WeatherScreen(
                             modifier = Modifier
                                 .clickable {
                                     query = ""
+                                    viewModel.hideErrorMessage()
                                     viewModel.getWeatherOfSelectedLocation(location)
                                 }
                                 .padding(5.dp)
