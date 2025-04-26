@@ -14,12 +14,12 @@ import kotlinx.coroutines.flow.shareIn
     Proxy between the application and the device.
     It exposes the information from the BleDevice to change the UI
 */
-class BleManager (
-    private val scope : CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-)
-{
-    private var _bleDevice : BleDevice? = null
-    private var connectionStatus : Flow<DeviceConnectionState>? = null
+class BleManager(
+    private val context: Context,
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
+) {
+    private var _bleDevice: BleDevice? = null
+    private var connectionStatus: Flow<DeviceConnectionState>? = null
     private val TAG = "BleManager"
 
     fun setDataSource(bleDevice: BleDevice) {
@@ -31,14 +31,13 @@ class BleManager (
         this._bleDevice = bleDevice
     }
 
-    fun connect(context: Context) {
-        if (connectionStatus == null) {
-            connectionStatus = _bleDevice?.connect(context)?.shareIn(
-                scope = scope,
-                replay = 1,
-                started = SharingStarted.Lazily
-            )
-        }
+    fun connect() {
+        Log.d(TAG, "BLEManager received function call to connect")
+        connectionStatus = _bleDevice?.connect(context)?.shareIn(
+            scope = scope,
+            replay = 1,
+            started = SharingStarted.Eagerly // prepare the flow for the connection as soon as possible
+        )
     }
 
     fun receiveUpdates() : Flow<DeviceConnectionState> {

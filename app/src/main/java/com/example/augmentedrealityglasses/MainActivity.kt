@@ -27,6 +27,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val bleManager = BleManager()
+            val bleManager = BleManager(LocalContext.current)
+
             NavHost(navController = navController, startDestination = ScreenName.HOME.name) {
                 composable(ScreenName.HOME.name) {
                     HomeScreen {
@@ -38,11 +40,11 @@ class MainActivity : ComponentActivity() {
                         FindDeviceScreen(onError = {
                             Log.d(TAG, "Error occurred during scanning")
                             navController.navigate(ScreenName.ERROR_SCREEN.name)
-                        })  {
-                            device ->
-                                Log.d(TAG, "device has been found")
-                                bleManager.setDataSource(BleDevice(device))
-                                navController.navigate(ScreenName.CONNECT_SCREEN.name)
+                        }) { device ->
+                            bleManager.setDataSource(BleDevice(device))
+                            // start the connection as soon as the device has been established
+                            bleManager.connect()
+                            navController.navigate(ScreenName.CONNECT_SCREEN.name)
                         }
                     }
                 }
