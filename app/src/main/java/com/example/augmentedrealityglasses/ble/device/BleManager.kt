@@ -5,7 +5,7 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.shareIn
@@ -40,7 +40,9 @@ class BleManager(
         )
     }
 
-    fun receiveUpdates() : Flow<DeviceConnectionState> {
+    fun receiveUpdates(): Flow<DeviceConnectionState> {
+        Log.d(TAG, "BLEManager received function call to receiveUpdates")
+        require(connectionStatus != null)
         return connectionStatus as Flow<DeviceConnectionState>
     }
 
@@ -49,7 +51,8 @@ class BleManager(
     }
 
     fun close() {
-        scope.cancel()
+        // reset the state
+        scope.coroutineContext.cancelChildren()
         _bleDevice?.close()
     }
 }
