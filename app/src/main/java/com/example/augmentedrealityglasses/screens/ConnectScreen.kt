@@ -90,10 +90,9 @@ class ConnectViewModel(
 @Composable
 fun ConnectScreen(
     viewModel: ConnectViewModel,
-    onClickFeature: (String) -> Unit,
+    onNavigateToFeature: (String) -> Unit,
     onClose: () -> Unit
 ) {
-    //val isConnected by remember { mutableStateOf(viewModel.uiState.isConnected) }
     Box(Modifier.fillMaxSize()) {
 
         if (!viewModel.uiState.isConnected) {
@@ -111,14 +110,14 @@ fun ConnectScreen(
             ) {
                 Button(
                     onClick = {
-                        onClickFeature(ScreenName.WEATHER_SCREEN.name)
+                        onNavigateToFeature(ScreenName.WEATHER_SCREEN.name)
                     }
                 ) {
                     Text(text = ScreenName.WEATHER_SCREEN.name)
                 }
                 Button(
                     onClick = {
-                        onClickFeature(ScreenName.TRANSLATION_SCREEN.name)
+                        onNavigateToFeature(ScreenName.TRANSLATION_SCREEN.name)
                     }
                 ) {
                     Text(text = ScreenName.TRANSLATION_SCREEN.name)
