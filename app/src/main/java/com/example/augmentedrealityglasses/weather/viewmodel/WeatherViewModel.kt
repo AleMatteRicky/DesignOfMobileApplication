@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.RetroInstance
 import com.example.augmentedrealityglasses.weather.network.RetroService
 import com.example.augmentedrealityglasses.weather.state.Coord
@@ -50,8 +49,8 @@ class WeatherViewModel : ViewModel() {
     var location by mutableStateOf(
         WeatherLocation(
             "",
-            Constants.INITIAL_VALUE,
-            Constants.INITIAL_VALUE,
+            "",
+            "",
             "",
             ""
         )
@@ -321,24 +320,28 @@ class WeatherViewModel : ViewModel() {
 //    }
 
     private suspend fun fetchWeatherInfo(lat: String, lon: String): WeatherCondition? {
-        return try {
-            retroInstance.getWeatherInfo(
-                lat,
-                lon
-            )
-        } catch (e: IOException) {
-            //network error
-            showErrorMessage("Network error. Please try again later")
-            null
-        } catch (e: HttpException) {
-            //http error
-            showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
-            null
-        } catch (e: Exception) {
-            //generic error
-            showErrorMessage("Something went wrong. Please try again later")
-            null
+        if (lat.isNotEmpty() && lon.isNotEmpty()) {
+            return try {
+                retroInstance.getWeatherInfo(
+                    lat,
+                    lon
+                )
+            } catch (e: IOException) {
+                //network error
+                showErrorMessage("Network error. Please try again later")
+                null
+            } catch (e: HttpException) {
+                //http error
+                showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
+                null
+            } catch (e: Exception) {
+                //generic error
+                showErrorMessage("Something went wrong. Please try again later")
+                null
+            }
         }
+
+        return null
     }
 
     private suspend fun fetchLatLonByQuery(query: String): List<WeatherLocation>? {

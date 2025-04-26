@@ -113,7 +113,7 @@ fun WeatherScreen(
         ) {
             Button(
                 onClick = { viewModel.refreshWeatherInfos(fusedLocationClient) },
-                enabled = viewModel.location.lat != Constants.INITIAL_VALUE
+                enabled = viewModel.location.lat.isNotEmpty() && viewModel.location.lon.isNotEmpty()
             ) {
                 Text(
                     text = "Update weather info"

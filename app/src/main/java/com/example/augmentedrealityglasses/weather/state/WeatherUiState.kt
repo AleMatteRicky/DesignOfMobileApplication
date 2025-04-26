@@ -45,7 +45,9 @@ data class WeatherLocation(
     var state: String?
 ) {
     fun getFullName(): String {
-        return if (this.state.isNullOrEmpty()) {
+        return if(this.name.isEmpty()){
+            ""
+        }else if (this.state.isNullOrEmpty()) {
             this.name + " (" + this.country + ")"
         } else {
             this.name + ", " + this.state.orEmpty() + " (" + this.country + ")"
