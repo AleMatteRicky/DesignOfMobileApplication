@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.RetroInstance
 import com.example.augmentedrealityglasses.weather.network.RetroService
 import com.example.augmentedrealityglasses.weather.state.Coord
@@ -18,6 +19,7 @@ import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -370,12 +372,34 @@ class WeatherViewModel : ViewModel() {
     ): Location? {
         return suspendCancellableCoroutine { continuation ->
             fusedLocationClient.lastLocation
-                .addOnSuccessListener { location: Location? ->
-                    if (location != null) {
-                        continuation.resume(location)
+                .addOnSuccessListener { lastLocation: Location? ->
+                    val currentTime = System.currentTimeMillis()
+
+                    val priority: Int = when {
+                        hasFineLocationPermission -> Priority.PRIORITY_HIGH_ACCURACY
+                        hasCoarseLocationPermission -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
+                        else -> throw IllegalStateException("No location permission granted") //TODO: handle
+                    }
+
+                    if (lastLocation != null && (currentTime - lastLocation.time) <= Constants.MAX_AGE_LAST_LOCATION) {
+                        //there is a last location saved and it is not too old
+                        continuation.resume(lastLocation)
                     } else {
-                        //TODO: handle
-                        continuation.resume(null)
+
+                        //fetch the current location
+                        fusedLocationClient.getCurrentLocation(priority, null)
+                            .addOnSuccessListener { currentLocation: Location? ->
+                                if (currentLocation != null) {
+                                    continuation.resume(currentLocation)
+                                } else {
+                                    continuation.resume(null)
+                                }
+                            }
+                            .addOnFailureListener { exception ->
+                                if (continuation.isActive) {
+                                    continuation.resumeWithException(exception)
+                                }
+                            }
                     }
                 }
                 .addOnFailureListener { exception ->
