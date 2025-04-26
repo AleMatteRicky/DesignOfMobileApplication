@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.RetroInstance
 import com.example.augmentedrealityglasses.weather.network.RetroService
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import retrofit2.HttpException
 import java.io.IOException
@@ -382,41 +384,85 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    private suspend fun getWeatherByResult(result: WeatherLocation) {
-        if (searchedLocations.isNotEmpty()) {
-            //get weather infos of the result
-            val newWeatherCondition = fetchWeatherInfo(result.lat, result.lon)
+    private fun getWeatherByResult(result: WeatherLocation) {
+        viewModelScope.launch {
+            if (searchedLocations.isNotEmpty()) {
+                //get weather infos of the result
+                val newWeatherCondition = fetchWeatherInfo(result.lat, result.lon)
 
-            if (newWeatherCondition != null) {
+                if (newWeatherCondition != null) {
 
-                //update weather and location states
-                updateWeatherState(newWeatherCondition)
+                    //update weather and location states
+                    updateWeatherState(newWeatherCondition)
 
-                updateLocationState(
-                    newWeatherCondition.name,
-                    newWeatherCondition.coord.lat,
-                    newWeatherCondition.coord.lon,
-                    newWeatherCondition.sys.country,
-                    result.state.orEmpty()
-                )
+                    updateLocationState(
+                        newWeatherCondition.name,
+                        newWeatherCondition.coord.lat,
+                        newWeatherCondition.coord.lon,
+                        newWeatherCondition.sys.country,
+                        result.state.orEmpty()
+                    )
 
-                //disable geolocationEnabled
-                geolocationEnabled = false
+                    //disable geolocationEnabled
+                    geolocationEnabled = false
+                }
             }
         }
     }
 
     // Functions called by the UI (e.g. onClick handlers)
 
-    suspend fun refreshWeatherInfos(fusedLocationClient: FusedLocationProviderClient) {
-        if (geolocationEnabled) {
-            //fetch geolocation
+    fun refreshWeatherInfos(fusedLocationClient: FusedLocationProviderClient) {
+        viewModelScope.launch {
+            if (geolocationEnabled) {
+                //fetch geolocation
+                try {
+                    val geo = fetchGeolocation(fusedLocationClient)
+
+                    if (geo != null) {
+
+                        //update weather conditions and location
+                        val newWeatherCondition =
+                            fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())
+
+                        if (newWeatherCondition != null) {
+                            updateWeatherState(newWeatherCondition)
+
+                            // state not available with this API call
+                            updateLocationState(
+                                newWeatherCondition.name,
+                                newWeatherCondition.coord.lat,
+                                newWeatherCondition.coord.lon,
+                                newWeatherCondition.sys.country,
+                                ""
+                            )
+                        }
+                    } else {
+                        showErrorMessage("Position unavailable! Please try again")
+                    }
+                } catch (e: Exception) {
+                    //TODO: handle
+                    showErrorMessage("An error has occurred!")
+                }
+            } else {
+                val newWeatherCondition = fetchWeatherInfo(location.lat, location.lon)
+
+                if (newWeatherCondition != null) {
+                    updateWeatherState(newWeatherCondition)
+                }
+            }
+        }
+    }
+
+    fun getGeolocationWeather(fusedLocationClient: FusedLocationProviderClient) {
+        viewModelScope.launch {
             try {
+
+                //get geolocation infos
                 val geo = fetchGeolocation(fusedLocationClient)
 
+                //update weather conditions
                 if (geo != null) {
-
-                    //update weather conditions and location
                     val newWeatherCondition =
                         fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())
 
@@ -431,75 +477,39 @@ class WeatherViewModel : ViewModel() {
                             newWeatherCondition.sys.country,
                             ""
                         )
+
+                        geolocationEnabled = true
                     }
+
                 } else {
                     showErrorMessage("Position unavailable! Please try again")
                 }
+
             } catch (e: Exception) {
                 //TODO: handle
                 showErrorMessage("An error has occurred!")
             }
-        } else {
-            val newWeatherCondition = fetchWeatherInfo(location.lat, location.lon)
-
-            if (newWeatherCondition != null) {
-                updateWeatherState(newWeatherCondition)
-            }
         }
     }
 
-    suspend fun getGeolocationWeather(fusedLocationClient: FusedLocationProviderClient) {
-        try {
-
-            //get geolocation infos
-            val geo = fetchGeolocation(fusedLocationClient)
-
-            //update weather conditions
-            if (geo != null) {
-                val newWeatherCondition =
-                    fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())
-
-                if (newWeatherCondition != null) {
-                    updateWeatherState(newWeatherCondition)
-
-                    // state not available with this API call
-                    updateLocationState(
-                        newWeatherCondition.name,
-                        newWeatherCondition.coord.lat,
-                        newWeatherCondition.coord.lon,
-                        newWeatherCondition.sys.country,
-                        ""
-                    )
-
-                    geolocationEnabled = true
-                }
-
-            } else {
-                showErrorMessage("Position unavailable! Please try again")
-            }
-
-        } catch (e: Exception) {
-            //TODO: handle
-            showErrorMessage("An error has occurred!")
-        }
-    }
-
-    suspend fun getWeatherOfFirstResult() {
+    fun getWeatherOfFirstResult() {
         getWeatherByResult(searchedLocations[0])
     }
 
-    suspend fun getWeatherOfSelectedLocation(result: WeatherLocation) {
+    fun getWeatherOfSelectedLocation(result: WeatherLocation) {
         getWeatherByResult(result)
     }
 
-    suspend fun searchLocations(query: String) {
-        val locations = fetchLatLonByQuery(query)
+    fun searchLocations(query: String) {
+        viewModelScope.launch {
+            val locations = fetchLatLonByQuery(query)
 
-        if (locations != null) {
-            _searchedLocations.clear()
-            _searchedLocations.addAll(locations)
+            if (locations != null) {
+                _searchedLocations.clear()
+                _searchedLocations.addAll(locations)
 
-            showNoResults = true
+                showNoResults = true
+            }
         }
     }
 }

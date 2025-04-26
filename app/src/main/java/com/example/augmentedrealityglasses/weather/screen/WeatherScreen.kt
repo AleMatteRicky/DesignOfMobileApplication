@@ -24,7 +24,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,7 +35,6 @@ import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun WeatherScreen(
@@ -44,9 +42,6 @@ fun WeatherScreen(
 ) {
     //Context
     val context = LocalContext.current
-
-    //Coroutine
-    val coroutineScope = rememberCoroutineScope()
 
     val requestPermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -116,11 +111,10 @@ fun WeatherScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            Button(onClick = {
-                coroutineScope.launch {
-                    viewModel.refreshWeatherInfos(fusedLocationClient)
-                }
-            }, enabled = viewModel.location.lat != Constants.INITIAL_VALUE) {
+            Button(
+                onClick = { viewModel.refreshWeatherInfos(fusedLocationClient) },
+                enabled = viewModel.location.lat != Constants.INITIAL_VALUE
+            ) {
                 Text(
                     text = "Update weather info"
                 )
@@ -128,9 +122,7 @@ fun WeatherScreen(
             Button(
                 onClick = {
                     query = ""
-                    coroutineScope.launch {
-                        viewModel.getGeolocationWeather(fusedLocationClient)
-                    }
+                    viewModel.getGeolocationWeather(fusedLocationClient)
                 },
                 enabled = !viewModel.geolocationEnabled
             ) {
@@ -173,9 +165,7 @@ fun WeatherScreen(
             Button(
                 onClick = {
                     query = ""
-                    coroutineScope.launch {
-                        viewModel.getWeatherOfFirstResult()
-                    }
+                    viewModel.getWeatherOfFirstResult()
                 },
                 enabled = viewModel.searchedLocations.isNotEmpty(),
                 modifier = Modifier.weight(0.25f)
@@ -193,9 +183,7 @@ fun WeatherScreen(
                     modifier = Modifier
                         .clickable {
                             query = ""
-                            coroutineScope.launch {
-                                viewModel.getWeatherOfSelectedLocation(location)
-                            }
+                            viewModel.getWeatherOfSelectedLocation(location)
                         }
                         .padding(5.dp)
                         .background(
