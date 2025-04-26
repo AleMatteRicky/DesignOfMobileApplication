@@ -125,6 +125,11 @@ fun ConnectScreen(
                 }
 
                 Text(text = "Received: ${viewModel.uiState.msg}", fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = onClose
+                ) {
+                    Text(text = "Close connection")
+                }
             }
         }
     }
