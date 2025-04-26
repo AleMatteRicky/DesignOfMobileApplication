@@ -128,11 +128,9 @@ fun WeatherScreen(
             Button(
                 onClick = {
                     query = ""
-                    viewModel.getGeolocationWeather(
-                        context,
-                        requestPermissionsLauncher,
-                        fusedLocationClient
-                    )
+                    coroutineScope.launch {
+                        viewModel.getGeolocationWeather(fusedLocationClient)
+                    }
                 },
                 enabled = !viewModel.geolocationEnabled
             ) {

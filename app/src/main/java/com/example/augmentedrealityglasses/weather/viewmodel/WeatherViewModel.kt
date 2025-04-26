@@ -95,6 +95,30 @@ class WeatherViewModel : ViewModel() {
 
     //Logic functions
 
+    private fun updateWeatherState(newWeatherCondition: WeatherCondition) {
+        _weatherState.update { currentState ->
+            currentState.copy(
+                condition = newWeatherCondition
+            )
+        }
+    }
+
+    private fun updateLocationState(
+        name: String,
+        lat: String,
+        lon: String,
+        country: String,
+        state: String
+    ) {
+        location = location.copy(
+            name = name,
+            lat = lat,
+            lon = lon,
+            country = country,
+            state = state
+        )
+    }
+
     fun setGeolocationPermissions(coarse: Boolean, fine: Boolean) {
         hasCoarseLocationPermission = coarse
         hasFineLocationPermission = fine
@@ -291,17 +315,17 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    fun getGeolocationWeather(
-        context: Context,
-        requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, Boolean>>,
-        fusedLocationClient: FusedLocationProviderClient
-    ) {
-        getGeolocation(
-            context,
-            requestPermissionsLauncher,
-            fusedLocationClient
-        )
-    }
+//    fun getGeolocationWeather(
+//        context: Context,
+//        requestPermissionsLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, Boolean>>,
+//        fusedLocationClient: FusedLocationProviderClient
+//    ) {
+//        getGeolocation(
+//            context,
+//            requestPermissionsLauncher,
+//            fusedLocationClient
+//        )
+//    }
 
 
     //New functions
@@ -319,18 +343,15 @@ class WeatherViewModel : ViewModel() {
                         fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())
 
                     if (newWeatherCondition != null) {
-                        _weatherState.update { currentState ->
-                            currentState.copy(
-                                condition = newWeatherCondition
-                            )
-                        }
+                        updateWeatherState(newWeatherCondition)
 
-                        location = location.copy(
-                            name = newWeatherCondition.name,
-                            lat = newWeatherCondition.coord.lat,
-                            lon = newWeatherCondition.coord.lon,
-                            country = newWeatherCondition.sys.country,
-                            state = "" //not available with this API call
+                        // state not available with this API call
+                        updateLocationState(
+                            newWeatherCondition.name,
+                            newWeatherCondition.coord.lat,
+                            newWeatherCondition.coord.lon,
+                            newWeatherCondition.sys.country,
+                            ""
                         )
                     }
                 } else {
@@ -344,11 +365,7 @@ class WeatherViewModel : ViewModel() {
             val newWeatherCondition = fetchWeatherInfo(location.lat, location.lon)
 
             if (newWeatherCondition != null) {
-                _weatherState.update { currentState ->
-                    currentState.copy(
-                        condition = newWeatherCondition
-                    )
-                }
+                updateWeatherState(newWeatherCondition)
             }
         }
     }
@@ -398,7 +415,7 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission") //FIXME
     suspend fun fetchGeolocation(
         fusedLocationClient: FusedLocationProviderClient
     ): Location? {
@@ -419,6 +436,44 @@ class WeatherViewModel : ViewModel() {
                     }
                 }
         }
+    }
+
+    suspend fun getGeolocationWeather(fusedLocationClient: FusedLocationProviderClient) {
+
+        try {
+
+            //get geolocation infos
+            val geo = fetchGeolocation(fusedLocationClient)
+
+            //update weather conditions
+            if (geo != null) {
+                val newWeatherCondition =
+                    fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())
+
+                if (newWeatherCondition != null) {
+                    updateWeatherState(newWeatherCondition)
+
+                    // state not available with this API call
+                    updateLocationState(
+                        newWeatherCondition.name,
+                        newWeatherCondition.coord.lat,
+                        newWeatherCondition.coord.lon,
+                        newWeatherCondition.sys.country,
+                        ""
+                    )
+
+                    geolocationEnabled = true
+                }
+
+            } else {
+                showErrorMessage("Position unavailable! Please try again")
+            }
+
+        } catch (e: Exception) {
+            //TODO: handle
+            showErrorMessage("An error has occurred!")
+        }
+
     }
 
 }
