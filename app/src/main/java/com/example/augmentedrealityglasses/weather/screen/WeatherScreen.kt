@@ -193,8 +193,9 @@ fun WeatherScreen(
                     modifier = Modifier
                         .clickable {
                             query = ""
-                            viewModel.findWeatherInfosByLocation(location)
-                            viewModel.clearSearchedLocationList()
+                            coroutineScope.launch {
+                                viewModel.getWeatherOfSelectedLocation(location)
+                            }
                         }
                         .padding(5.dp)
                         .background(

@@ -476,12 +476,10 @@ class WeatherViewModel : ViewModel() {
 
     }
 
-    suspend fun getWeatherOfFirstResult() {
+    private suspend fun getWeatherByResult(result: WeatherLocation) {
         if (searchedLocations.isNotEmpty()) {
-            //get weather infos of first result
-            val firstResult = searchedLocations[0]
-
-            val newWeatherCondition = fetchWeatherInfo(firstResult.lat, firstResult.lon)
+            //get weather infos of the result
+            val newWeatherCondition = fetchWeatherInfo(result.lat, result.lon)
 
             if (newWeatherCondition != null) {
 
@@ -493,7 +491,7 @@ class WeatherViewModel : ViewModel() {
                     newWeatherCondition.coord.lat,
                     newWeatherCondition.coord.lon,
                     newWeatherCondition.sys.country,
-                    firstResult.state.orEmpty()
+                    result.state.orEmpty()
                 )
 
                 //disable geolocationEnabled
@@ -502,4 +500,11 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
+    suspend fun getWeatherOfFirstResult() {
+        getWeatherByResult(searchedLocations[0])
+    }
+
+    suspend fun getWeatherOfSelectedLocation(result: WeatherLocation) {
+        getWeatherByResult(result)
+    }
 }
