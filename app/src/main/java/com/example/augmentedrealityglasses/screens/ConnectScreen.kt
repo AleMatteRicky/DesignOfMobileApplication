@@ -1,7 +1,7 @@
 package com.example.augmentedrealityglasses.screens
 
 import android.bluetooth.BluetoothProfile
-import android.content.Context
+import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,8 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.AbstractSavedStateViewModelFactory
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.savedstate.SavedStateRegistryOwner
 import com.example.augmentedrealityglasses.ble.device.BleManager
 import kotlinx.coroutines.launch
 
@@ -40,13 +43,14 @@ class ConnectViewModel(
     var uiState by mutableStateOf(UiDeviceConnectionState())
         private set
 
-    fun connect(context: Context) {
-        bleManager.connect(context)
-
+    init {
         viewModelScope.launch {
             bleManager.receiveUpdates()
                 .collect { connectionState ->
-                    Log.d(TAG, "new connection state from the ble manager: $connectionState")
+                    Log.d(
+                        TAG,
+                        "current view model: $this new connection state from the ble manager: $connectionState"
+                    )
                     uiState =
                         uiState.copy(
                             isConnected = connectionState.connectionState == BluetoothProfile.STATE_CONNECTED,
