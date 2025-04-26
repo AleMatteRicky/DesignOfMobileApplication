@@ -87,6 +87,10 @@ class WeatherViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
 
+    //Loading screen
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     // LOGIC FUNCTIONS
 
     fun clearSearchedLocationList() {
@@ -377,7 +381,7 @@ class WeatherViewModel : ViewModel() {
 
                     val priority: Int = when {
                         hasFineLocationPermission -> Priority.PRIORITY_HIGH_ACCURACY
-                        hasCoarseLocationPermission -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
+                        hasCoarseLocationPermission -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
                         else -> throw IllegalStateException("No location permission granted") //TODO: handle
                     }
 
@@ -385,10 +389,13 @@ class WeatherViewModel : ViewModel() {
                         //there is a last location saved and it is not too old
                         continuation.resume(lastLocation)
                     } else {
+                        _isLoading.value = true
 
                         //fetch the current location
                         fusedLocationClient.getCurrentLocation(priority, null)
                             .addOnSuccessListener { currentLocation: Location? ->
+                                _isLoading.value = false
+
                                 if (currentLocation != null) {
                                     continuation.resume(currentLocation)
                                 } else {
@@ -396,6 +403,8 @@ class WeatherViewModel : ViewModel() {
                                 }
                             }
                             .addOnFailureListener { exception ->
+                                _isLoading.value = false
+
                                 if (continuation.isActive) {
                                     continuation.resumeWithException(exception)
                                 }
@@ -403,6 +412,8 @@ class WeatherViewModel : ViewModel() {
                     }
                 }
                 .addOnFailureListener { exception ->
+                    _isLoading.value = false
+
                     if (continuation.isActive) {
                         //TODO: handle
                         continuation.resumeWithException(exception)
