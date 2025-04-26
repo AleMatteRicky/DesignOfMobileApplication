@@ -120,7 +120,7 @@ fun WeatherScreen(
                 coroutineScope.launch {
                     viewModel.refreshWeatherInfos(fusedLocationClient)
                 }
-            }) {
+            }, enabled = viewModel.location.lat != Constants.INITIAL_VALUE) {
                 Text(
                     text = "Update weather info"
                 )

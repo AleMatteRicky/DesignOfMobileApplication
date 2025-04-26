@@ -319,28 +319,24 @@ class WeatherViewModel : ViewModel() {
 //    }
 
     private suspend fun fetchWeatherInfo(lat: String, lon: String): WeatherCondition? {
-        if (lat != Constants.INITIAL_VALUE && lon != Constants.INITIAL_VALUE) {
-            return try {
-                retroInstance.getWeatherInfo(
-                    lat,
-                    lon
-                )
-            } catch (e: IOException) {
-                //network error
-                showErrorMessage("Network error. Please try again later")
-                null
-            } catch (e: HttpException) {
-                //http error
-                showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
-                null
-            } catch (e: Exception) {
-                //generic error
-                showErrorMessage("Something went wrong. Please try again later")
-                null
-            }
+        return try {
+            retroInstance.getWeatherInfo(
+                lat,
+                lon
+            )
+        } catch (e: IOException) {
+            //network error
+            showErrorMessage("Network error. Please try again later")
+            null
+        } catch (e: HttpException) {
+            //http error
+            showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
+            null
+        } catch (e: Exception) {
+            //generic error
+            showErrorMessage("Something went wrong. Please try again later")
+            null
         }
-
-        return null
     }
 
     private suspend fun fetchLatLonByQuery(query: String): List<WeatherLocation>? {
