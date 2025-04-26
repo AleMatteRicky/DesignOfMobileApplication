@@ -59,6 +59,9 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Log.d(TAG, "Connection closed")
                         bleManager.close()
+                        navController.navigate(ScreenName.FIND_DEVICE.name) {
+                            popUpTo(ScreenName.CONNECT_SCREEN.name) { inclusive = true }
+                        }
                     }
 
                 }
