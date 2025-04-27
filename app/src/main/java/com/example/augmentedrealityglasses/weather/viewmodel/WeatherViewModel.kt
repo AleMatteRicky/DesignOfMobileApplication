@@ -9,8 +9,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.augmentedrealityglasses.weather.constants.Constants
-import com.example.augmentedrealityglasses.weather.network.RetroInstance
-import com.example.augmentedrealityglasses.weather.network.RetroService
+import com.example.augmentedrealityglasses.weather.retrofit.RetroInstance
+import com.example.augmentedrealityglasses.weather.retrofit.RetroService
 import com.example.augmentedrealityglasses.weather.state.Coord
 import com.example.augmentedrealityglasses.weather.state.Main
 import com.example.augmentedrealityglasses.weather.state.Sys

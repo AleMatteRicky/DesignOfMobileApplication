@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.weather.network
+package com.example.augmentedrealityglasses.weather.retrofit
 
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import retrofit2.Retrofit
