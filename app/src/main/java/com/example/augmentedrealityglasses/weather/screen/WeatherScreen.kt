@@ -172,10 +172,10 @@ fun WeatherScreen(
                     text = "Description: ${weatherUiState.condition.weather.description}"
                 )
                 Text(
-                    text = "Temperature: ${weatherUiState.condition.main.temp}"
+                    text = "Temperature: ${weatherUiState.condition.main.temp} °C"
                 )
                 Text(
-                    text = "Pressure: ${weatherUiState.condition.main.pressure}"
+                    text = "Pressure: ${weatherUiState.condition.main.pressure} hPa"
                 )
                 Row(modifier = Modifier.fillMaxWidth()) {
                     TextField(
