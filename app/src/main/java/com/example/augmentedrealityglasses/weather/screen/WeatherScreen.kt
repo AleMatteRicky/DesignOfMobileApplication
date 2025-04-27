@@ -23,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -82,14 +81,14 @@ fun WeatherScreen(
     val weatherUiState by viewModel.weatherState.collectAsStateWithLifecycle()
 
     //Error message state
-    val errorVisible = viewModel.errorVisible.collectAsState().value
-    val errorMessage = viewModel.errorMessage.collectAsState().value
+    val errorVisible by viewModel.errorVisible.collectAsStateWithLifecycle()
+    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
 
     //Input for searching the location
     var query by remember { mutableStateOf("") }
 
     //Loading screen
-    val isLoading by viewModel.isLoading.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
     LaunchedEffect(query) {
         viewModel.hideNoResult()
