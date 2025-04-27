@@ -77,7 +77,7 @@ class WeatherViewModel : ViewModel() {
         private set
 
     //Interface for the API
-    private val retroInstance = RetrofitProvider.retroService
+    private val weatherAPI = RetrofitProvider.retroService
 
     //Error message
     private val _errorVisible = MutableStateFlow(false)
@@ -141,7 +141,7 @@ class WeatherViewModel : ViewModel() {
     private suspend fun fetchWeatherInfo(lat: String, lon: String): WeatherCondition? {
         if (lat.isNotEmpty() && lon.isNotEmpty()) {
             return try {
-                retroInstance.getWeatherInfo(
+                weatherAPI.getWeatherInfo(
                     lat,
                     lon
                 )
@@ -165,7 +165,7 @@ class WeatherViewModel : ViewModel() {
 
     private suspend fun fetchLatLonByQuery(query: String): List<WeatherLocation>? {
         return try {
-            retroInstance.getLocations(
+            weatherAPI.getLocations(
                 query
             )
         } catch (e: IOException) {
