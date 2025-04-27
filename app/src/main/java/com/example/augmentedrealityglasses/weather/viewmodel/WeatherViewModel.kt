@@ -9,8 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.augmentedrealityglasses.weather.constants.Constants
-import com.example.augmentedrealityglasses.weather.retrofit.RetroInstance
-import com.example.augmentedrealityglasses.weather.retrofit.RetroService
+import com.example.augmentedrealityglasses.weather.retrofit.RetrofitProvider
 import com.example.augmentedrealityglasses.weather.state.Coord
 import com.example.augmentedrealityglasses.weather.state.Main
 import com.example.augmentedrealityglasses.weather.state.Sys
@@ -78,7 +77,7 @@ class WeatherViewModel : ViewModel() {
         private set
 
     //Interface for the API
-    private val retroInstance = RetroInstance.getRetroInstance().create(RetroService::class.java)
+    private val retroInstance = RetrofitProvider.retroService
 
     //Error message
     private val _errorVisible = MutableStateFlow(false)
