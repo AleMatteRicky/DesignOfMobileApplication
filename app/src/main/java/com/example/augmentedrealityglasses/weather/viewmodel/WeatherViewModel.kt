@@ -78,7 +78,6 @@ class WeatherViewModel : ViewModel() {
     //Error message
     var errorVisible by mutableStateOf(false)
         private set
-
     var errorMessage by mutableStateOf("")
         private set
 
