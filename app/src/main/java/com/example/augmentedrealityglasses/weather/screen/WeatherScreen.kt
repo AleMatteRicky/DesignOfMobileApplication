@@ -76,18 +76,23 @@ fun WeatherScreen(
         }
     }
 
-    //Input for searching the location
-    var query by remember { mutableStateOf("") }
+    var previousQuery by remember { mutableStateOf(viewModel.query) }
 
-    LaunchedEffect(query) {
-        viewModel.hideNoResult()
-        if (query.isBlank()) {
+    LaunchedEffect(viewModel.query) {
+        val isKeyChanged = previousQuery != viewModel.query
+        previousQuery = viewModel.query
+
+        if (isKeyChanged) {
+            viewModel.hideNoResult()
+        }
+
+        if (viewModel.query.isBlank()) {
             viewModel.clearSearchedLocationList()
             return@LaunchedEffect
         }
 
         delay(Constants.DEBOUNCE_DELAY)
-        viewModel.searchLocations(query)
+        viewModel.searchLocations(viewModel.query)
     }
 
     //To make the error message disappear after time
@@ -131,7 +136,7 @@ fun WeatherScreen(
                     }
                     Button(
                         onClick = {
-                            query = ""
+                            viewModel.query = ""
                             viewModel.hideErrorMessage()
                             viewModel.getGeolocationWeather(fusedLocationClient)
                         },
@@ -167,15 +172,15 @@ fun WeatherScreen(
                 )
                 Row(modifier = Modifier.fillMaxWidth()) {
                     TextField(
-                        value = query,
-                        onValueChange = { query = it },
+                        value = viewModel.query,
+                        onValueChange = { viewModel.query = it },
                         label = { Text("Query") },
                         modifier = Modifier
                             .weight(0.75f)
                     )
                     Button(
                         onClick = {
-                            query = ""
+                            viewModel.query = ""
                             viewModel.hideErrorMessage()
                             viewModel.getWeatherOfFirstResult()
                         },
@@ -194,7 +199,7 @@ fun WeatherScreen(
                             text = location.getFullName(),
                             modifier = Modifier
                                 .clickable {
-                                    query = ""
+                                    viewModel.query = ""
                                     viewModel.hideErrorMessage()
                                     viewModel.getWeatherOfSelectedLocation(location)
                                 }
@@ -206,7 +211,7 @@ fun WeatherScreen(
                         )
                     }
                 }
-                if (viewModel.searchedLocations.isEmpty() && query.isNotBlank() && viewModel.showNoResults) {
+                if (viewModel.searchedLocations.isEmpty() && viewModel.query.isNotBlank() && viewModel.showNoResults) {
                     Text(
                         text = "No results found"
                     )

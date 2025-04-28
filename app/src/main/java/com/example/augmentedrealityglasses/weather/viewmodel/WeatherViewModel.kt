@@ -85,6 +85,9 @@ class WeatherViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
         private set
 
+    //Input for searching the location
+    var query by mutableStateOf("")
+
     // LOGIC FUNCTIONS
 
     fun clearSearchedLocationList() {
