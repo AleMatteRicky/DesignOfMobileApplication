@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
@@ -77,15 +76,8 @@ fun WeatherScreen(
         }
     }
 
-    //Error message state
-    val errorVisible by viewModel.errorVisible.collectAsStateWithLifecycle()
-    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
-
     //Input for searching the location
     var query by remember { mutableStateOf("") }
-
-    //Loading screen
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
     LaunchedEffect(query) {
         viewModel.hideNoResult()
@@ -99,8 +91,8 @@ fun WeatherScreen(
     }
 
     //To make the error message disappear after time
-    LaunchedEffect(errorVisible) {
-        if (errorVisible) {
+    LaunchedEffect(viewModel.errorVisible) {
+        if (viewModel.errorVisible) {
             delay(Constants.ERROR_DISPLAY_TIME)
             viewModel.hideErrorMessage()
         }
@@ -108,7 +100,7 @@ fun WeatherScreen(
 
     // ----  UI  ----
     Box(modifier = Modifier.fillMaxSize()) {
-        if (isLoading) {
+        if (viewModel.isLoading) {
             Column(
                 modifier = Modifier.align(Alignment.Center),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -220,10 +212,10 @@ fun WeatherScreen(
                     )
                 }
 
-                if (errorVisible) {
+                if (viewModel.errorVisible) {
                     Text(
                         color = Color.Red,
-                        text = errorMessage
+                        text = viewModel.errorMessage
                     )
                 }
             }

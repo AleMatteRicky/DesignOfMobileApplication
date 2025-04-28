@@ -19,9 +19,6 @@ import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import retrofit2.HttpException
@@ -79,15 +76,15 @@ class WeatherViewModel : ViewModel() {
     private val weatherAPI = RetrofitProvider.retroService
 
     //Error message
-    private val _errorVisible = MutableStateFlow(false)
-    val errorVisible: StateFlow<Boolean> = _errorVisible
+    var errorVisible by mutableStateOf(false)
+        private set
 
-    private val _errorMessage = MutableStateFlow("")
-    val errorMessage: StateFlow<String> = _errorMessage
+    var errorMessage by mutableStateOf("")
+        private set
 
     //Loading screen
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    var isLoading by mutableStateOf(false)
+        private set
 
     // LOGIC FUNCTIONS
 
@@ -125,12 +122,12 @@ class WeatherViewModel : ViewModel() {
     }
 
     private fun showErrorMessage(errorMsg: String) {
-        _errorMessage.value = errorMsg
-        _errorVisible.value = true
+        errorMessage = errorMsg
+        errorVisible = true
     }
 
     fun hideErrorMessage() {
-        _errorVisible.value = false
+        errorVisible = false
     }
 
     private suspend fun fetchWeatherInfo(lat: String, lon: String): WeatherCondition? {
@@ -197,12 +194,12 @@ class WeatherViewModel : ViewModel() {
                         //there is a last location saved and it is not too old
                         continuation.resume(lastLocation)
                     } else {
-                        _isLoading.value = true
+                        isLoading = true
 
                         //fetch the current location
                         fusedLocationClient.getCurrentLocation(priority, null)
                             .addOnSuccessListener { currentLocation: Location? ->
-                                _isLoading.value = false
+                                isLoading = false
 
                                 if (currentLocation != null) {
                                     continuation.resume(currentLocation)
@@ -211,7 +208,7 @@ class WeatherViewModel : ViewModel() {
                                 }
                             }
                             .addOnFailureListener { exception ->
-                                _isLoading.value = false
+                                isLoading = false
 
                                 if (continuation.isActive) {
                                     continuation.resumeWithException(exception)
@@ -220,7 +217,7 @@ class WeatherViewModel : ViewModel() {
                     }
                 }
                 .addOnFailureListener { exception ->
-                    _isLoading.value = false
+                    isLoading = false
 
                     if (continuation.isActive) {
                         //TODO: handle
