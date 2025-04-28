@@ -22,7 +22,6 @@ import com.google.android.gms.location.Priority
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import retrofit2.HttpException
@@ -33,7 +32,7 @@ import kotlin.coroutines.resumeWithException
 class WeatherViewModel : ViewModel() {
 
     //Main UI state
-    private val _weatherState = MutableStateFlow(
+    var weatherState by mutableStateOf(
         WeatherUiState(
             WeatherCondition(
                 listOf(Weather("", "")),
@@ -44,7 +43,7 @@ class WeatherViewModel : ViewModel() {
             )
         )
     )
-    val weatherState: StateFlow<WeatherUiState> = _weatherState.asStateFlow()
+        private set
 
     //Selected location to display the weather conditions for
     var location by mutableStateOf(
@@ -97,11 +96,7 @@ class WeatherViewModel : ViewModel() {
     }
 
     private fun updateWeatherState(newWeatherCondition: WeatherCondition) {
-        _weatherState.update { currentState ->
-            currentState.copy(
-                condition = newWeatherCondition
-            )
-        }
+        weatherState = weatherState.copy(condition = newWeatherCondition)
     }
 
     private fun updateLocationState(

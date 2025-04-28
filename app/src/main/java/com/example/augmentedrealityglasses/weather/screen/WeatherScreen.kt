@@ -77,9 +77,6 @@ fun WeatherScreen(
         }
     }
 
-    //Main UI state (current weather conditions)
-    val weatherUiState by viewModel.weatherState.collectAsStateWithLifecycle()
-
     //Error message state
     val errorVisible by viewModel.errorVisible.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
@@ -165,16 +162,16 @@ fun WeatherScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Info: ${weatherUiState.condition.weather.main}"
+                    text = "Info: ${viewModel.weatherState.condition.weather.main}"
                 )
                 Text(
-                    text = "Description: ${weatherUiState.condition.weather.description}"
+                    text = "Description: ${viewModel.weatherState.condition.weather.description}"
                 )
                 Text(
-                    text = "Temperature: ${weatherUiState.condition.main.temp} °C"
+                    text = "Temperature: ${viewModel.weatherState.condition.main.temp} °C"
                 )
                 Text(
-                    text = "Pressure: ${weatherUiState.condition.main.pressure} hPa"
+                    text = "Pressure: ${viewModel.weatherState.condition.main.pressure} hPa"
                 )
                 Row(modifier = Modifier.fillMaxWidth()) {
                     TextField(
