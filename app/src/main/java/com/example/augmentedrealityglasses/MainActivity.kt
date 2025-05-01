@@ -27,9 +27,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
-            val bleManager = BleManager()
-            val bleManager = BleManager(LocalContext.current)
-
             NavHost(navController = navController, startDestination = ScreenName.HOME.name) {
                 composable(ScreenName.HOME.name) {
                     HomeScreen {
