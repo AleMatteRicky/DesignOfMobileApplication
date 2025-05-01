@@ -1,7 +1,6 @@
 package com.example.augmentedrealityglasses.screens
 
 import android.bluetooth.BluetoothProfile
-import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,11 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.savedstate.SavedStateRegistryOwner
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.device.BleManager
 import kotlinx.coroutines.launch
 
@@ -36,7 +37,7 @@ data class UiDeviceConnectionState(
 
 // TODO. add SavedStateHandle to retain UI logic after process' death
 class ConnectViewModel(
-    val bleManager: BleManager
+    private val bleManager: BleManager
 ) : ViewModel() {
     private val TAG: String = "ConnectViewModel"
 
@@ -47,10 +48,6 @@ class ConnectViewModel(
         viewModelScope.launch {
             bleManager.receiveUpdates()
                 .collect { connectionState ->
-                    Log.d(
-                        TAG,
-                        "current view model: $this new connection state from the ble manager: $connectionState"
-                    )
                     uiState =
                         uiState.copy(
                             isConnected = connectionState.connectionState == BluetoothProfile.STATE_CONNECTED,
@@ -60,29 +57,25 @@ class ConnectViewModel(
         }
     }
 
-
     // Define ViewModel factory in a companion object
     companion object {
-        fun provideFactory(
-            bleManager: BleManager,
-            owner: SavedStateRegistryOwner,
-            defaultArgs: Bundle? = null,
-        ): AbstractSavedStateViewModelFactory =
-            object : AbstractSavedStateViewModelFactory(owner, defaultArgs) {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(
-                    key: String,
-                    modelClass: Class<T>,
-                    handle: SavedStateHandle
-                ): T {
-                    return ConnectViewModel(bleManager) as T
-                }
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val bleManager = (this[APPLICATION_KEY] as App).container.bleManager
+                ConnectViewModel(
+                    bleManager = bleManager
+                )
             }
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
         Log.d(TAG, "connect view model cleared")
+    }
+
+    fun closeConnection() {
+        bleManager.close()
     }
 
 }
@@ -91,7 +84,7 @@ class ConnectViewModel(
 fun ConnectScreen(
     viewModel: ConnectViewModel,
     onNavigateToFeature: (String) -> Unit,
-    onClose: () -> Unit
+    onNavigateAfterClosingTheConnection: () -> Unit
 ) {
     Box(Modifier.fillMaxSize()) {
 
@@ -125,7 +118,10 @@ fun ConnectScreen(
 
                 Text(text = "Received: ${viewModel.uiState.msg}", fontWeight = FontWeight.Bold)
                 Button(
-                    onClick = onClose
+                    onClick = {
+                        viewModel.closeConnection()
+                        onNavigateAfterClosingTheConnection()
+                    }
                 ) {
                     Text(text = "Close connection")
                 }

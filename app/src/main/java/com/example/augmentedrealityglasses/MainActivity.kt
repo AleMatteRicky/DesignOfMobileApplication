@@ -22,7 +22,7 @@ import com.example.augmentedrealityglasses.screens.TranslationViewModel
 import com.example.augmentedrealityglasses.screens.WeatherScreen
 
 class MainActivity : ComponentActivity() {
-    private val TAG = "myapp"
+    private val TAG = "myActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -48,38 +48,31 @@ class MainActivity : ComponentActivity() {
                 }
                 composable(ScreenName.CONNECT_SCREEN.name) {
                     ConnectScreen(
-                        viewModel = viewModel(
-                            factory = ConnectViewModel.provideFactory(
-                                bleManager,
-                                owner = LocalSavedStateRegistryOwner.current
-                            )
-                        ),
+                        viewModel = viewModel(factory = ConnectViewModel.Factory),
                         onNavigateToFeature = { screen ->
                             navController.navigate(screen)
+                        },
+                        onNavigateAfterClosingTheConnection = {
+                            navController.navigate(ScreenName.FIND_DEVICE.name) {
+                                popUpTo(ScreenName.CONNECT_SCREEN.name) { inclusive = true }
+                            }
                         }
-                    ) {
-                        Log.d(TAG, "Connection closed")
-                        bleManager.close()
-                        navController.navigate(ScreenName.FIND_DEVICE.name) {
-                            popUpTo(ScreenName.CONNECT_SCREEN.name) { inclusive = true }
-                        }
-                    }
-
+                    )
                 }
-                composable (ScreenName.WEATHER_SCREEN.name) {
+
+                composable(ScreenName.WEATHER_SCREEN.name) {
                     // TODO: add function by Teo
                     WeatherScreen()
                 }
 
                 composable(ScreenName.TRANSLATION_SCREEN.name) {
                     // TODO: integrate with the application by Ale
-                    val translationViewModel =
-                        TranslationViewModel(bleManager)
+                    val translationViewModel: TranslationViewModel =
+                        viewModel(factory = TranslationViewModel.Factory)
                     TranslationScreen(
-                        translationViewModel,
-                        onSendingData = {
-                            msg ->
-                                translationViewModel.send(msg)
+                        translationViewModel = translationViewModel,
+                        onSendingData = { msg ->
+                            translationViewModel.send(msg)
                         }
                     )
                 }
