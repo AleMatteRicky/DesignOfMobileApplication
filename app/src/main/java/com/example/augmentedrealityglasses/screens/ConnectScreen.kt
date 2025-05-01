@@ -30,55 +30,7 @@ import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.device.BleManager
 import kotlinx.coroutines.launch
 
-data class UiDeviceConnectionState(
-    val isConnected: Boolean = false,
-    val msg: String = "" // TODO: remove, used just for testing notifications
-)
-
-// TODO. add SavedStateHandle to retain UI logic after process' death
-class ConnectViewModel(
-    private val bleManager: BleManager
-) : ViewModel() {
-    private val TAG: String = "ConnectViewModel"
-
-    var uiState by mutableStateOf(UiDeviceConnectionState())
-        private set
-
-    init {
-        viewModelScope.launch {
-            bleManager.receiveUpdates()
-                .collect { connectionState ->
-                    uiState =
-                        uiState.copy(
-                            isConnected = connectionState.connectionState == BluetoothProfile.STATE_CONNECTED,
-                            msg = connectionState.messageReceived
-                        )
-                }
-        }
-    }
-
-    // Define ViewModel factory in a companion object
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val bleManager = (this[APPLICATION_KEY] as App).container.bleManager
-                ConnectViewModel(
-                    bleManager = bleManager
-                )
-            }
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        Log.d(TAG, "connect view model cleared")
-    }
-
-    fun closeConnection() {
-        bleManager.close()
-    }
-
-}
+private val TAG = "ConnectScreen"
 
 @Composable
 fun ConnectScreen(
@@ -86,6 +38,7 @@ fun ConnectScreen(
     onNavigateToFeature: (String) -> Unit,
     onNavigateAfterClosingTheConnection: () -> Unit
 ) {
+    Log.d(TAG, "Recomposing the connect screen")
     Box(Modifier.fillMaxSize()) {
 
         if (!viewModel.uiState.isConnected) {
