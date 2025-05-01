@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                         TranslationViewModel(
                             systemLanguage = TranslateLanguage.ITALIAN,
                             application
-                        )
+                        ), enabled = translationFeatureAvailable()
                     ) //todo update with system language from settings
                 }
             }
@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun CheckRecordAudioPermission() {
+    private fun CheckRecordAudioPermission() {
         if (!audioPermissionGranted()) {
             requestPermissions(
                 this,
@@ -76,11 +76,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun audioPermissionGranted(): Boolean {
+    private fun audioPermissionGranted(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun isMicrophoneAvailable(): Boolean {
+        return applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
+    }
+
+    private fun translationFeatureAvailable(): Boolean {
+        return audioPermissionGranted() && isMicrophoneAvailable()
     }
 }
 
@@ -100,7 +108,12 @@ fun HomeScreen(onNavigateToTranslation: () -> Unit) {
 
 @SuppressLint("MissingPermission")
 @Composable
-fun TranslationScreen(onNavigateToHome: () -> Unit, viewModel: TranslationViewModel) {
+fun TranslationScreen(
+    onNavigateToHome: () -> Unit,
+    viewModel: TranslationViewModel,
+    enabled: Boolean
+) {
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -114,7 +127,7 @@ fun TranslationScreen(onNavigateToHome: () -> Unit, viewModel: TranslationViewMo
                 viewModel.startRecording()
                 recordingButtonText = "Stop Recording"
             }
-        }, modifier = Modifier.align(Alignment.Center)) {
+        }, modifier = Modifier.align(Alignment.Center), enabled = enabled) {
             Text(recordingButtonText)
         }
 
@@ -130,16 +143,21 @@ fun TranslationScreen(onNavigateToHome: () -> Unit, viewModel: TranslationViewMo
             modifier = Modifier.offset(x = 0.dp, y = 150.dp),
             contentAlignment = Alignment.Center
         ) {
-            SelectLanguageButton(true, viewModel)
+            SelectLanguageButton(enabled, viewModel)
         }
 
         Button(
             onClick = { viewModel.translate() },
-            modifier = Modifier.offset(x = 0.dp, y = 105.dp)
+            modifier = Modifier.offset(x = 0.dp, y = 105.dp), enabled = enabled
         ) {
             Text("Translate")
         }
     }
+
+    /*
+    todo, check if the device has a microphone otherwise disable the feature
+
+ */
 
 }
 
