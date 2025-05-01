@@ -25,7 +25,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class TranslationViewModel(
-    private val systemLanguage: String, application: Application,
+    private val systemLanguage: String, application: Application
 ) : AndroidViewModel(application) {
     var uiState by mutableStateOf(TranslationUiState())
         private set
@@ -85,7 +85,6 @@ class TranslationViewModel(
         translator = Translation.getClient(options)
 
         var conditions = DownloadConditions.Builder()
-            .requireWifi()
             .build()
         translator?.downloadModelIfNeeded(conditions)
             ?.addOnSuccessListener {
