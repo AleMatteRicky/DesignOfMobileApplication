@@ -55,7 +55,11 @@ import kotlinx.coroutines.delay
 private val TAG = "FindDeviceScreen"
 
 @Composable
-fun FindDeviceScreen(onError: () -> Unit, onConnect: (BluetoothDevice) -> Unit) {
+fun FindDeviceScreen(
+    viewModel: FindDeviceViewModel,
+    navigateOnError: () -> Unit,
+    navigateOnConnect: () -> Unit,
+) {
     val notGranted = ActivityCompat.checkSelfPermission(
         LocalContext.current,
         Manifest.permission.BLUETOOTH_CONNECT
@@ -72,7 +76,7 @@ fun FindDeviceScreen(onError: () -> Unit, onConnect: (BluetoothDevice) -> Unit) 
     if (adapter == null) {
         Log.d(TAG, "adapter is null => the device does not support bluetooth")
         // TODO: for now left as is. Generally, the current screen should be popped out.
-        onError()
+        navigateOnError()
         return
     }
 
@@ -83,8 +87,10 @@ fun FindDeviceScreen(onError: () -> Unit, onConnect: (BluetoothDevice) -> Unit) 
 
     // TODO. add virtual view to manage the state
     val myConnect: (BluetoothDevice) -> Unit = {
+        Log.d(TAG, "Selected device: $it ")
         scanning = false
-        onConnect(it)
+        viewModel.connect(it)
+        navigateOnConnect()
     }
 
     val devices = remember {

@@ -4,18 +4,15 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSavedStateRegistryOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.augmentedrealityglasses.ble.device.BleDevice
-import com.example.augmentedrealityglasses.ble.device.BleManager
 import com.example.augmentedrealityglasses.ble.permissions.BluetoothSampleBox
 import com.example.augmentedrealityglasses.screens.ConnectScreen
 import com.example.augmentedrealityglasses.screens.ConnectViewModel
 import com.example.augmentedrealityglasses.screens.FindDeviceScreen
+import com.example.augmentedrealityglasses.screens.FindDeviceViewModel
 import com.example.augmentedrealityglasses.screens.ScreenName
 import com.example.augmentedrealityglasses.screens.TranslationScreen
 import com.example.augmentedrealityglasses.screens.TranslationViewModel
@@ -35,15 +32,16 @@ class MainActivity : ComponentActivity() {
                 }
                 composable(ScreenName.FIND_DEVICE.name) {
                     BluetoothSampleBox {
-                        FindDeviceScreen(onError = {
-                            Log.d(TAG, "Error occurred during scanning")
-                            navController.navigate(ScreenName.ERROR_SCREEN.name)
-                        }) { device ->
-                            bleManager.setDataSource(BleDevice(device))
-                            // start the connection as soon as the device has been established
-                            bleManager.connect()
-                            navController.navigate(ScreenName.CONNECT_SCREEN.name)
-                        }
+                        FindDeviceScreen(
+                            viewModel = viewModel(factory = FindDeviceViewModel.Factory),
+                            navigateOnError = {
+                                Log.d(TAG, "Error occurred during scanning")
+                                navController.navigate(ScreenName.ERROR_SCREEN.name)
+                            },
+                            navigateOnConnect = {
+                                navController.navigate(ScreenName.CONNECT_SCREEN.name)
+                            }
+                        )
                     }
                 }
                 composable(ScreenName.CONNECT_SCREEN.name) {
