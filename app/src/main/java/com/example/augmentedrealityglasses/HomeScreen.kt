@@ -9,18 +9,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun HomeScreen(onStartup: () -> Unit) {
+fun HomeScreen(
+    onNavigateToTranslation: () -> Unit,
+    onStartup: () -> Unit
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(text = "Scan")
+        Button(onClick = {
+            onNavigateToTranslation()
+        }) {
+            Text("Translation Screen")
+        }
         Button(
             onClick = {
                 onStartup()
             },
         ) {
-            Text(text = "Find the device")
+            Text(text = "Ble")
         }
     }
 }

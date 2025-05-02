@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.screens
+package com.example.augmentedrealityglasses.ble.screens
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -50,6 +50,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.augmentedrealityglasses.ble.device.SERVICE_UUID
+import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import kotlinx.coroutines.delay
 
 private val TAG = "FindDeviceScreen"

@@ -46,7 +46,7 @@ class BleManager(
         return connectionStatus as Flow<DeviceConnectionState>
     }
 
-    fun send(msg : String) {
+    fun send(msg: String) {
         _bleDevice?.send(msg)
     }
 

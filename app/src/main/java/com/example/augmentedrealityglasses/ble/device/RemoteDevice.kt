@@ -9,7 +9,7 @@ interface RemoteDevice {
      * @property context The context of this app
      * @return the flow through which information on the connection state are shared externally
      */
-    fun connect(context : Context) : Flow<DeviceConnectionState>
+    fun connect(context: Context): Flow<DeviceConnectionState>
 
     /**
      * Restore the connection previously established. The method differs from connect because
@@ -26,7 +26,7 @@ interface RemoteDevice {
      * Sends the message to the remote device.
      * @property msg The message to send to the remote device
      */
-    fun send(msg : String)
+    fun send(msg: String)
 
     /**
      * Closes the bluetooth gatt client on this device.

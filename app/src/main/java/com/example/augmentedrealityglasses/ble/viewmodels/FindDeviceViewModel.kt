@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.screens
+package com.example.augmentedrealityglasses.ble.viewmodels
 
 import android.bluetooth.BluetoothDevice
 import androidx.lifecycle.ViewModel
