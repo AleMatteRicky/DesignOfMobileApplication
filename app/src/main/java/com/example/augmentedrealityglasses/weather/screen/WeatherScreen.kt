@@ -45,20 +45,18 @@ fun WeatherScreen(
     //Context
     val context = LocalContext.current
 
+    //Client for fetching the geolocation infos
+    val fusedLocationClient = remember {
+        LocationServices.getFusedLocationProviderClient((context))
+    }
+
     val requestPermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
-        //FIXME
-//        //update the state
-//        viewModel.setGeolocationPermissions(coarseLocationGranted, fineLocationGranted)
-    }
-
-    //Client for fetching the geolocation infos
-    val fusedLocationClient = remember {
-        LocationServices.getFusedLocationProviderClient((context))
+        viewModel.getGeolocationWeather(fusedLocationClient, context)
     }
 
     LaunchedEffect(Unit) {
