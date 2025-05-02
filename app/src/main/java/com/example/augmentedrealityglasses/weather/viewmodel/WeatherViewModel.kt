@@ -1,11 +1,16 @@
 package com.example.augmentedrealityglasses.weather.viewmodel
 
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Location
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.augmentedrealityglasses.weather.constants.Constants
@@ -58,12 +63,6 @@ class WeatherViewModel : ViewModel() {
     private var _searchedLocations = mutableStateListOf<WeatherLocation>()
     val searchedLocations: List<WeatherLocation> get() = _searchedLocations
 
-    //Geolocation Permissions
-    var hasCoarseLocationPermission by mutableStateOf(false)
-        private set
-    var hasFineLocationPermission by mutableStateOf(false)
-        private set
-
     //Geolocation state
     var geolocationEnabled by mutableStateOf(false)
         private set
@@ -94,6 +93,24 @@ class WeatherViewModel : ViewModel() {
         _searchedLocations.clear()
     }
 
+    fun getGeolocationPermissions(context: Context): Map<String, Boolean> {
+        val hasCoarseLocationPermission = ContextCompat.checkSelfPermission(
+            context,
+            ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val hasFineLocationPermission = ContextCompat.checkSelfPermission(
+            context,
+            ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        return mapOf(
+            Pair(ACCESS_COARSE_LOCATION, hasCoarseLocationPermission), Pair(
+                ACCESS_FINE_LOCATION, hasFineLocationPermission
+            )
+        )
+    }
+
     private fun updateWeatherState(newWeatherCondition: WeatherCondition) {
         weatherState = weatherState.copy(condition = newWeatherCondition)
     }
@@ -112,11 +129,6 @@ class WeatherViewModel : ViewModel() {
             country = country,
             state = state
         )
-    }
-
-    fun setGeolocationPermissions(coarse: Boolean, fine: Boolean) {
-        hasCoarseLocationPermission = coarse
-        hasFineLocationPermission = fine
     }
 
     fun hideNoResult() {
@@ -177,18 +189,28 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    @SuppressLint("MissingPermission") //FIXME
+    @SuppressLint("MissingPermission") //FIXME: check permissions
     private suspend fun fetchGeolocation(
-        fusedLocationClient: FusedLocationProviderClient
+        fusedLocationClient: FusedLocationProviderClient,
+        context: Context
     ): Location? {
         return suspendCancellableCoroutine { continuation ->
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { lastLocation: Location? ->
                     val currentTime = System.currentTimeMillis()
 
+                    val permissions = getGeolocationPermissions(context)
+
                     val priority: Int = when {
-                        hasFineLocationPermission -> Priority.PRIORITY_HIGH_ACCURACY
-                        hasCoarseLocationPermission -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
+                        permissions.getOrDefault(
+                            ACCESS_FINE_LOCATION,
+                            false
+                        ) -> Priority.PRIORITY_HIGH_ACCURACY
+
+                        permissions.getOrDefault(
+                            ACCESS_COARSE_LOCATION,
+                            false
+                        ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
                         else -> throw IllegalStateException("No location permission granted") //TODO: handle
                     }
 
@@ -257,12 +279,15 @@ class WeatherViewModel : ViewModel() {
 
     // Functions called by the UI (e.g. onClick handlers)
 
-    fun refreshWeatherInfos(fusedLocationClient: FusedLocationProviderClient) {
+    fun refreshWeatherInfos(
+        fusedLocationClient: FusedLocationProviderClient,
+        context: Context
+    ) {
         viewModelScope.launch {
             if (geolocationEnabled) {
                 //fetch geolocation
                 try {
-                    val geo = fetchGeolocation(fusedLocationClient)
+                    val geo = fetchGeolocation(fusedLocationClient, context)
 
                     if (geo != null) {
 
@@ -299,12 +324,15 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    fun getGeolocationWeather(fusedLocationClient: FusedLocationProviderClient) {
+    fun getGeolocationWeather(
+        fusedLocationClient: FusedLocationProviderClient,
+        context: Context
+    ) {
         viewModelScope.launch {
             try {
 
                 //get geolocation infos
-                val geo = fetchGeolocation(fusedLocationClient)
+                val geo = fetchGeolocation(fusedLocationClient, context)
 
                 //update weather conditions
                 if (geo != null) {

@@ -51,8 +51,9 @@ fun WeatherScreen(
         val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
-        //update the state
-        viewModel.setGeolocationPermissions(coarseLocationGranted, fineLocationGranted)
+        //FIXME
+//        //update the state
+//        viewModel.setGeolocationPermissions(coarseLocationGranted, fineLocationGranted)
     }
 
     //Client for fetching the geolocation infos
@@ -60,8 +61,8 @@ fun WeatherScreen(
         LocationServices.getFusedLocationProviderClient((context))
     }
 
-    LaunchedEffect(viewModel.hasCoarseLocationPermission, viewModel.hasFineLocationPermission) {
-        if (!viewModel.hasCoarseLocationPermission && !viewModel.hasFineLocationPermission) {
+    LaunchedEffect(Unit) {
+        if (viewModel.getGeolocationPermissions(context).values.none { it }) {
             //request permissions
             requestPermissionsLauncher.launch(
                 arrayOf(
@@ -69,10 +70,8 @@ fun WeatherScreen(
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             )
-        }
-
-        if (viewModel.hasCoarseLocationPermission || viewModel.hasFineLocationPermission) {
-            viewModel.getGeolocationWeather(fusedLocationClient)
+        } else {
+            viewModel.getGeolocationWeather(fusedLocationClient, context)
         }
     }
 
@@ -126,7 +125,7 @@ fun WeatherScreen(
                     Button(
                         onClick = {
                             viewModel.hideErrorMessage()
-                            viewModel.refreshWeatherInfos(fusedLocationClient)
+                            viewModel.refreshWeatherInfos(fusedLocationClient, context)
                         },
                         enabled = viewModel.location.lat.isNotEmpty() && viewModel.location.lon.isNotEmpty()
                     ) {
@@ -138,7 +137,7 @@ fun WeatherScreen(
                         onClick = {
                             viewModel.query = ""
                             viewModel.hideErrorMessage()
-                            viewModel.getGeolocationWeather(fusedLocationClient)
+                            viewModel.getGeolocationWeather(fusedLocationClient, context)
                         },
                         enabled = !viewModel.geolocationEnabled
                     ) {
