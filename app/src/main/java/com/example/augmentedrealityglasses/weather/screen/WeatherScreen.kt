@@ -73,6 +73,7 @@ fun WeatherScreen(
                 )
             )
         } else {
+            viewModel.isLoading = true
             viewModel.getGeolocationWeather(fusedLocationClient, context)
         }
     }
@@ -114,7 +115,7 @@ fun WeatherScreen(
             ) {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(text = "Finding your location...")
+                Text(text = "Loading data...")
             }
         } else {
             Column(

@@ -82,7 +82,6 @@ class WeatherViewModel : ViewModel() {
 
     //Loading screen
     var isLoading by mutableStateOf(false)
-        private set
 
     //Input for searching the location
     var query by mutableStateOf("")
@@ -189,55 +188,58 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
-    @SuppressLint("MissingPermission") //FIXME: check permissions
+
+    @SuppressLint("MissingPermission")
     private suspend fun fetchGeolocation(
         fusedLocationClient: FusedLocationProviderClient,
         context: Context
     ): Location? {
         return suspendCancellableCoroutine { continuation ->
+            val permissions = getGeolocationPermissions(context)
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { lastLocation: Location? ->
-                    val currentTime = System.currentTimeMillis()
+                    if (getGeolocationPermissions(context).values.any { it }) {
+                        if (lastLocation != null && (System.currentTimeMillis() - lastLocation.time) <= Constants.MAX_AGE_LAST_LOCATION) {
+                            //there is a last location saved and it is not too old
+                            isLoading = false
+                            continuation.resume(lastLocation)
+                        } else {
+                            isLoading = true
+                            val priority: Int = when {
+                                permissions.getOrDefault(
+                                    ACCESS_FINE_LOCATION,
+                                    false
+                                ) -> Priority.PRIORITY_HIGH_ACCURACY
 
-                    val permissions = getGeolocationPermissions(context)
+                                permissions.getOrDefault(
+                                    ACCESS_COARSE_LOCATION,
+                                    false
+                                ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
+                                else -> throw IllegalStateException("No location permission granted") //TODO: handle
+                            }
 
-                    val priority: Int = when {
-                        permissions.getOrDefault(
-                            ACCESS_FINE_LOCATION,
-                            false
-                        ) -> Priority.PRIORITY_HIGH_ACCURACY
+                            //fetch the current location
+                            fusedLocationClient.getCurrentLocation(priority, null)
+                                .addOnSuccessListener { currentLocation: Location? ->
+                                    isLoading = false
 
-                        permissions.getOrDefault(
-                            ACCESS_COARSE_LOCATION,
-                            false
-                        ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
-                        else -> throw IllegalStateException("No location permission granted") //TODO: handle
-                    }
+                                    if (currentLocation != null) {
+                                        continuation.resume(currentLocation)
+                                    } else {
+                                        continuation.resume(null)
+                                    }
+                                }
+                                .addOnFailureListener { exception ->
+                                    isLoading = false
 
-                    if (lastLocation != null && (currentTime - lastLocation.time) <= Constants.MAX_AGE_LAST_LOCATION) {
-                        //there is a last location saved and it is not too old
-                        continuation.resume(lastLocation)
+                                    if (continuation.isActive) {
+                                        continuation.resumeWithException(exception)
+                                    }
+                                }
+                        }
                     } else {
-                        isLoading = true
-
-                        //fetch the current location
-                        fusedLocationClient.getCurrentLocation(priority, null)
-                            .addOnSuccessListener { currentLocation: Location? ->
-                                isLoading = false
-
-                                if (currentLocation != null) {
-                                    continuation.resume(currentLocation)
-                                } else {
-                                    continuation.resume(null)
-                                }
-                            }
-                            .addOnFailureListener { exception ->
-                                isLoading = false
-
-                                if (continuation.isActive) {
-                                    continuation.resumeWithException(exception)
-                                }
-                            }
+                        continuation.resume(null)
+                        //TODO: handle
                     }
                 }
                 .addOnFailureListener { exception ->
