@@ -34,6 +34,9 @@ android {
                 getByName("debug") {
                     buildConfigField("String", "WEATHER_API_KEY", "\"$apiKey\"")
                 }
+                getByName("release") {
+                    buildConfigField("String", "WEATHER_API_KEY", "\"$apiKey\"")
+                }
             }
         }else{
             val localProperties = Properties().apply {
