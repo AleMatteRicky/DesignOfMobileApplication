@@ -27,15 +27,26 @@ android {
         }
 
         //Weather's API key
-        val localProperties = Properties().apply {
-            load(rootProject.file("local.properties").inputStream())
+        var apiKey = System.getenv("WEATHER_API_KEY") ?: ""
+
+        if(apiKey != ""){
+            buildTypes {
+                getByName("debug") {
+                    buildConfigField("String", "API_KEY", "\"$apiKey\"")
+                }
+            }
+        }else{
+            val localProperties = Properties().apply {
+                load(rootProject.file("local.properties").inputStream())
+            }
+
+            apiKey = localProperties.getProperty("WEATHER_API_KEY") ?: ""
+            buildConfigField(
+                type = "String",
+                name = "API_KEY",
+                value = "\"$apiKey\""
+            )
         }
-        val apiKey = localProperties.getProperty("API_KEY") ?: ""
-        buildConfigField(
-            type = "String",
-            name = "API_KEY",
-            value = "\"$apiKey\""
-        )
     }
 
     buildTypes {
