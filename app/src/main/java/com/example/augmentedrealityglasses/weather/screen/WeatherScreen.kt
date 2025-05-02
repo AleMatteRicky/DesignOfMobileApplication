@@ -56,7 +56,11 @@ fun WeatherScreen(
         val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
-        viewModel.getGeolocationWeather(fusedLocationClient, context)
+        if (coarseLocationGranted || fineLocationGranted) {
+            viewModel.getGeolocationWeather(fusedLocationClient, context)
+        } else {
+            //TODO: handle
+        }
     }
 
     LaunchedEffect(Unit) {
