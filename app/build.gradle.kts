@@ -43,7 +43,7 @@ android {
             apiKey = localProperties.getProperty("WEATHER_API_KEY") ?: ""
             buildConfigField(
                 type = "String",
-                name = "API_KEY",
+                name = "WEATHER_API_KEY",
                 value = "\"$apiKey\""
             )
         }

@@ -13,13 +13,13 @@ interface RetroService {
         @Query("lat") lat: String,
         @Query("lon") lon: String,
         @Query("units") units: String = "metric",
-        @Query("appid") appId: String = BuildConfig.API_KEY
+        @Query("appid") appId: String = BuildConfig.WEATHER_API_KEY
     ): WeatherCondition
 
     @GET("geo/1.0/direct")
     suspend fun getLocations(
         @Query("q") q: String,
         @Query("limit") limit: String = "5",
-        @Query("appid") appId: String = BuildConfig.API_KEY
+        @Query("appid") appId: String = BuildConfig.WEATHER_API_KEY
     ): List<WeatherLocation>
 }
