@@ -32,7 +32,7 @@ android {
         if(apiKey != ""){
             buildTypes {
                 getByName("debug") {
-                    buildConfigField("String", "API_KEY", "\"$apiKey\"")
+                    buildConfigField("String", "WEATHER_API_KEY", "\"$apiKey\"")
                 }
             }
         }else{
