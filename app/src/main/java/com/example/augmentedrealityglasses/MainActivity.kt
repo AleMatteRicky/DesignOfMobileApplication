@@ -1,35 +1,84 @@
 package com.example.augmentedrealityglasses
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.augmentedrealityglasses.ble.permissions.BluetoothSampleBox
+import com.example.augmentedrealityglasses.screens.ConnectScreen
+import com.example.augmentedrealityglasses.screens.ConnectViewModel
+import com.example.augmentedrealityglasses.screens.FindDeviceScreen
+import com.example.augmentedrealityglasses.screens.FindDeviceViewModel
+import com.example.augmentedrealityglasses.screens.ScreenName
+import com.example.augmentedrealityglasses.screens.TranslationScreen
+import com.example.augmentedrealityglasses.screens.TranslationViewModel
+import com.example.augmentedrealityglasses.screens.WeatherScreen
 
 class MainActivity : ComponentActivity() {
+    private val TAG = "myActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
             NavHost(navController = navController, startDestination = ScreenName.HOME.name) {
                 composable(ScreenName.HOME.name) {
-                    Greeting(
-                        name = "Android"
+                    HomeScreen {
+                        navController.navigate(ScreenName.FIND_DEVICE.name)
+                    }
+                }
+                composable(ScreenName.FIND_DEVICE.name) {
+                    BluetoothSampleBox {
+                        FindDeviceScreen(
+                            viewModel = viewModel(factory = FindDeviceViewModel.Factory),
+                            navigateOnError = {
+                                Log.d(TAG, "Error occurred during scanning")
+                                navController.navigate(ScreenName.ERROR_SCREEN.name)
+                            },
+                            navigateOnConnect = {
+                                navController.navigate(ScreenName.CONNECT_SCREEN.name)
+                            }
+                        )
+                    }
+                }
+                composable(ScreenName.CONNECT_SCREEN.name) {
+                    ConnectScreen(
+                        viewModel = viewModel(factory = ConnectViewModel.Factory),
+                        onNavigateToFeature = { screen ->
+                            navController.navigate(screen)
+                        },
+                        onNavigateAfterClosingTheConnection = {
+                            navController.navigate(ScreenName.FIND_DEVICE.name) {
+                                popUpTo(ScreenName.CONNECT_SCREEN.name) { inclusive = true }
+                            }
+                        }
                     )
+                }
+
+                composable(ScreenName.WEATHER_SCREEN.name) {
+                    // TODO: add function by Teo
+                    WeatherScreen()
+                }
+
+                composable(ScreenName.TRANSLATION_SCREEN.name) {
+                    // TODO: integrate with the application by Ale
+                    val translationViewModel: TranslationViewModel =
+                        viewModel(factory = TranslationViewModel.Factory)
+                    TranslationScreen(
+                        translationViewModel = translationViewModel,
+                        onSendingData = { msg ->
+                            translationViewModel.send(msg)
+                        }
+                    )
+                }
+
+                composable(ScreenName.ERROR_SCREEN.name) {
+                    ErrorScreen()
                 }
             }
         }
     }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
 }
