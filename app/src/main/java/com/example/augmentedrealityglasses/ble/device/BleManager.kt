@@ -17,21 +17,22 @@ import kotlinx.coroutines.flow.shareIn
 class BleManager(
     private val context: Context,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
-) {
-    private var _bleDevice: BleDevice? = null
+) : RemoteDeviceManager {
+    private var _bleDevice: RemoteDevice? = null
     private var connectionStatus: Flow<DeviceConnectionState>? = null
     private val TAG = "BleManager"
 
-    fun setDataSource(bleDevice: BleDevice) {
+    override fun setDeviceToManage(device: RemoteDevice) {
+        Log.d(TAG, "setting ble device to manage $device")
         if (_bleDevice != null) {
             Log.d(TAG, "cleaning previous connection")
             // a new device has been added, hence close the flow from the previous one
             close()
         }
-        this._bleDevice = bleDevice
+        this._bleDevice = device
     }
 
-    fun connect() {
+    override fun connect() {
         Log.d(TAG, "BLEManager received function call to connect")
         connectionStatus = _bleDevice?.connect(context)?.shareIn(
             scope = scope,
@@ -40,19 +41,32 @@ class BleManager(
         )
     }
 
-    fun receiveUpdates(): Flow<DeviceConnectionState> {
+    override fun restoreConnection() {
+        _bleDevice?.restoreConnection()
+    }
+
+    override fun receiveUpdates(): Flow<DeviceConnectionState> {
         Log.d(TAG, "BLEManager received function call to receiveUpdates")
         require(connectionStatus != null)
         return connectionStatus as Flow<DeviceConnectionState>
     }
 
-    fun send(msg: String) {
+    override fun send(msg: String) {
         _bleDevice?.send(msg)
     }
 
-    fun close() {
+    override fun disconnect() {
+        _bleDevice?.disconnect()
+    }
+
+    override fun close() {
+        Log.d(TAG, "Connection closed")
         // reset the state
         scope.coroutineContext.cancelChildren()
         _bleDevice?.close()
+    }
+
+    override fun isConnected(): Boolean {
+        return _bleDevice?.isConnected() ?: false
     }
 }

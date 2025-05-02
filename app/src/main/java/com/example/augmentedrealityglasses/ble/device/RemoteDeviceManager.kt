@@ -1,17 +1,25 @@
 package com.example.augmentedrealityglasses.ble.device
 
-import android.content.Context
 import kotlinx.coroutines.flow.Flow
 
-interface RemoteDevice {
+interface RemoteDeviceManager{
     /**
-     * Connects the device passing the context information.
-     * @property context The context of this app
-     * @return the flow through which information on the connection state are shared externally
+     * Connects the remote device
      */
-    fun connect(context: Context): Flow<DeviceConnectionState>
+    fun connect()
 
     /**
+     * Sets the remote device that will be managed by this instance.
+     */
+    fun setDeviceToManage(device: RemoteDevice)
+
+    /**
+     * Starts receiving updates from the remote device
+     * @return flow to consume the updates
+     */
+    fun receiveUpdates(): Flow<DeviceConnectionState>
+
+     /**
      * @return true if the remote device is connected, false otherwise
      */
     fun isConnected() : Boolean
@@ -34,7 +42,7 @@ interface RemoteDevice {
     fun disconnect()
 
     /**
-     * Closes the bluetooth gatt client on this device. In contrast with disconnect(), this method forgets
+     * Closes the bluetooth gatt client on the device. In contrast with disconnect(), this method forgets
      * all information about the device to which the application was connected to hence requiring the communication
      * to start over.
      */

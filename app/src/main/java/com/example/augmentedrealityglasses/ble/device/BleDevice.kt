@@ -256,4 +256,7 @@ class BleDevice(
         _deviceConnectionState.gatt?.close() ?: Log.d(TAG, "Connection already closed")
     }
 
+    override fun isConnected() : Boolean {
+        return _deviceConnectionState.gatt != null
+    }
 }

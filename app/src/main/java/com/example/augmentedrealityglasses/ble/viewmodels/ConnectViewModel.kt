@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.ble.device.BleManager
+import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
 import kotlinx.coroutines.launch
 
 data class UiDeviceConnectionState(
@@ -22,7 +22,7 @@ data class UiDeviceConnectionState(
 
 // TODO. add SavedStateHandle to retain UI logic after process' death
 class ConnectViewModel(
-    private val bleManager: BleManager
+    private val bleManager: RemoteDeviceManager
 ) : ViewModel() {
     private val TAG: String = "ConnectViewModel"
 

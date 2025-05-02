@@ -12,7 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.ble.device.BleManager
+import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
 import kotlinx.coroutines.launch
 
 //FIXME: delete this in future, now just for testing
@@ -23,7 +23,7 @@ data class UiMessageForTranslationState(
 )
 
 class TranslationViewModel(
-    private val bleManager: BleManager
+    private val bleManager: RemoteDeviceManager
 ) : ViewModel() {
     var uiState by mutableStateOf(UiMessageForTranslationState())
         private set
