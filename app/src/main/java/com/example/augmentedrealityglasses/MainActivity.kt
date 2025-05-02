@@ -19,6 +19,7 @@ import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.translation.ui.TranslationScreen
+import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
 import com.google.mlkit.nl.translate.TranslateLanguage
 
 class MainActivity : ComponentActivity() {
@@ -35,7 +36,8 @@ class MainActivity : ComponentActivity() {
                                 route = ScreenName.TRANSLATION_SCREEN.name
                             )
                         },
-                        onStartup = { navController.navigate(ScreenName.FIND_DEVICE.name) }
+                        onNavigateToWeather = { navController.navigate(ScreenName.WEATHER_SCREEN.name) },
+                        onNavigateToBLE = { navController.navigate(ScreenName.FIND_DEVICE.name) }
                     )
                 }
                 composable(ScreenName.FIND_DEVICE.name) {
@@ -92,6 +94,9 @@ class MainActivity : ComponentActivity() {
                             application
                         ), enabled = translationFeatureAvailable()
                     ) //todo update with system language from settings
+                }
+                composable(ScreenName.WEATHER_SCREEN.name) {
+                    WeatherScreen()
                 }
             }
         }

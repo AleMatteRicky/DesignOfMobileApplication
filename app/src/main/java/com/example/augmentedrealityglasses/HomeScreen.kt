@@ -11,7 +11,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HomeScreen(
     onNavigateToTranslation: () -> Unit,
-    onStartup: () -> Unit
+    onNavigateToWeather: () -> Unit,
+    onNavigateToBLE: () -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -24,7 +25,14 @@ fun HomeScreen(
         }
         Button(
             onClick = {
-                onStartup()
+                onNavigateToWeather()
+            },
+        ) {
+            Text(text = "Weather")
+        }
+        Button(
+            onClick = {
+                onNavigateToBLE()
             },
         ) {
             Text(text = "Ble")
