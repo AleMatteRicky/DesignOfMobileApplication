@@ -40,7 +40,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun WeatherScreen(
-    viewModel: WeatherViewModel = viewModel()
+    viewModel: WeatherViewModel = viewModel(),
+    onNavigateToHome: () -> Unit
 ) {
     //Context
     val context = LocalContext.current
@@ -225,6 +226,16 @@ fun WeatherScreen(
                         text = viewModel.errorMessage
                     )
                 }
+            }
+            Button(
+                onClick = { onNavigateToHome() },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Home"
+                )
             }
         }
     }

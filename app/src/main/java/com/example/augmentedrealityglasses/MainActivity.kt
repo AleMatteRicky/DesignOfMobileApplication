@@ -96,7 +96,13 @@ class MainActivity : ComponentActivity() {
                     ) //todo update with system language from settings
                 }
                 composable(ScreenName.WEATHER_SCREEN.name) {
-                    WeatherScreen()
+                    WeatherScreen(
+                        onNavigateToHome = {
+                            navController.navigate(
+                                route = ScreenName.HOME.name
+                            )
+                        }
+                    )
                 }
             }
         }
