@@ -26,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,18 +65,23 @@ fun WeatherScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        if (viewModel.getGeolocationPermissions(context).values.none { it }) {
-            //request permissions
-            requestPermissionsLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
+    var isFirstLaunch by rememberSaveable { mutableStateOf(true) }
+
+    LaunchedEffect(isFirstLaunch) {
+        if (isFirstLaunch) {
+            if (viewModel.getGeolocationPermissions(context).values.none { it }) {
+                //request permissions
+                requestPermissionsLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
                 )
-            )
-        } else {
-            viewModel.isLoading = true
-            viewModel.getGeolocationWeather(fusedLocationClient, context)
+            } else {
+                viewModel.isLoading = true
+                viewModel.getGeolocationWeather(fusedLocationClient, context)
+            }
+            isFirstLaunch = false
         }
     }
 
