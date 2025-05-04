@@ -6,7 +6,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
 class WeatherRepositoryImpl(
-    private val weatherService: RetroService = RetrofitProvider.retroService,
+    private val weatherService: RetrofitService = RetrofitProvider.retrofitService,
     //TODO: check the dispatcher
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : WeatherRepository {

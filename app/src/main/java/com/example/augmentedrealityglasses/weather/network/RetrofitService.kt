@@ -6,7 +6,7 @@ import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface RetroService {
+interface RetrofitService {
 
     @GET("data/2.5/weather")
     suspend fun getWeatherInfo(

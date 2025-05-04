@@ -6,10 +6,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 //Singleton object for the retrofit service
 object RetrofitProvider {
-    val retroService: RetroService by lazy {
+    val retrofitService: RetrofitService by lazy {
         Retrofit.Builder()
             .baseUrl(Constants.WEATHER_API_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
-            .build().create(RetroService::class.java)
+            .build().create(RetrofitService::class.java)
     }
 }
