@@ -1,6 +1,5 @@
-package com.example.augmentedrealityglasses.weather.retrofit
+package com.example.augmentedrealityglasses.weather.network
 
-//TODO: rename package with "network"
 sealed class ResultWrapper<out T> {
     data class Success<out T>(val value: T) : ResultWrapper<T>()
 

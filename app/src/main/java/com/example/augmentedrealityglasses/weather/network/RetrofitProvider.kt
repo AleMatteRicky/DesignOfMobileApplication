@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.weather.retrofit
+package com.example.augmentedrealityglasses.weather.network
 
 //Singleton object for the retrofit service
 object RetrofitProvider {

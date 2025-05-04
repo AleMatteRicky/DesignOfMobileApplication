@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.weather.retrofit
+package com.example.augmentedrealityglasses.weather.network
 
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation

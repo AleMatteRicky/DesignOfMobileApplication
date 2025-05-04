@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.weather.retrofit
+package com.example.augmentedrealityglasses.weather.network
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

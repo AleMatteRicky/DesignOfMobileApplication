@@ -19,8 +19,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.weather.constants.Constants
-import com.example.augmentedrealityglasses.weather.retrofit.ResultWrapper
-import com.example.augmentedrealityglasses.weather.retrofit.WeatherRepositoryImpl
+import com.example.augmentedrealityglasses.weather.network.ResultWrapper
+import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
 import com.example.augmentedrealityglasses.weather.state.Coord
 import com.example.augmentedrealityglasses.weather.state.Main
 import com.example.augmentedrealityglasses.weather.state.Sys

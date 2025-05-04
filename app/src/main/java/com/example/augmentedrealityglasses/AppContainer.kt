@@ -2,7 +2,7 @@ package com.example.augmentedrealityglasses
 
 import android.content.Context
 import com.example.augmentedrealityglasses.ble.device.BleManager
-import com.example.augmentedrealityglasses.weather.retrofit.WeatherRepositoryImpl
+import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
 
 /**
  * Dependency Injection container at the application level.
