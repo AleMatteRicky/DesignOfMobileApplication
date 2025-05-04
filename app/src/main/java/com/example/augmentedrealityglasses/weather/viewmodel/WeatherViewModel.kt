@@ -12,9 +12,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.weather.constants.Constants
-import com.example.augmentedrealityglasses.weather.retrofit.RetrofitProvider
+import com.example.augmentedrealityglasses.weather.retrofit.ResultWrapper
+import com.example.augmentedrealityglasses.weather.retrofit.WeatherRepositoryImpl
 import com.example.augmentedrealityglasses.weather.state.Coord
 import com.example.augmentedrealityglasses.weather.state.Main
 import com.example.augmentedrealityglasses.weather.state.Sys
@@ -26,12 +32,25 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import retrofit2.HttpException
-import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-class WeatherViewModel : ViewModel() {
+class WeatherViewModel(
+    private val repository: WeatherRepositoryImpl
+) : ViewModel() {
+
+    //Initialize the viewModel
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val weatherAPIRepository =
+                    (this[APPLICATION_KEY] as App).container.weatherAPIRepository
+                WeatherViewModel(
+                    repository = weatherAPIRepository
+                )
+            }
+        }
+    }
 
     //Main UI state
     var weatherState by mutableStateOf(
@@ -70,9 +89,6 @@ class WeatherViewModel : ViewModel() {
     //For managing the visibility of the Text "no results found"
     var showNoResults by mutableStateOf(false)
         private set
-
-    //Interface for the API
-    private val weatherAPI = RetrofitProvider.retroService
 
     //Error message
     var errorVisible by mutableStateOf(false)
@@ -143,48 +159,84 @@ class WeatherViewModel : ViewModel() {
         errorVisible = false
     }
 
-    private suspend fun fetchWeatherInfo(lat: String, lon: String): WeatherCondition? {
-        if (lat.isNotEmpty() && lon.isNotEmpty()) {
-            return try {
-                weatherAPI.getWeatherInfo(
-                    lat,
-                    lon
-                )
-            } catch (e: IOException) {
-                //network error
-                showErrorMessage("Network error. Please try again later")
-                null
-            } catch (e: HttpException) {
-                //http error
-                showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
-                null
-            } catch (e: Exception) {
-                //generic error
-                showErrorMessage("Something went wrong. Please try again later")
-                null
+    private suspend fun fetchWeatherInfo(
+        lat: String,
+        lon: String
+    ): ResultWrapper<WeatherCondition> {
+        //FIXME: useful? if (lat.isNotEmpty() && lon.isNotEmpty()) {
+//        return try {
+//            weatherAPI.getWeatherInfo(
+//                lat,
+//                lon
+//            )
+//        } catch (e: IOException) {
+//            //network error
+//            showErrorMessage("Network error. Please try again later")
+//            null
+//        } catch (e: HttpException) {
+//            //http error
+//            showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
+//            null
+//        } catch (e: Exception) {
+//            //generic error
+//            showErrorMessage("Something went wrong. Please try again later")
+//            null
+//        }
+
+        return when (val weatherInfo = repository.getWeatherInfo(lat, lon)) {
+            is ResultWrapper.Success -> {
+                weatherInfo
+            }
+
+            is ResultWrapper.GenericError -> {
+                //TODO: use constant
+                showErrorMessage("Generic error while fetching weather information. Try again")
+                weatherInfo
+            }
+
+            is ResultWrapper.NetworkError -> {
+                //TODO: use constant
+                showErrorMessage("Network error while fetching weather information. Try again")
+                weatherInfo
             }
         }
-
-        return null
     }
 
-    private suspend fun fetchLatLonByQuery(query: String): List<WeatherLocation>? {
-        return try {
-            weatherAPI.getLocations(
-                query
-            )
-        } catch (e: IOException) {
-            //network error
-            showErrorMessage("Network error. Please try again later")
-            null
-        } catch (e: HttpException) {
-            //http error
-            showErrorMessage("Something went wrong while fetching the locations. Please try again later")
-            null
-        } catch (e: Exception) {
-            //generic error
-            showErrorMessage("Something went wrong. Please try again later")
-            null
+    private suspend fun fetchLatLonByQuery(query: String): ResultWrapper<List<WeatherLocation>> {
+//        return try {
+//            weatherAPI.getLocations(
+//                query
+//            )
+//        } catch (e: IOException) {
+//            //network error
+//            showErrorMessage("Network error. Please try again later")
+//            null
+//        } catch (e: HttpException) {
+//            //http error
+//            showErrorMessage("Something went wrong while fetching the locations. Please try again later")
+//            null
+//        } catch (e: Exception) {
+//            //generic error
+//            showErrorMessage("Something went wrong. Please try again later")
+//            null
+//        }
+
+        return when (val locations = repository.searchLocations(query)) {
+            is ResultWrapper.Success -> {
+                locations
+            }
+
+            is ResultWrapper.GenericError -> {
+                //TODO: use constant
+                showErrorMessage("Generic error while searching locations. Try again")
+                locations
+            }
+
+            is ResultWrapper.NetworkError -> {
+                //TODO: use constant
+                showErrorMessage("Network error while searching locations. Try again")
+                locations
+            }
         }
     }
 
@@ -256,24 +308,28 @@ class WeatherViewModel : ViewModel() {
     private fun getWeatherByResult(result: WeatherLocation) {
         viewModelScope.launch {
             if (searchedLocations.isNotEmpty()) {
+
                 //get weather infos of the result
-                val newWeatherCondition = fetchWeatherInfo(result.lat, result.lon)
+                when (val newWeatherCondition = fetchWeatherInfo(result.lat, result.lon)) {
+                    is ResultWrapper.Success -> {
+                        //update weather and location states
+                        updateWeatherState(newWeatherCondition.value)
 
-                if (newWeatherCondition != null) {
+                        updateLocationState(
+                            newWeatherCondition.value.name,
+                            newWeatherCondition.value.coord.lat,
+                            newWeatherCondition.value.coord.lon,
+                            newWeatherCondition.value.sys.country,
+                            result.state.orEmpty()
+                        )
 
-                    //update weather and location states
-                    updateWeatherState(newWeatherCondition)
+                        //disable geolocationEnabled
+                        geolocationEnabled = false
+                    }
 
-                    updateLocationState(
-                        newWeatherCondition.name,
-                        newWeatherCondition.coord.lat,
-                        newWeatherCondition.coord.lon,
-                        newWeatherCondition.sys.country,
-                        result.state.orEmpty()
-                    )
-
-                    //disable geolocationEnabled
-                    geolocationEnabled = false
+                    else -> {
+                        //all the other cases already handled
+                    }
                 }
             }
         }
@@ -288,39 +344,49 @@ class WeatherViewModel : ViewModel() {
         viewModelScope.launch {
             if (geolocationEnabled) {
                 //fetch geolocation
+                //TODO: try only for geolocation (remove it in future maybe)
                 try {
                     val geo = fetchGeolocation(fusedLocationClient, context)
 
                     if (geo != null) {
 
                         //update weather conditions and location
-                        val newWeatherCondition =
-                            fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())
+                        when (val newWeatherCondition =
+                            fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())) {
 
-                        if (newWeatherCondition != null) {
-                            updateWeatherState(newWeatherCondition)
+                            is ResultWrapper.Success -> {
+                                updateWeatherState(newWeatherCondition.value)
 
-                            // state not available with this API call
-                            updateLocationState(
-                                newWeatherCondition.name,
-                                newWeatherCondition.coord.lat,
-                                newWeatherCondition.coord.lon,
-                                newWeatherCondition.sys.country,
-                                ""
-                            )
+                                // state not available with this API call
+                                updateLocationState(
+                                    newWeatherCondition.value.name,
+                                    newWeatherCondition.value.coord.lat,
+                                    newWeatherCondition.value.coord.lon,
+                                    newWeatherCondition.value.sys.country,
+                                    ""
+                                )
+                            }
+
+                            else -> {
+                                //all the other cases already handled
+                            }
                         }
                     } else {
                         showErrorMessage("Position unavailable! Please try again")
                     }
                 } catch (e: Exception) {
                     //TODO: handle
-                    showErrorMessage("An error has occurred!")
+                    showErrorMessage("An error has occurred while retrieve the geolocation!")
                 }
             } else {
-                val newWeatherCondition = fetchWeatherInfo(location.lat, location.lon)
+                when (val newWeatherCondition = fetchWeatherInfo(location.lat, location.lon)) {
+                    is ResultWrapper.Success -> {
+                        updateWeatherState(newWeatherCondition.value)
+                    }
 
-                if (newWeatherCondition != null) {
-                    updateWeatherState(newWeatherCondition)
+                    else -> {
+                        //all the other cases already handled
+                    }
                 }
             }
         }
@@ -331,29 +397,35 @@ class WeatherViewModel : ViewModel() {
         context: Context
     ) {
         viewModelScope.launch {
+            //TODO: try only for geolocation (remove it in future maybe)
             try {
 
                 //get geolocation infos
                 val geo = fetchGeolocation(fusedLocationClient, context)
 
-                //update weather conditions
                 if (geo != null) {
-                    val newWeatherCondition =
-                        fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())
+                    //update weather conditions
+                    when (val newWeatherCondition =
+                        fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())) {
 
-                    if (newWeatherCondition != null) {
-                        updateWeatherState(newWeatherCondition)
+                        is ResultWrapper.Success -> {
+                            updateWeatherState(newWeatherCondition.value)
 
-                        // state not available with this API call
-                        updateLocationState(
-                            newWeatherCondition.name,
-                            newWeatherCondition.coord.lat,
-                            newWeatherCondition.coord.lon,
-                            newWeatherCondition.sys.country,
-                            ""
-                        )
+                            // state not available with this API call
+                            updateLocationState(
+                                newWeatherCondition.value.name,
+                                newWeatherCondition.value.coord.lat,
+                                newWeatherCondition.value.coord.lon,
+                                newWeatherCondition.value.sys.country,
+                                ""
+                            )
 
-                        geolocationEnabled = true
+                            geolocationEnabled = true
+                        }
+
+                        else -> {
+                            //all the other cases already handled
+                        }
                     }
 
                 } else {
@@ -362,7 +434,7 @@ class WeatherViewModel : ViewModel() {
 
             } catch (e: Exception) {
                 //TODO: handle
-                showErrorMessage("An error has occurred!")
+                showErrorMessage("An error has occurred while retrieve the geolocation!")
             }
         }
     }
@@ -377,13 +449,17 @@ class WeatherViewModel : ViewModel() {
 
     fun searchLocations(query: String) {
         viewModelScope.launch {
-            val locations = fetchLatLonByQuery(query)
+            when (val locations = fetchLatLonByQuery(query)) {
+                is ResultWrapper.Success -> {
+                    _searchedLocations.clear()
+                    _searchedLocations.addAll(locations.value)
 
-            if (locations != null) {
-                _searchedLocations.clear()
-                _searchedLocations.addAll(locations)
+                    showNoResults = true
+                }
 
-                showNoResults = true
+                else -> {
+                    //all the other cases already handled
+                }
             }
         }
     }

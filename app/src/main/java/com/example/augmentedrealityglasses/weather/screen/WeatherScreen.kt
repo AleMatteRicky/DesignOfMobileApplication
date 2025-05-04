@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
@@ -41,7 +40,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun WeatherScreen(
-    viewModel: WeatherViewModel = viewModel(),
+    viewModel: WeatherViewModel,
     onNavigateToHome: () -> Unit
 ) {
     //Context
