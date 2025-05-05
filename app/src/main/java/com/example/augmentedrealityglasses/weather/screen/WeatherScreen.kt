@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -37,6 +39,10 @@ import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun WeatherScreen(
@@ -165,18 +171,34 @@ fun WeatherScreen(
                 Text(
                     text = "Longitude: ${viewModel.location.lon}"
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                Row {
+                    ForecastDropdown(
+                        viewModel
+                    )
+                    Button(
+                        onClick = { viewModel.showCurrentWeather() }
+                    ) {
+                        Text(
+                            text = "Current weather"
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Info: ${viewModel.weatherState.condition.weather.main}"
+                    text = "Date and time: ${formatDate(viewModel.weatherUI.timestamp)}"
                 )
                 Text(
-                    text = "Description: ${viewModel.weatherState.condition.weather.description}"
+                    text = "Info: ${viewModel.weatherUI.main}"
                 )
                 Text(
-                    text = "Temperature: ${viewModel.weatherState.condition.main.temp} °C"
+                    text = "Description: ${viewModel.weatherUI.description}"
                 )
                 Text(
-                    text = "Pressure: ${viewModel.weatherState.condition.main.pressure} hPa"
+                    text = "Temperature: ${viewModel.weatherUI.temp} °C"
+                )
+                Text(
+                    text = "Pressure: ${viewModel.weatherUI.pressure} hPa"
                 )
                 Row(modifier = Modifier.fillMaxWidth()) {
                     TextField(
@@ -243,5 +265,56 @@ fun WeatherScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ForecastDropdown(
+    viewModel: WeatherViewModel
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Column {
+        Box(modifier = Modifier
+            .clickable { expanded = true }
+            .background(Color.LightGray.copy(alpha = 0.3f), shape = RoundedCornerShape(8.dp))
+            .padding(12.dp)
+        ) {
+            Text(
+                text = "Select date and time of forecast"
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            viewModel.weatherState.forecasts.list.forEach { forecast ->
+                DropdownMenuItem(
+                    text = { Text(formatDate(forecast.dt) ?: "") },
+                    onClick = {
+                        expanded = false
+                        viewModel.showWeatherForecast(forecast.dt)
+                    }
+                )
+            }
+        }
+    }
+}
+
+fun formatDate(timestampSeconds: String): String? {
+    if (timestampSeconds != "current" && timestampSeconds != "") {
+        try {
+            val date = Date((timestampSeconds.toLong()) * 1000)
+            val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+            format.timeZone =
+                TimeZone.getTimeZone("Europe/Rome") //TODO: get time zone from app settings
+            return format.format(date)
+        } catch (e: NumberFormatException) {
+            //TODO: handle
+        }
+        return null
+    } else {
+        return timestampSeconds
     }
 }

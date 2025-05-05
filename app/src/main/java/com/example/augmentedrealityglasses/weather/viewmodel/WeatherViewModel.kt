@@ -26,7 +26,9 @@ import com.example.augmentedrealityglasses.weather.state.Main
 import com.example.augmentedrealityglasses.weather.state.Sys
 import com.example.augmentedrealityglasses.weather.state.Weather
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
+import com.example.augmentedrealityglasses.weather.state.WeatherForecasts
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
+import com.example.augmentedrealityglasses.weather.state.WeatherUI
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
@@ -52,6 +54,17 @@ class WeatherViewModel(
         }
     }
 
+    var weatherUI by mutableStateOf(
+        WeatherUI(
+            "",
+            "",
+            "",
+            "",
+            ""
+        )
+    )
+        private set
+
     //Main UI state
     var weatherState by mutableStateOf(
         WeatherUiState(
@@ -61,7 +74,11 @@ class WeatherViewModel(
                 Main("", ""),
                 Sys(""),
                 ""
-            )
+            ),
+            WeatherForecasts(
+                listOf()
+            ),
+            "current"
         )
     )
         private set
@@ -126,8 +143,41 @@ class WeatherViewModel(
         )
     }
 
-    private fun updateWeatherState(newWeatherCondition: WeatherCondition) {
-        weatherState = weatherState.copy(condition = newWeatherCondition)
+    private fun updateWeatherState(
+        newCurrentWeatherConditions: WeatherCondition = weatherState.currentCondition,
+        newForecasts: WeatherForecasts = weatherState.forecasts,
+        newTimestamp: String = weatherState.shownTimestamp
+    ) {
+        weatherState = weatherState.copy(
+            currentCondition = newCurrentWeatherConditions,
+            forecasts = newForecasts,
+            shownTimestamp = newTimestamp
+        )
+
+        if (newTimestamp == "current") {
+            weatherUI = weatherUI.copy(
+                main = weatherState.currentCondition.weather.main,
+                description = weatherState.currentCondition.weather.description,
+                temp = weatherState.currentCondition.main.temp,
+                pressure = weatherState.currentCondition.main.pressure,
+                timestamp = "current"
+            )
+        } else {
+            val selectedForecast =
+                weatherState.forecasts.list.find { forecast -> forecast.dt == newTimestamp }
+
+            if (selectedForecast != null) {
+                weatherUI = weatherUI.copy(
+                    main = selectedForecast.weather.main,
+                    description = selectedForecast.weather.description,
+                    temp = selectedForecast.main.temp,
+                    pressure = selectedForecast.main.pressure,
+                    timestamp = selectedForecast.dt
+                )
+            } else {
+                //TODO: handle
+            }
+        }
     }
 
     private fun updateLocationState(
@@ -159,7 +209,7 @@ class WeatherViewModel(
         errorVisible = false
     }
 
-    private suspend fun fetchWeatherInfo(
+    private suspend fun fetchCurrentWeatherInfo(
         lat: String,
         lon: String
     ): ResultWrapper<WeatherCondition> {
@@ -183,7 +233,7 @@ class WeatherViewModel(
 //            null
 //        }
 
-        return when (val weatherInfo = repository.getWeatherInfo(lat, lon)) {
+        return when (val weatherInfo = repository.getCurrentWeatherInfo(lat, lon)) {
             is ResultWrapper.Success -> {
                 weatherInfo
             }
@@ -198,6 +248,29 @@ class WeatherViewModel(
                 //TODO: use constant
                 showErrorMessage("Network error while fetching weather information. Try again")
                 weatherInfo
+            }
+        }
+    }
+
+    private suspend fun fetchForecastsInfo(
+        lat: String,
+        lon: String
+    ): ResultWrapper<WeatherForecasts> {
+        return when (val forecasts = repository.getWeatherForecast(lat, lon)) {
+            is ResultWrapper.Success -> {
+                forecasts
+            }
+
+            is ResultWrapper.GenericError -> {
+                //TODO: use constant
+                showErrorMessage("Generic error while fetching weather forecasts information. Try again")
+                forecasts
+            }
+
+            is ResultWrapper.NetworkError -> {
+                //TODO: use constant
+                showErrorMessage("Network error while fetching weather forecasts information. Try again")
+                forecasts
             }
         }
     }
@@ -310,21 +383,36 @@ class WeatherViewModel(
             if (searchedLocations.isNotEmpty()) {
 
                 //get weather infos of the result
-                when (val newWeatherCondition = fetchWeatherInfo(result.lat, result.lon)) {
+                when (val newCurrentWeatherCondition =
+                    fetchCurrentWeatherInfo(result.lat, result.lon)) {
                     is ResultWrapper.Success -> {
                         //update weather and location states
-                        updateWeatherState(newWeatherCondition.value)
 
-                        updateLocationState(
-                            newWeatherCondition.value.name,
-                            newWeatherCondition.value.coord.lat,
-                            newWeatherCondition.value.coord.lon,
-                            newWeatherCondition.value.sys.country,
-                            result.state.orEmpty()
-                        )
+                        when (val newForecasts = fetchForecastsInfo(result.lat, result.lon)) {
+                            is ResultWrapper.Success -> {
 
-                        //disable geolocationEnabled
-                        geolocationEnabled = false
+                                updateWeatherState(
+                                    newCurrentWeatherCondition.value,
+                                    newForecasts.value
+                                )
+
+                                updateLocationState(
+                                    newCurrentWeatherCondition.value.name,
+                                    newCurrentWeatherCondition.value.coord.lat,
+                                    newCurrentWeatherCondition.value.coord.lon,
+                                    newCurrentWeatherCondition.value.sys.country,
+                                    result.state.orEmpty()
+                                )
+
+                                //disable geolocationEnabled
+                                geolocationEnabled = false
+
+                            }
+
+                            else -> {
+                                //all the other cases already handled
+                            }
+                        }
                     }
 
                     else -> {
@@ -351,20 +439,40 @@ class WeatherViewModel(
                     if (geo != null) {
 
                         //update weather conditions and location
-                        when (val newWeatherCondition =
-                            fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())) {
+                        when (val newCurrentWeatherCondition =
+                            fetchCurrentWeatherInfo(
+                                geo.latitude.toString(),
+                                geo.longitude.toString()
+                            )) {
 
                             is ResultWrapper.Success -> {
-                                updateWeatherState(newWeatherCondition.value)
 
-                                // state not available with this API call
-                                updateLocationState(
-                                    newWeatherCondition.value.name,
-                                    newWeatherCondition.value.coord.lat,
-                                    newWeatherCondition.value.coord.lon,
-                                    newWeatherCondition.value.sys.country,
-                                    ""
-                                )
+                                when (val newForecasts = fetchForecastsInfo(
+                                    geo.latitude.toString(),
+                                    geo.longitude.toString()
+                                )) {
+                                    is ResultWrapper.Success -> {
+
+                                        updateWeatherState(
+                                            newCurrentWeatherCondition.value,
+                                            newForecasts.value,
+                                            "current" //show current weather
+                                        )
+
+                                        // state not available with this API call
+                                        updateLocationState(
+                                            newCurrentWeatherCondition.value.name,
+                                            newCurrentWeatherCondition.value.coord.lat,
+                                            newCurrentWeatherCondition.value.coord.lon,
+                                            newCurrentWeatherCondition.value.sys.country,
+                                            ""
+                                        )
+                                    }
+
+                                    else -> {
+                                        //all the other cases already handled
+                                    }
+                                }
                             }
 
                             else -> {
@@ -379,9 +487,22 @@ class WeatherViewModel(
                     showErrorMessage("An error has occurred while retrieve the geolocation!")
                 }
             } else {
-                when (val newWeatherCondition = fetchWeatherInfo(location.lat, location.lon)) {
+                when (val newCurrentWeatherCondition =
+                    fetchCurrentWeatherInfo(location.lat, location.lon)) {
                     is ResultWrapper.Success -> {
-                        updateWeatherState(newWeatherCondition.value)
+                        when (val newForecasts = fetchForecastsInfo(location.lat, location.lon)) {
+                            is ResultWrapper.Success -> {
+                                updateWeatherState(
+                                    newCurrentWeatherCondition.value,
+                                    newForecasts.value,
+                                    "current" //show current weather
+                                )
+                            }
+
+                            else -> {
+                                //all the other cases already handled
+                            }
+                        }
                     }
 
                     else -> {
@@ -405,22 +526,40 @@ class WeatherViewModel(
 
                 if (geo != null) {
                     //update weather conditions
-                    when (val newWeatherCondition =
-                        fetchWeatherInfo(geo.latitude.toString(), geo.longitude.toString())) {
+                    when (val newCurrentWeatherCondition =
+                        fetchCurrentWeatherInfo(
+                            geo.latitude.toString(),
+                            geo.longitude.toString()
+                        )) {
 
                         is ResultWrapper.Success -> {
-                            updateWeatherState(newWeatherCondition.value)
 
-                            // state not available with this API call
-                            updateLocationState(
-                                newWeatherCondition.value.name,
-                                newWeatherCondition.value.coord.lat,
-                                newWeatherCondition.value.coord.lon,
-                                newWeatherCondition.value.sys.country,
-                                ""
-                            )
+                            when (val newForecasts = fetchForecastsInfo(
+                                geo.latitude.toString(),
+                                geo.longitude.toString()
+                            )) {
+                                is ResultWrapper.Success -> {
+                                    updateWeatherState(
+                                        newCurrentWeatherCondition.value,
+                                        newForecasts.value
+                                    )
 
-                            geolocationEnabled = true
+                                    // state not available with this API call
+                                    updateLocationState(
+                                        newCurrentWeatherCondition.value.name,
+                                        newCurrentWeatherCondition.value.coord.lat,
+                                        newCurrentWeatherCondition.value.coord.lon,
+                                        newCurrentWeatherCondition.value.sys.country,
+                                        ""
+                                    )
+
+                                    geolocationEnabled = true
+                                }
+
+                                else -> {
+                                    //all the other cases already handled
+                                }
+                            }
                         }
 
                         else -> {
@@ -462,5 +601,13 @@ class WeatherViewModel(
                 }
             }
         }
+    }
+
+    fun showCurrentWeather() {
+        updateWeatherState(newTimestamp = "current")
+    }
+
+    fun showWeatherForecast(timeStamp: String) {
+        updateWeatherState(newTimestamp = timeStamp)
     }
 }

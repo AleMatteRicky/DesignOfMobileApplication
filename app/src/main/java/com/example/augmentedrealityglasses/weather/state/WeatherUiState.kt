@@ -1,9 +1,19 @@
 package com.example.augmentedrealityglasses.weather.state
 
 import com.google.gson.annotations.SerializedName
+//TODO: improve all classes
+data class WeatherUI(
+    val main: String,
+    val description: String,
+    val temp: String,
+    val pressure: String,
+    val timestamp: String
+)
 
 data class WeatherUiState(
-    val condition: WeatherCondition
+    val currentCondition: WeatherCondition,
+    val forecasts: WeatherForecasts,
+    val shownTimestamp: String
 )
 
 data class WeatherCondition(
@@ -45,9 +55,9 @@ data class WeatherLocation(
     val state: String?
 ) {
     fun getFullName(): String {
-        return if(this.name.isEmpty()){
+        return if (this.name.isEmpty()) {
             ""
-        }else if (this.state.isNullOrEmpty()) {
+        } else if (this.state.isNullOrEmpty()) {
             this.name + " (" + this.country + ")"
         } else {
             this.name + ", " + this.state.orEmpty() + " (" + this.country + ")"
@@ -57,15 +67,15 @@ data class WeatherLocation(
 }
 
 data class WeatherForecasts(
-    @SerializedName("list")
-    val forecasts: List<Forecast>
+    val list: List<Forecast>
 )
 
 data class Forecast(
     val dt: String,
     val main: Main,
+    @SerializedName("weather")
     private val _weather: List<Weather>,
-){
+) {
     val weather: Weather
         get() = _weather[0]
 }

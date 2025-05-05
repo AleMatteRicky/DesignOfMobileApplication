@@ -7,8 +7,6 @@ object Constants {
     private const val MAX_AGE_LAST_LOCATION_MINUTES = 5
     const val MAX_AGE_LAST_LOCATION = MAX_AGE_LAST_LOCATION_MINUTES * 60 * 1000
     const val MAX_LOCATIONS_FETCHED = "5"
-
-    //TODO: put 40
-    const val NUMBER_OF_TIMESTAMPS_FORECAST = "6"
+    const val NUMBER_OF_TIMESTAMPS_FORECAST = "40" //max value: 40
     const val API_UNIT_OF_MEASUREMENT = "metric"
 }
