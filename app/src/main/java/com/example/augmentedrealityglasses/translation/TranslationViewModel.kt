@@ -95,7 +95,7 @@ class TranslationViewModel(
                 Log.d("Correct", "Download Succeeded")
             }
             ?.addOnFailureListener { exception ->
-                Log.d("Error", "Translate, Download Failed")
+                Log.d("Error", "Download Failed")
             }
     }
 
@@ -107,7 +107,27 @@ class TranslationViewModel(
                 } else {
                     uiState.copy(isModelNotAvailable = true)
                 }
-            }.addOnFailureListener { Log.d("Error", "Error while checking if the model was already downloaded on the device") }
+            }.addOnFailureListener {
+                Log.d(
+                    "Error",
+                    "Error while checking if the model was already downloaded on the device"
+                )
+            }
+    }
+
+    //todo add a button to download the language model if it is not already downloaded on the device
+    fun downloadLanguageModel(languageRemoteModel: RemoteModel) {
+        uiState = uiState.copy(isDownloadingLanguageModel = true)
+        modelManager.download(languageRemoteModel, DownloadConditions.Builder().build())
+            .addOnSuccessListener {
+                Log.d("Correct", "Download Succeeded")
+                uiState = uiState.copy(isDownloadingLanguageModel = false)
+            }
+            .addOnFailureListener {
+                Log.d("Error", "Download Failed")
+                uiState = uiState.copy(isDownloadingLanguageModel = false)
+                //todo add error handling
+            }
     }
 
     private fun identifySourceLanguage() {
