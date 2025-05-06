@@ -1,0 +1,47 @@
+package com.example.augmentedrealityglasses.callnotifications
+
+import android.util.Log
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.telephony.TelephonyManager
+import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+
+class PhoneCallReceiver : BroadcastReceiver() {
+    private val TAG: String = "PhoneCallReceiver"
+
+    // TODO: wakeup the process on ongoing calls
+    // TODO: test receiving a call when the application is not running, when it is running with the bleManager not set and when it is set
+    override fun onReceive(context: Context, intent: Intent?) {
+        Log.d(TAG, "Calling on receive")
+        val bleManager: RemoteDeviceManager =
+            (context.applicationContext as App).container.bleManager
+
+        val incomingCall = "incoming_call"
+
+        // TODO: Listen only for incoming calls, nothing more
+        intent?.let {
+            val action: String? = it.action
+            if(TelephonyManager.ACTION_PHONE_STATE_CHANGED==action){
+                val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
+                if(TelephonyManager.EXTRA_STATE_RINGING==state){
+                    Log.d(TAG, "Incoming call")
+                    if (bleManager.isConnected()) {
+                        bleManager.send(incomingCall)
+                    } else {
+                        Log.d(
+                            TAG,
+                            "Incoming call event not transmitted to the device because they are offline"
+                        )
+                    }
+                } else{
+                    Log.d(TAG, "Not interesting state")
+                }
+            } else{
+                Log.d(TAG, "Broadcast has received an unrecognised action $action")
+            }
+        }
+    }
+
+}
