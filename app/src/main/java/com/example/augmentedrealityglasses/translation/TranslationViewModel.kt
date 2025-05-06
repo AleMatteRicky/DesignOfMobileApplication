@@ -20,6 +20,7 @@ import com.google.mlkit.common.model.RemoteModel
 import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.TranslateRemoteModel
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
@@ -42,6 +43,10 @@ class TranslationViewModel(
     var translatorJob: Job? = null
 
     val modelManager: RemoteModelManager = RemoteModelManager.getInstance()
+
+    var isSourceModelNotAvailable = false
+
+    var isTargetModelNotAvailable = false
 
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
@@ -99,36 +104,78 @@ class TranslationViewModel(
             }
     }
 
-    private fun checkModelDownloaded(languageRemoteModel: RemoteModel) {
-        modelManager.isModelDownloaded(languageRemoteModel)
+    private fun checkModelDownloaded() {
+        val targetLanguageRemoteModel: RemoteModel =
+            TranslateRemoteModel.Builder(uiState.targetLanguage!!).build()
+        val sourceLanguageRemoteModel: RemoteModel =
+            TranslateRemoteModel.Builder(uiState.sourceLanguage!!).build()
+        modelManager.isModelDownloaded(sourceLanguageRemoteModel)
             .addOnSuccessListener { isDownloaded ->
-                uiState = if (isDownloaded) {
-                    uiState.copy(isModelNotAvailable = false)
-                } else {
-                    uiState.copy(isModelNotAvailable = true)
-                }
+                isSourceModelNotAvailable = !isDownloaded
             }.addOnFailureListener {
                 Log.d(
                     "Error",
-                    "Error while checking if the model was already downloaded on the device"
+                    "Error while checking if the source model was already downloaded on the device"
                 )
             }
+
+        modelManager.isModelDownloaded(targetLanguageRemoteModel)
+            .addOnSuccessListener { isDownloaded ->
+                isTargetModelNotAvailable = !isDownloaded
+            }.addOnFailureListener {
+                Log.d(
+                    "Error",
+                    "Error while checking if the target model was already downloaded on the device"
+                )
+            }
+
+        uiState =
+            uiState.copy(isModelNotAvailable = isSourceModelNotAvailable || isTargetModelNotAvailable)
     }
 
     //todo add a button to download the language model if it is not already downloaded on the device
-    fun downloadLanguageModel(languageRemoteModel: RemoteModel) {
+    fun downloadLanguageModel() {
         uiState = uiState.copy(isDownloadingLanguageModel = true)
-        modelManager.download(languageRemoteModel, DownloadConditions.Builder().build())
+        if (isSourceModelNotAvailable) {
+            downloadSourceLanguageModel()
+        }
+        if (isTargetModelNotAvailable) {
+            downloadTargetLanguageModel()
+        }
+        uiState = uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
+        uiState = uiState.copy(isDownloadingLanguageModel = false)
+    }
+
+    private fun downloadSourceLanguageModel() {
+        modelManager.download(
+            TranslateRemoteModel.Builder(uiState.sourceLanguage!!).build(),
+            DownloadConditions.Builder().build()
+        )
             .addOnSuccessListener {
-                Log.d("Correct", "Download Succeeded")
-                uiState = uiState.copy(isDownloadingLanguageModel = false)
+                Log.d("Correct", "Download of source language succeeded")
+                isSourceModelNotAvailable = false
             }
             .addOnFailureListener {
-                Log.d("Error", "Download Failed")
-                uiState = uiState.copy(isDownloadingLanguageModel = false)
+                Log.d("Error", "Download of source language failed")
                 //todo add error handling
             }
     }
+
+    private fun downloadTargetLanguageModel() {
+        modelManager.download(
+            TranslateRemoteModel.Builder(uiState.targetLanguage!!).build(),
+            DownloadConditions.Builder().build()
+        )
+            .addOnSuccessListener {
+                Log.d("Correct", "Download of target language succeeded")
+                isTargetModelNotAvailable = false
+            }
+            .addOnFailureListener {
+                Log.d("Error", "Download of target language failed")
+                //todo add error handling
+            }
+    }
+
 
     private fun identifySourceLanguage() {
         val languageIdentification = LanguageIdentification.getClient()
