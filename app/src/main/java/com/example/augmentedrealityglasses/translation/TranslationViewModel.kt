@@ -16,6 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.common.model.RemoteModel
+import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
@@ -38,6 +40,8 @@ class TranslationViewModel(
     var translator: Translator? = null
 
     var translatorJob: Job? = null
+
+    val modelManager: RemoteModelManager = RemoteModelManager.getInstance()
 
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
@@ -63,13 +67,13 @@ class TranslationViewModel(
 
     fun translate() {
 
-        if(uiState.isRecording){
+        if (uiState.isRecording) {
             stopRecording()
         }
 
         translatorJob?.cancel()
 
-        translatorJob = viewModelScope.launch{
+        translatorJob = viewModelScope.launch {
             if (uiState.targetLanguage != null) {
                 identifySourceLanguage() //todo check if could ever happen that the initialization do not wait for the identification
             }
@@ -93,6 +97,17 @@ class TranslationViewModel(
             ?.addOnFailureListener { exception ->
                 Log.d("Error", "Translate, Download Failed")
             }
+    }
+
+    private fun checkModelDownloaded(languageRemoteModel: RemoteModel) {
+        modelManager.isModelDownloaded(languageRemoteModel)
+            .addOnSuccessListener { isDownloaded ->
+                uiState = if (isDownloaded) {
+                    uiState.copy(isModelNotAvailable = false)
+                } else {
+                    uiState.copy(isModelNotAvailable = true)
+                }
+            }.addOnFailureListener { Log.d("Error", "Error while checking if the model was already downloaded on the device") }
     }
 
     private fun identifySourceLanguage() {
