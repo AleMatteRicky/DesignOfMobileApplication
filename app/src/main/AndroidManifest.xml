@@ -29,6 +29,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Permissions for detecting changes in the phone state and incoming calls -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -51,6 +55,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- BroadcastReceiver for catching incoming calls from the Android system -->
+        <receiver
+                android:name=".callnotifications.PhoneCallReceiver"
+                android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
     </application>
     <uses-feature
         android:name="android.hardware.microphone"
