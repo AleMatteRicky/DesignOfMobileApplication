@@ -28,8 +28,7 @@ data class WeatherLocation(
         } else if (this.state.isNullOrEmpty()) {
             this.name + " (" + this.country + ")"
         } else {
-            this.name + ", " + this.state.orEmpty() + " (" + this.country + ")"
+            this.name + ", " + this.state + " (" + this.country + ")"
         }
-
     }
 }
