@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.weather.network
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -24,7 +25,7 @@ suspend fun <T> safeApiCall(
                 }
 
                 else -> {
-                    //TODO: log
+                    Log.d("safeApiCall", "Unknown error: ${throwable.message}")
                     ResultWrapper.GenericError(null, "")
                 }
             }
