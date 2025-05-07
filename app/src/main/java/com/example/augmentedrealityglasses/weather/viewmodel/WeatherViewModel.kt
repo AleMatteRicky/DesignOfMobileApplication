@@ -558,7 +558,10 @@ class WeatherViewModel(
         if (currentWeather != null) {
             updateShownTimestamp(currentWeather.timestamp)
         } else {
-            //TODO: handle
+            Log.d(
+                TAG,
+                "There is no current weather condition. List size: ${weatherState.conditions.size}"
+            )
         }
     }
 
