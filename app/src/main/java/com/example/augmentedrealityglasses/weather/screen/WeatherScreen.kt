@@ -1,6 +1,8 @@
 package com.example.augmentedrealityglasses.weather.screen
 
 import android.Manifest
+import android.content.Context
+import android.text.format.DateFormat.is24HourFormat
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -175,7 +177,8 @@ fun WeatherScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row {
                     ForecastDropdown(
-                        viewModel
+                        viewModel,
+                        context
                     )
                     Button(
                         onClick = { viewModel.showCurrentWeather() }
@@ -189,9 +192,14 @@ fun WeatherScreen(
                 Text(
                     text = if (viewModel.isCurrentWeatherShown()) "Date and time (current): ${
                         formatDate(
-                            viewModel.weatherState.shownTimestamp
+                            viewModel.weatherState.shownTimestamp, context
                         ).orEmpty()
-                    }" else "Date and time: ${formatDate(viewModel.weatherState.shownTimestamp).orEmpty()}"
+                    }" else "Date and time: ${
+                        formatDate(
+                            viewModel.weatherState.shownTimestamp,
+                            context
+                        ).orEmpty()
+                    }"
                 )
                 Text(
                     text = "Info: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.main}"
@@ -275,7 +283,8 @@ fun WeatherScreen(
 
 @Composable
 fun ForecastDropdown(
-    viewModel: WeatherViewModel
+    viewModel: WeatherViewModel,
+    context: Context
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -297,7 +306,7 @@ fun ForecastDropdown(
             viewModel.weatherState.conditions.filter { condition -> !condition.isCurrent }
                 .forEach { forecast ->
                     DropdownMenuItem(
-                        text = { Text(formatDate(forecast.timestamp) ?: "") },
+                        text = { Text(formatDate(forecast.timestamp, context) ?: "") },
                         onClick = {
                             expanded = false
                             viewModel.showWeatherForecast(forecast.timestamp)
@@ -308,13 +317,24 @@ fun ForecastDropdown(
     }
 }
 
-fun formatDate(timestampSeconds: String): String? {
+fun formatDate(timestampSeconds: String, context: Context): String? {
     if (timestampSeconds != "") {
         try {
             val date = Date((timestampSeconds.toLong()) * 1000)
-            val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+            val timeZone = TimeZone.getDefault().id
+            val is24HourFormat = is24HourFormat(context)
+
+            val pattern = if (is24HourFormat) {
+                "dd/MM/yyyy HH:mm:ss" // 24h
+            } else {
+                "dd/MM/yyyy hh:mm:ss a" // 12h with AM/PM
+            }
+
+            val format = SimpleDateFormat(pattern, Locale.getDefault())
+
             format.timeZone =
-                TimeZone.getTimeZone("Europe/Rome") //TODO: get time zone from app settings
+                TimeZone.getTimeZone(timeZone)
+
             return format.format(date)
         } catch (e: NumberFormatException) {
             Log.d("formatDate", "Error while formatting date: ${e.message}")
