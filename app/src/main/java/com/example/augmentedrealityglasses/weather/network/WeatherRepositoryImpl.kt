@@ -12,13 +12,13 @@ class WeatherRepositoryImpl(
     override suspend fun getCurrentWeather(
         lat: String,
         lon: String
-    ): ResultWrapper<APIWeatherCondition> {
+    ): APIResult<APIWeatherCondition> {
         return safeApiCall(dispatcher) {
             weatherService.getCurrentWeather(lat, lon)
         }
     }
 
-    override suspend fun searchLocations(query: String): ResultWrapper<List<WeatherLocation>> {
+    override suspend fun searchLocations(query: String): APIResult<List<WeatherLocation>> {
         return safeApiCall(dispatcher) {
             weatherService.getLocations(query)
         }
@@ -27,7 +27,7 @@ class WeatherRepositoryImpl(
     override suspend fun getWeatherForecasts(
         lat: String,
         lon: String
-    ): ResultWrapper<APIWeatherForecasts> {
+    ): APIResult<APIWeatherForecasts> {
         return safeApiCall(dispatcher) {
             weatherService.getWeatherForecasts(lat, lon)
         }

@@ -20,10 +20,11 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.weather.constants.Constants
+import com.example.augmentedrealityglasses.weather.network.APIResult
 import com.example.augmentedrealityglasses.weather.network.APIWeatherCondition
 import com.example.augmentedrealityglasses.weather.network.APIWeatherForecasts
-import com.example.augmentedrealityglasses.weather.network.ResultWrapper
 import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
+import com.example.augmentedrealityglasses.weather.state.GeolocationResult
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
@@ -32,7 +33,6 @@ import com.google.android.gms.location.Priority
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class WeatherViewModel(
     private val repository: WeatherRepositoryImpl
@@ -199,19 +199,19 @@ class WeatherViewModel(
     private suspend fun fetchCurrentWeatherInfo(
         lat: String,
         lon: String
-    ): ResultWrapper<APIWeatherCondition> {
+    ): APIResult<APIWeatherCondition> {
         return when (val weatherInfo = repository.getCurrentWeather(lat, lon)) {
-            is ResultWrapper.Success -> {
+            is APIResult.Success -> {
                 weatherInfo
             }
 
-            is ResultWrapper.GenericError -> {
+            is APIResult.GenericError -> {
                 Log.d(TAG, "Error (code ${weatherInfo.code}): ${weatherInfo.error}")
                 showErrorMessage(Constants.ERROR_GENERIC_CURRENT_WEATHER)
                 weatherInfo
             }
 
-            is ResultWrapper.NetworkError -> {
+            is APIResult.NetworkError -> {
                 Log.d(TAG, "Network error")
                 showErrorMessage(Constants.ERROR_NETWORK_CURRENT_WEATHER)
                 weatherInfo
@@ -222,19 +222,19 @@ class WeatherViewModel(
     private suspend fun fetchForecastsInfo(
         lat: String,
         lon: String
-    ): ResultWrapper<APIWeatherForecasts> {
+    ): APIResult<APIWeatherForecasts> {
         return when (val forecasts = repository.getWeatherForecasts(lat, lon)) {
-            is ResultWrapper.Success -> {
+            is APIResult.Success -> {
                 forecasts
             }
 
-            is ResultWrapper.GenericError -> {
+            is APIResult.GenericError -> {
                 Log.d(TAG, "Error (code ${forecasts.code}): ${forecasts.error}")
                 showErrorMessage(Constants.ERROR_GENERIC_FORECASTS)
                 forecasts
             }
 
-            is ResultWrapper.NetworkError -> {
+            is APIResult.NetworkError -> {
                 Log.d(TAG, "Network error")
                 showErrorMessage(Constants.ERROR_NETWORK_FORECASTS)
                 forecasts
@@ -242,19 +242,19 @@ class WeatherViewModel(
         }
     }
 
-    private suspend fun fetchLatLonByQuery(query: String): ResultWrapper<List<WeatherLocation>> {
+    private suspend fun fetchLatLonByQuery(query: String): APIResult<List<WeatherLocation>> {
         return when (val locations = repository.searchLocations(query)) {
-            is ResultWrapper.Success -> {
+            is APIResult.Success -> {
                 locations
             }
 
-            is ResultWrapper.GenericError -> {
+            is APIResult.GenericError -> {
                 Log.d(TAG, "Error (code ${locations.code}): ${locations.error}")
                 showErrorMessage(Constants.ERROR_GENERIC_LOCATIONS)
                 locations
             }
 
-            is ResultWrapper.NetworkError -> {
+            is APIResult.NetworkError -> {
                 Log.d(TAG, "Network error")
                 showErrorMessage(Constants.ERROR_NETWORK_LOCATIONS)
                 locations
@@ -267,61 +267,68 @@ class WeatherViewModel(
     private suspend fun fetchGeolocation(
         fusedLocationClient: FusedLocationProviderClient,
         context: Context
-    ): Location? {
+    ): GeolocationResult {
+        if (getGeolocationPermissions(context).values.none { it }) {
+            return GeolocationResult.NoPermissionGranted
+        }
+
         return suspendCancellableCoroutine { continuation ->
             val permissions = getGeolocationPermissions(context)
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { lastLocation: Location? ->
-                    if (getGeolocationPermissions(context).values.any { it }) {
-                        if (lastLocation != null && (System.currentTimeMillis() - lastLocation.time) <= Constants.MAX_AGE_LAST_LOCATION) {
-                            //there is a last location saved and it is not too old
-                            isLoading = false
-                            continuation.resume(lastLocation)
-                        } else {
-                            isLoading = true
-                            val priority: Int = when {
-                                permissions.getOrDefault(
-                                    ACCESS_FINE_LOCATION,
-                                    false
-                                ) -> Priority.PRIORITY_HIGH_ACCURACY
 
-                                permissions.getOrDefault(
-                                    ACCESS_COARSE_LOCATION,
-                                    false
-                                ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
-                                else -> throw IllegalStateException("No location permission granted") //TODO: handle
-                            }
-
-                            //fetch the current location
-                            fusedLocationClient.getCurrentLocation(priority, null)
-                                .addOnSuccessListener { currentLocation: Location? ->
-                                    isLoading = false
-
-                                    if (currentLocation != null) {
-                                        continuation.resume(currentLocation)
-                                    } else {
-                                        continuation.resume(null)
-                                    }
-                                }
-                                .addOnFailureListener { exception ->
-                                    isLoading = false
-
-                                    if (continuation.isActive) {
-                                        continuation.resumeWithException(exception)
-                                    }
-                                }
-                        }
+                    if (lastLocation != null && (System.currentTimeMillis() - lastLocation.time) <= Constants.MAX_AGE_LAST_LOCATION) {
+                        //there is a last location saved and it is not too old
+                        isLoading = false
+                        continuation.resume(GeolocationResult.Success(lastLocation))
                     } else {
-                        continuation.resume(null)
-                        //TODO: handle
+                        isLoading = true
+                        val priority: Int = when {
+                            permissions.getOrDefault(
+                                ACCESS_FINE_LOCATION,
+                                false
+                            ) -> Priority.PRIORITY_HIGH_ACCURACY
+
+                            permissions.getOrDefault(
+                                ACCESS_COARSE_LOCATION,
+                                false
+                            ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
+                            else -> {
+                                continuation.resume(GeolocationResult.NoPermissionGranted)
+                                return@addOnSuccessListener
+                            }
+                        }
+
+                        //fetch the current location
+                        fusedLocationClient.getCurrentLocation(priority, null)
+                            .addOnSuccessListener { currentLocation: Location? ->
+                                isLoading = false
+
+                                if (currentLocation != null) {
+                                    continuation.resume(
+                                        GeolocationResult.Success(
+                                            currentLocation
+                                        )
+                                    )
+                                } else {
+                                    continuation.resume(GeolocationResult.NotAvailable)
+                                }
+                            }
+                            .addOnFailureListener { exception ->
+                                isLoading = false
+
+                                if (continuation.isActive) {
+                                    continuation.resume(GeolocationResult.Error(exception))
+                                }
+                            }
                     }
+
                 }
                 .addOnFailureListener { exception ->
                     isLoading = false
 
                     if (continuation.isActive) {
-                        //TODO: handle
-                        continuation.resumeWithException(exception)
+                        continuation.resume(GeolocationResult.Error(exception))
                     }
                 }
         }
@@ -334,11 +341,11 @@ class WeatherViewModel(
                 //get weather infos of the result
                 when (val newCurrentWeatherCondition =
                     fetchCurrentWeatherInfo(result.lat, result.lon)) {
-                    is ResultWrapper.Success -> {
+                    is APIResult.Success -> {
                         //update weather and location states
 
                         when (val newForecasts = fetchForecastsInfo(result.lat, result.lon)) {
-                            is ResultWrapper.Success -> {
+                            is APIResult.Success -> {
 
                                 updateConditionsAndShownTimestamp(
                                     newCurrentWeatherCondition.value,
@@ -372,7 +379,7 @@ class WeatherViewModel(
         }
     }
 
-    // Functions called by the UI (e.g. onClick handlers)
+// Functions called by the UI (e.g. onClick handlers)
 
     fun refreshWeatherInfos(
         fusedLocationClient: FusedLocationProviderClient,
@@ -380,27 +387,27 @@ class WeatherViewModel(
     ) {
         viewModelScope.launch {
             if (geolocationEnabled) {
-                //fetch geolocation
-                //TODO: try only for geolocation (remove it in future maybe)
-                try {
-                    val geo = fetchGeolocation(fusedLocationClient, context)
 
-                    if (geo != null) {
+                //fetch geolocation
+                //FIXME: run this in Dispatchers.IO?
+                when (val geo = fetchGeolocation(fusedLocationClient, context)) {
+
+                    is GeolocationResult.Success -> {
 
                         //update weather conditions and location
                         when (val newCurrentWeatherCondition =
                             fetchCurrentWeatherInfo(
-                                geo.latitude.toString(),
-                                geo.longitude.toString()
+                                geo.data.latitude.toString(),
+                                geo.data.longitude.toString()
                             )) {
 
-                            is ResultWrapper.Success -> {
+                            is APIResult.Success -> {
 
                                 when (val newForecasts = fetchForecastsInfo(
-                                    geo.latitude.toString(),
-                                    geo.longitude.toString()
+                                    geo.data.latitude.toString(),
+                                    geo.data.longitude.toString()
                                 )) {
-                                    is ResultWrapper.Success -> {
+                                    is APIResult.Success -> {
 
                                         updateConditionsAndShownTimestamp(
                                             newCurrentWeatherCondition.value,
@@ -427,19 +434,27 @@ class WeatherViewModel(
                                 //all the other cases already handled
                             }
                         }
-                    } else {
-                        showErrorMessage("Position unavailable! Please try again")
                     }
-                } catch (e: Exception) {
-                    //TODO: handle
-                    showErrorMessage("An error has occurred while retrieve the geolocation!")
+
+                    is GeolocationResult.NotAvailable -> {
+                        showErrorMessage(Constants.ERROR_GEOLOCATION_NOT_AVAILABLE)
+                    }
+
+                    is GeolocationResult.NoPermissionGranted -> {
+                        showErrorMessage(Constants.ERROR_GEOLOCATION_NO_PERMISSIONS)
+                    }
+
+                    is GeolocationResult.Error -> {
+                        Log.d(TAG, "Error: ${geo.exception.message.orEmpty()}")
+                        showErrorMessage(Constants.ERROR_GEOLOCATION_GENERIC)
+                    }
                 }
             } else {
                 when (val newCurrentWeatherCondition =
                     fetchCurrentWeatherInfo(location.lat, location.lon)) {
-                    is ResultWrapper.Success -> {
+                    is APIResult.Success -> {
                         when (val newForecasts = fetchForecastsInfo(location.lat, location.lon)) {
-                            is ResultWrapper.Success -> {
+                            is APIResult.Success -> {
 
                                 updateConditionsAndShownTimestamp(
                                     newCurrentWeatherCondition.value,
@@ -466,27 +481,25 @@ class WeatherViewModel(
         context: Context
     ) {
         viewModelScope.launch {
-            //TODO: try only for geolocation (remove it in future maybe)
-            try {
+            //get geolocation infos
+            //FIXME: run this in Dispatchers.IO?
+            when (val geo = fetchGeolocation(fusedLocationClient, context)) {
 
-                //get geolocation infos
-                val geo = fetchGeolocation(fusedLocationClient, context)
-
-                if (geo != null) {
+                is GeolocationResult.Success -> {
                     //update weather conditions
                     when (val newCurrentWeatherCondition =
                         fetchCurrentWeatherInfo(
-                            geo.latitude.toString(),
-                            geo.longitude.toString()
+                            geo.data.latitude.toString(),
+                            geo.data.longitude.toString()
                         )) {
 
-                        is ResultWrapper.Success -> {
+                        is APIResult.Success -> {
 
                             when (val newForecasts = fetchForecastsInfo(
-                                geo.latitude.toString(),
-                                geo.longitude.toString()
+                                geo.data.latitude.toString(),
+                                geo.data.longitude.toString()
                             )) {
-                                is ResultWrapper.Success -> {
+                                is APIResult.Success -> {
 
                                     updateConditionsAndShownTimestamp(
                                         newCurrentWeatherCondition.value,
@@ -515,14 +528,20 @@ class WeatherViewModel(
                             //all the other cases already handled
                         }
                     }
-
-                } else {
-                    showErrorMessage("Position unavailable! Please try again")
                 }
 
-            } catch (e: Exception) {
-                //TODO: handle
-                showErrorMessage("An error has occurred while retrieve the geolocation!")
+                is GeolocationResult.NotAvailable -> {
+                    showErrorMessage(Constants.ERROR_GEOLOCATION_NOT_AVAILABLE)
+                }
+
+                is GeolocationResult.NoPermissionGranted -> {
+                    showErrorMessage(Constants.ERROR_GEOLOCATION_NO_PERMISSIONS)
+                }
+
+                is GeolocationResult.Error -> {
+                    Log.d(TAG, "Error: ${geo.exception.message.orEmpty()}")
+                    showErrorMessage(Constants.ERROR_GEOLOCATION_GENERIC)
+                }
             }
         }
     }
@@ -538,7 +557,7 @@ class WeatherViewModel(
     fun searchLocations(query: String) {
         viewModelScope.launch {
             when (val locations = fetchLatLonByQuery(query)) {
-                is ResultWrapper.Success -> {
+                is APIResult.Success -> {
                     _searchedLocations.clear()
                     _searchedLocations.addAll(locations.value)
 

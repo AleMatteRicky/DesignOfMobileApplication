@@ -9,24 +9,24 @@ import java.io.IOException
 suspend fun <T> safeApiCall(
     dispatcher: CoroutineDispatcher,
     apiCall: suspend () -> T
-): ResultWrapper<T> {
+): APIResult<T> {
     return withContext(dispatcher) {
         try {
-            ResultWrapper.Success(
+            APIResult.Success(
                 apiCall()
             )
         } catch (throwable: Throwable) {
             when (throwable) {
-                is IOException -> ResultWrapper.NetworkError
+                is IOException -> APIResult.NetworkError
                 is HttpException -> {
                     val code = throwable.code()
                     val message = throwable.response()?.errorBody()?.string()
-                    ResultWrapper.GenericError(code, message.orEmpty())
+                    APIResult.GenericError(code, message.orEmpty())
                 }
 
                 else -> {
                     Log.d("safeApiCall", "Unknown error: ${throwable.message}")
-                    ResultWrapper.GenericError(null, "")
+                    APIResult.GenericError(null, "")
                 }
             }
         }
