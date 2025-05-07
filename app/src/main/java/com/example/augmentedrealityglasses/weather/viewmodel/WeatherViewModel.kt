@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +50,9 @@ class WeatherViewModel(
             }
         }
     }
+
+    //Tag for logging
+    private val TAG = "weather"
 
     //Main UI state
     var weatherState by mutableStateOf(
@@ -196,40 +200,20 @@ class WeatherViewModel(
         lat: String,
         lon: String
     ): ResultWrapper<APIWeatherCondition> {
-        //FIXME: useful? if (lat.isNotEmpty() && lon.isNotEmpty()) {
-//        return try {
-//            weatherAPI.getWeatherInfo(
-//                lat,
-//                lon
-//            )
-//        } catch (e: IOException) {
-//            //network error
-//            showErrorMessage("Network error. Please try again later")
-//            null
-//        } catch (e: HttpException) {
-//            //http error
-//            showErrorMessage("Something went wrong while fetching the weather conditions. Please try again later")
-//            null
-//        } catch (e: Exception) {
-//            //generic error
-//            showErrorMessage("Something went wrong. Please try again later")
-//            null
-//        }
-
         return when (val weatherInfo = repository.getCurrentWeather(lat, lon)) {
             is ResultWrapper.Success -> {
                 weatherInfo
             }
 
             is ResultWrapper.GenericError -> {
-                //TODO: use constant
-                showErrorMessage("Generic error while fetching weather information. Try again")
+                Log.d(TAG, "Error (code ${weatherInfo.code}): ${weatherInfo.error}")
+                showErrorMessage(Constants.ERROR_GENERIC_CURRENT_WEATHER)
                 weatherInfo
             }
 
             is ResultWrapper.NetworkError -> {
-                //TODO: use constant
-                showErrorMessage("Network error while fetching weather information. Try again")
+                Log.d(TAG, "Network error")
+                showErrorMessage(Constants.ERROR_NETWORK_CURRENT_WEATHER)
                 weatherInfo
             }
         }
@@ -245,52 +229,34 @@ class WeatherViewModel(
             }
 
             is ResultWrapper.GenericError -> {
-                //TODO: use constant
-                showErrorMessage("Generic error while fetching weather forecasts information. Try again")
+                Log.d(TAG, "Error (code ${forecasts.code}): ${forecasts.error}")
+                showErrorMessage(Constants.ERROR_GENERIC_FORECASTS)
                 forecasts
             }
 
             is ResultWrapper.NetworkError -> {
-                //TODO: use constant
-                showErrorMessage("Network error while fetching weather forecasts information. Try again")
+                Log.d(TAG, "Network error")
+                showErrorMessage(Constants.ERROR_NETWORK_FORECASTS)
                 forecasts
             }
         }
     }
 
     private suspend fun fetchLatLonByQuery(query: String): ResultWrapper<List<WeatherLocation>> {
-//        return try {
-//            weatherAPI.getLocations(
-//                query
-//            )
-//        } catch (e: IOException) {
-//            //network error
-//            showErrorMessage("Network error. Please try again later")
-//            null
-//        } catch (e: HttpException) {
-//            //http error
-//            showErrorMessage("Something went wrong while fetching the locations. Please try again later")
-//            null
-//        } catch (e: Exception) {
-//            //generic error
-//            showErrorMessage("Something went wrong. Please try again later")
-//            null
-//        }
-
         return when (val locations = repository.searchLocations(query)) {
             is ResultWrapper.Success -> {
                 locations
             }
 
             is ResultWrapper.GenericError -> {
-                //TODO: use constant
-                showErrorMessage("Generic error while searching locations. Try again")
+                Log.d(TAG, "Error (code ${locations.code}): ${locations.error}")
+                showErrorMessage(Constants.ERROR_GENERIC_LOCATIONS)
                 locations
             }
 
             is ResultWrapper.NetworkError -> {
-                //TODO: use constant
-                showErrorMessage("Network error while searching locations. Try again")
+                Log.d(TAG, "Network error")
+                showErrorMessage(Constants.ERROR_NETWORK_LOCATIONS)
                 locations
             }
         }
