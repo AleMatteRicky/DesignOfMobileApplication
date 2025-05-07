@@ -11,8 +11,6 @@ import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
 class PhoneCallReceiver : BroadcastReceiver() {
     private val TAG: String = "PhoneCallReceiver"
 
-    // TODO: wakeup the process on ongoing calls
-    // TODO: test receiving a call when the application is not running, when it is running with the bleManager not set and when it is set
     override fun onReceive(context: Context, intent: Intent?) {
         Log.d(TAG, "Calling on receive")
         val bleManager: RemoteDeviceManager =
@@ -20,7 +18,6 @@ class PhoneCallReceiver : BroadcastReceiver() {
 
         val incomingCall = "incoming_call"
 
-        // TODO: Listen only for incoming calls, nothing more
         intent?.let {
             val action: String? = it.action
             if(TelephonyManager.ACTION_PHONE_STATE_CHANGED==action){

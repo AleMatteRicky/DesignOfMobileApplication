@@ -56,15 +56,6 @@
             </intent-filter>
         </activity>
 
-        <!-- BroadcastReceiver for catching incoming calls from the Android system -->
-        <receiver
-                android:name=".callnotifications.PhoneCallReceiver"
-                android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.PHONE_STATE" />
-            </intent-filter>
-        </receiver>
-
     </application>
     <uses-feature
         android:name="android.hardware.microphone"
