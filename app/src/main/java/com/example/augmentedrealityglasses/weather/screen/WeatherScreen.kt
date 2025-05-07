@@ -1,6 +1,7 @@
 package com.example.augmentedrealityglasses.weather.screen
 
 import android.Manifest
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -189,8 +190,8 @@ fun WeatherScreen(
                     text = if (viewModel.isCurrentWeatherShown()) "Date and time (current): ${
                         formatDate(
                             viewModel.weatherState.shownTimestamp
-                        )
-                    }" else "Date and time: ${formatDate(viewModel.weatherState.shownTimestamp)}"
+                        ).orEmpty()
+                    }" else "Date and time: ${formatDate(viewModel.weatherState.shownTimestamp).orEmpty()}"
                 )
                 Text(
                     text = "Info: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.main}"
@@ -316,7 +317,7 @@ fun formatDate(timestampSeconds: String): String? {
                 TimeZone.getTimeZone("Europe/Rome") //TODO: get time zone from app settings
             return format.format(date)
         } catch (e: NumberFormatException) {
-            //TODO: handle
+            Log.d("formatDate", "Error while formatting date: ${e.message}")
         }
         return null
     } else {

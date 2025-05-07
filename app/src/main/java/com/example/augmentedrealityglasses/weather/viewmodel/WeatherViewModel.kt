@@ -52,7 +52,7 @@ class WeatherViewModel(
     }
 
     //Tag for logging
-    private val TAG = "weather"
+    private val TAG = "weather_viewModel"
 
     //Main UI state
     var weatherState by mutableStateOf(
