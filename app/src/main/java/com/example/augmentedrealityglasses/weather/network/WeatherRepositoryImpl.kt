@@ -1,7 +1,5 @@
 package com.example.augmentedrealityglasses.weather.network
 
-import com.example.augmentedrealityglasses.weather.state.WeatherCondition
-import com.example.augmentedrealityglasses.weather.state.WeatherForecasts
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -12,12 +10,12 @@ class WeatherRepositoryImpl(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : WeatherRepository {
 
-    override suspend fun getCurrentWeatherInfo(
+    override suspend fun getCurrentWeather(
         lat: String,
         lon: String
-    ): ResultWrapper<WeatherCondition> {
+    ): ResultWrapper<APIWeatherCondition> {
         return safeApiCall(dispatcher) {
-            weatherService.getCurrentWeatherInfo(lat, lon)
+            weatherService.getCurrentWeather(lat, lon)
         }
     }
 
@@ -27,12 +25,12 @@ class WeatherRepositoryImpl(
         }
     }
 
-    override suspend fun getWeatherForecast(
+    override suspend fun getWeatherForecasts(
         lat: String,
         lon: String
-    ): ResultWrapper<WeatherForecasts> {
+    ): ResultWrapper<APIWeatherForecasts> {
         return safeApiCall(dispatcher) {
-            weatherService.getWeatherForecast(lat, lon)
+            weatherService.getWeatherForecasts(lat, lon)
         }
     }
 }

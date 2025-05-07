@@ -165,12 +165,12 @@ fun WeatherScreen(
                     text = if (viewModel.geolocationEnabled) "Current location: ${viewModel.location.getFullName()}" else "Searched location: ${viewModel.location.getFullName()}",
                     color = if (viewModel.geolocationEnabled) Color.Red else Color.Black
                 )
-                Text(
-                    text = "Latitude: ${viewModel.location.lat}"
-                )
-                Text(
-                    text = "Longitude: ${viewModel.location.lon}"
-                )
+//                Text(
+//                    text = "Latitude: ${viewModel.location.lat}"
+//                )
+//                Text(
+//                    text = "Longitude: ${viewModel.location.lon}"
+//                )
                 Spacer(modifier = Modifier.height(16.dp))
                 Row {
                     ForecastDropdown(
@@ -186,19 +186,23 @@ fun WeatherScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Date and time: ${formatDate(viewModel.weatherUI.timestamp)}"
+                    text = if (viewModel.isCurrentWeatherShown()) "Date and time (current): ${
+                        formatDate(
+                            viewModel.weatherState.shownTimestamp
+                        )
+                    }" else "Date and time: ${formatDate(viewModel.weatherState.shownTimestamp)}"
                 )
                 Text(
-                    text = "Info: ${viewModel.weatherUI.main}"
+                    text = "Info: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.main}"
                 )
                 Text(
-                    text = "Description: ${viewModel.weatherUI.description}"
+                    text = "Description: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.description}"
                 )
                 Text(
-                    text = "Temperature: ${viewModel.weatherUI.temp} °C"
+                    text = "Temperature: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.temp} °C"
                 )
                 Text(
-                    text = "Pressure: ${viewModel.weatherUI.pressure} hPa"
+                    text = "Pressure: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.pressure} hPa"
                 )
                 Row(modifier = Modifier.fillMaxWidth()) {
                     TextField(
@@ -289,21 +293,22 @@ fun ForecastDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            viewModel.weatherState.forecasts.list.forEach { forecast ->
-                DropdownMenuItem(
-                    text = { Text(formatDate(forecast.dt) ?: "") },
-                    onClick = {
-                        expanded = false
-                        viewModel.showWeatherForecast(forecast.dt)
-                    }
-                )
-            }
+            viewModel.weatherState.conditions.filter { condition -> !condition.isCurrent }
+                .forEach { forecast ->
+                    DropdownMenuItem(
+                        text = { Text(formatDate(forecast.timestamp) ?: "") },
+                        onClick = {
+                            expanded = false
+                            viewModel.showWeatherForecast(forecast.timestamp)
+                        }
+                    )
+                }
         }
     }
 }
 
 fun formatDate(timestampSeconds: String): String? {
-    if (timestampSeconds != "current" && timestampSeconds != "") {
+    if (timestampSeconds != "") {
         try {
             val date = Date((timestampSeconds.toLong()) * 1000)
             val format = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())

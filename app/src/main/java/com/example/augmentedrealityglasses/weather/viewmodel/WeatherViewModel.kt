@@ -19,16 +19,12 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.weather.constants.Constants
+import com.example.augmentedrealityglasses.weather.network.APIWeatherCondition
+import com.example.augmentedrealityglasses.weather.network.APIWeatherForecasts
 import com.example.augmentedrealityglasses.weather.network.ResultWrapper
 import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
-import com.example.augmentedrealityglasses.weather.state.Coord
-import com.example.augmentedrealityglasses.weather.state.Main
-import com.example.augmentedrealityglasses.weather.state.Sys
-import com.example.augmentedrealityglasses.weather.state.Weather
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
-import com.example.augmentedrealityglasses.weather.state.WeatherForecasts
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
-import com.example.augmentedrealityglasses.weather.state.WeatherUI
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
@@ -54,31 +50,11 @@ class WeatherViewModel(
         }
     }
 
-    var weatherUI by mutableStateOf(
-        WeatherUI(
-            "",
-            "",
-            "",
-            "",
-            ""
-        )
-    )
-        private set
-
     //Main UI state
     var weatherState by mutableStateOf(
         WeatherUiState(
-            WeatherCondition(
-                listOf(Weather("", "")),
-                Coord("", ""),
-                Main("", ""),
-                Sys(""),
-                ""
-            ),
-            WeatherForecasts(
-                listOf()
-            ),
-            "current"
+            listOf(),
+            ""
         )
     )
         private set
@@ -143,41 +119,48 @@ class WeatherViewModel(
         )
     }
 
-    private fun updateWeatherState(
-        newCurrentWeatherConditions: WeatherCondition = weatherState.currentCondition,
-        newForecasts: WeatherForecasts = weatherState.forecasts,
-        newTimestamp: String = weatherState.shownTimestamp
+    private fun updateConditionsAndShownTimestamp(
+        newCurrentCondition: APIWeatherCondition,
+        newForecasts: APIWeatherForecasts
     ) {
+        val newConditions: List<WeatherCondition> = listOf(
+            WeatherCondition(
+                newCurrentCondition.weather.main,
+                newCurrentCondition.weather.description,
+                newCurrentCondition.main.temp,
+                newCurrentCondition.main.pressure,
+                newCurrentCondition.dt,
+                true
+            )
+        ) +
+                newForecasts.list.map { forecast ->
+                    WeatherCondition(
+                        forecast.weather.main,
+                        forecast.weather.description,
+                        forecast.main.temp,
+                        forecast.main.pressure,
+                        forecast.dt,
+                        false
+                    )
+                }
+
         weatherState = weatherState.copy(
-            currentCondition = newCurrentWeatherConditions,
-            forecasts = newForecasts,
-            shownTimestamp = newTimestamp
+            conditions = newConditions
         )
 
-        if (newTimestamp == "current") {
-            weatherUI = weatherUI.copy(
-                main = weatherState.currentCondition.weather.main,
-                description = weatherState.currentCondition.weather.description,
-                temp = weatherState.currentCondition.main.temp,
-                pressure = weatherState.currentCondition.main.pressure,
-                timestamp = "current"
-            )
-        } else {
-            val selectedForecast =
-                weatherState.forecasts.list.find { forecast -> forecast.dt == newTimestamp }
+        updateShownTimestamp(newCurrentCondition.dt)
 
-            if (selectedForecast != null) {
-                weatherUI = weatherUI.copy(
-                    main = selectedForecast.weather.main,
-                    description = selectedForecast.weather.description,
-                    temp = selectedForecast.main.temp,
-                    pressure = selectedForecast.main.pressure,
-                    timestamp = selectedForecast.dt
-                )
-            } else {
-                //TODO: handle
-            }
-        }
+    }
+
+    private fun updateShownTimestamp(newTimestamp: String) {
+        weatherState = weatherState.copy(
+            shownTimestamp = newTimestamp
+        )
+    }
+
+    fun isCurrentWeatherShown(): Boolean {
+        return weatherState.conditions.find { condition -> condition.timestamp == weatherState.shownTimestamp }?.isCurrent
+            ?: false
     }
 
     private fun updateLocationState(
@@ -212,7 +195,7 @@ class WeatherViewModel(
     private suspend fun fetchCurrentWeatherInfo(
         lat: String,
         lon: String
-    ): ResultWrapper<WeatherCondition> {
+    ): ResultWrapper<APIWeatherCondition> {
         //FIXME: useful? if (lat.isNotEmpty() && lon.isNotEmpty()) {
 //        return try {
 //            weatherAPI.getWeatherInfo(
@@ -233,7 +216,7 @@ class WeatherViewModel(
 //            null
 //        }
 
-        return when (val weatherInfo = repository.getCurrentWeatherInfo(lat, lon)) {
+        return when (val weatherInfo = repository.getCurrentWeather(lat, lon)) {
             is ResultWrapper.Success -> {
                 weatherInfo
             }
@@ -255,8 +238,8 @@ class WeatherViewModel(
     private suspend fun fetchForecastsInfo(
         lat: String,
         lon: String
-    ): ResultWrapper<WeatherForecasts> {
-        return when (val forecasts = repository.getWeatherForecast(lat, lon)) {
+    ): ResultWrapper<APIWeatherForecasts> {
+        return when (val forecasts = repository.getWeatherForecasts(lat, lon)) {
             is ResultWrapper.Success -> {
                 forecasts
             }
@@ -391,7 +374,7 @@ class WeatherViewModel(
                         when (val newForecasts = fetchForecastsInfo(result.lat, result.lon)) {
                             is ResultWrapper.Success -> {
 
-                                updateWeatherState(
+                                updateConditionsAndShownTimestamp(
                                     newCurrentWeatherCondition.value,
                                     newForecasts.value
                                 )
@@ -453,10 +436,9 @@ class WeatherViewModel(
                                 )) {
                                     is ResultWrapper.Success -> {
 
-                                        updateWeatherState(
+                                        updateConditionsAndShownTimestamp(
                                             newCurrentWeatherCondition.value,
-                                            newForecasts.value,
-                                            "current" //show current weather
+                                            newForecasts.value
                                         )
 
                                         // state not available with this API call
@@ -492,10 +474,10 @@ class WeatherViewModel(
                     is ResultWrapper.Success -> {
                         when (val newForecasts = fetchForecastsInfo(location.lat, location.lon)) {
                             is ResultWrapper.Success -> {
-                                updateWeatherState(
+
+                                updateConditionsAndShownTimestamp(
                                     newCurrentWeatherCondition.value,
                                     newForecasts.value,
-                                    "current" //show current weather
                                 )
                             }
 
@@ -539,7 +521,8 @@ class WeatherViewModel(
                                 geo.longitude.toString()
                             )) {
                                 is ResultWrapper.Success -> {
-                                    updateWeatherState(
+
+                                    updateConditionsAndShownTimestamp(
                                         newCurrentWeatherCondition.value,
                                         newForecasts.value
                                     )
@@ -604,10 +587,16 @@ class WeatherViewModel(
     }
 
     fun showCurrentWeather() {
-        updateWeatherState(newTimestamp = "current")
+        val currentWeather = weatherState.conditions.find { condition -> condition.isCurrent }
+
+        if (currentWeather != null) {
+            updateShownTimestamp(currentWeather.timestamp)
+        } else {
+            //TODO: handle
+        }
     }
 
     fun showWeatherForecast(timeStamp: String) {
-        updateWeatherState(newTimestamp = timeStamp)
+        updateShownTimestamp(timeStamp)
     }
 }
