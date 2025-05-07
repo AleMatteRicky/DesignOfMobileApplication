@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.callnotifications
 
+import android.app.NotificationManager
 import android.util.Log
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -20,9 +21,19 @@ class PhoneCallReceiver : BroadcastReceiver() {
 
         intent?.let {
             val action: String? = it.action
-            if(TelephonyManager.ACTION_PHONE_STATE_CHANGED==action){
+
+            // check if DND is active
+            val notificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val filter = notificationManager.currentInterruptionFilter
+            if (isDNDActive(filter)) {
+                Log.d(TAG, "DND is active: do not share the notification")
+                return
+            }
+
+            if (TelephonyManager.ACTION_PHONE_STATE_CHANGED == action) {
                 val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
-                if(TelephonyManager.EXTRA_STATE_RINGING==state){
+                if (TelephonyManager.EXTRA_STATE_RINGING == state) {
                     Log.d(TAG, "Incoming call")
                     if (bleManager.isConnected()) {
                         bleManager.send(incomingCall)
@@ -41,4 +52,9 @@ class PhoneCallReceiver : BroadcastReceiver() {
         }
     }
 
+    private fun isDNDActive(filter: Int): Boolean {
+        return filter == NotificationManager.INTERRUPTION_FILTER_NONE
+                || filter == NotificationManager.INTERRUPTION_FILTER_ALARMS
+                || filter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
+    }
 }
