@@ -26,6 +26,7 @@ import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class TranslationViewModel(
     private val systemLanguage: String, application: Application
@@ -81,6 +82,18 @@ class TranslationViewModel(
         translatorJob = viewModelScope.launch {
             if (uiState.targetLanguage != null) {
                 identifySourceLanguage() //todo check if could ever happen that the initialization do not wait for the identification
+                checkModelDownloaded()
+                if (!uiState.isModelNotAvailable) {
+                    initializeTranslator()
+                    translator?.translate(uiState.recognizedText)
+                        ?.addOnSuccessListener { translatedText ->
+                            Log.d("Translation succeeded", translatedText)
+                            uiState = uiState.copy(translatedText = translatedText)
+                        }
+                        ?.addOnFailureListener { exception ->
+                            Log.e("Translation failed", exception.toString())
+                        }
+                }
             }
         }
     }
@@ -92,42 +105,17 @@ class TranslationViewModel(
             .build()
 
         translator = Translation.getClient(options)
-
-        var conditions = DownloadConditions.Builder()
-            .build()
-        translator?.downloadModelIfNeeded(conditions)
-            ?.addOnSuccessListener {
-                Log.d("Correct", "Download Succeeded")
-            }
-            ?.addOnFailureListener { exception ->
-                Log.d("Error", "Download Failed")
-            }
     }
 
-    private fun checkModelDownloaded() {
+    private suspend fun checkModelDownloaded() {
         val targetLanguageRemoteModel: RemoteModel =
             TranslateRemoteModel.Builder(uiState.targetLanguage!!).build()
         val sourceLanguageRemoteModel: RemoteModel =
             TranslateRemoteModel.Builder(uiState.sourceLanguage!!).build()
-        modelManager.isModelDownloaded(sourceLanguageRemoteModel)
-            .addOnSuccessListener { isDownloaded ->
-                isSourceModelNotAvailable = !isDownloaded
-            }.addOnFailureListener {
-                Log.d(
-                    "Error",
-                    "Error while checking if the source model was already downloaded on the device"
-                )
-            }
-
-        modelManager.isModelDownloaded(targetLanguageRemoteModel)
-            .addOnSuccessListener { isDownloaded ->
-                isTargetModelNotAvailable = !isDownloaded
-            }.addOnFailureListener {
-                Log.d(
-                    "Error",
-                    "Error while checking if the target model was already downloaded on the device"
-                )
-            }
+        isSourceModelNotAvailable =
+            !modelManager.isModelDownloaded(sourceLanguageRemoteModel).await()
+        isTargetModelNotAvailable =
+            !modelManager.isModelDownloaded(targetLanguageRemoteModel).await()
 
         uiState =
             uiState.copy(isModelNotAvailable = isSourceModelNotAvailable || isTargetModelNotAvailable)
@@ -142,7 +130,8 @@ class TranslationViewModel(
         if (isTargetModelNotAvailable) {
             downloadTargetLanguageModel()
         }
-        uiState = uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
+        uiState =
+            uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
         uiState = uiState.copy(isDownloadingLanguageModel = false)
     }
 
@@ -176,28 +165,18 @@ class TranslationViewModel(
             }
     }
 
+    //todo try to remove nested Tasks
 
-    private fun identifySourceLanguage() {
+    private suspend fun identifySourceLanguage() {
         val languageIdentification = LanguageIdentification.getClient()
-        languageIdentification.identifyLanguage(uiState.recognizedText)
-            .addOnSuccessListener { tag ->
-                if (tag == "und") {
-                    Log.e("Undefined Language", "Exception")
-                } else {
-                    uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
-                    //todo tag could be not supported by mlkit translate
-                }
-
-                initializeTranslator()
-                translator?.translate(uiState.recognizedText)
-                    ?.addOnSuccessListener { translatedText ->
-                        Log.d("Translation succeeded", translatedText)
-                        uiState = uiState.copy(translatedText = translatedText)
-                    }
-                    ?.addOnFailureListener { exception ->
-                        Log.e("Translation failed", exception.toString())
-                    }
-            }
+        val tag = languageIdentification.identifyLanguage(uiState.recognizedText).await()
+        if (tag != "und") {
+            uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
+            //todo tag could be not supported by mlkit translate
+            //todo
+        } else {
+            Log.e("Undefined Language", "Exception")
+        }
     }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
