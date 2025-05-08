@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.play.services.location)
     implementation(libs.kotlinx.coroutines.core)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
