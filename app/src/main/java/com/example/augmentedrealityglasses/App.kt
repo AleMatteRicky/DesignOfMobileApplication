@@ -2,9 +2,11 @@ package com.example.augmentedrealityglasses
 
 import android.app.Application
 import android.content.IntentFilter
+import android.provider.Telephony
 import android.telephony.TelephonyManager
 import android.util.Log
 import com.example.augmentedrealityglasses.notifications.PhoneCallReceiver
+import com.example.augmentedrealityglasses.notifications.SmsReceiver
 
 class App : Application() {
     private val TAG = "myapp"
@@ -16,8 +18,14 @@ class App : Application() {
         super.onCreate()
         // application context passed since the dependencies in DefaultAppContainer live as long as the application
         container = DefaultAppContainer(this)
-        // register the broadcast receiver
-        val receiver = PhoneCallReceiver()
-        registerReceiver(receiver, IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED))
+        // register the broadcast receivers
+        registerReceiver(
+            PhoneCallReceiver(),
+            IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED)
+        )
+
+        if (container.isDeviceSmsCapable) {
+            registerReceiver(SmsReceiver(), IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION))
+        }
     }
 }
