@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.callnotifications
+package com.example.augmentedrealityglasses.notifications
 
 import android.app.NotificationManager
 import android.util.Log

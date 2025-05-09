@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.callnotifications.permissions
+package com.example.augmentedrealityglasses.notifications.permissions
 
 import android.Manifest
 import android.os.Build

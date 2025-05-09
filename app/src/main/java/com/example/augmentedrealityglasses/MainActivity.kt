@@ -18,7 +18,7 @@ import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
 import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
-import com.example.augmentedrealityglasses.callnotifications.permissions.PermissionsForNotification
+import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
 import com.example.augmentedrealityglasses.translation.ui.TranslationScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
 import com.google.mlkit.nl.translate.TranslateLanguage

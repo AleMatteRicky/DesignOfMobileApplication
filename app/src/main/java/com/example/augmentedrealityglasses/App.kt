@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.IntentFilter
 import android.telephony.TelephonyManager
 import android.util.Log
-import com.example.augmentedrealityglasses.callnotifications.PhoneCallReceiver
+import com.example.augmentedrealityglasses.notifications.PhoneCallReceiver
 
 class App : Application() {
     private val TAG = "myapp"
