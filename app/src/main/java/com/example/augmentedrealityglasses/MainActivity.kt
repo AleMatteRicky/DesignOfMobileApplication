@@ -27,21 +27,25 @@ class MainActivity : ComponentActivity() {
     private val TAG = "myActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val app = application as App
         setContent {
             val navController = rememberNavController()
             NavHost(navController = navController, startDestination = ScreenName.HOME.name) {
                 composable(ScreenName.HOME.name) {
-                    PermissionsForNotification {
-                        HomeScreen(
-                            onNavigateToTranslation = {
-                                navController.navigate(
-                                    route = ScreenName.TRANSLATION_SCREEN.name
-                                )
-                            },
-                            onNavigateToWeather = { navController.navigate(ScreenName.WEATHER_SCREEN.name) },
-                            onNavigateToBLE = { navController.navigate(ScreenName.FIND_DEVICE.name) }
-                        )
-                    }
+                    PermissionsForNotification(
+                        app.container.isDeviceSmsCapable,
+                        content={
+                            HomeScreen(
+                                onNavigateToTranslation = {
+                                    navController.navigate(
+                                        route = ScreenName.TRANSLATION_SCREEN.name
+                                    )
+                                },
+                                onNavigateToWeather = { navController.navigate(ScreenName.WEATHER_SCREEN.name) },
+                                onNavigateToBLE = { navController.navigate(ScreenName.FIND_DEVICE.name) }
+                            )
+                        }
+                    )
                 }
                 composable(ScreenName.FIND_DEVICE.name) {
                     BluetoothSampleBox {

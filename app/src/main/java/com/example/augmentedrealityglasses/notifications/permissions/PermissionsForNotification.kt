@@ -7,14 +7,20 @@ import com.example.augmentedrealityglasses.ble.permissions.PermissionBox
 
 @Composable
 fun PermissionsForNotification(
+    isDeviceSmsCapable: Boolean,
     content: @Composable () -> Unit
 ) {
+    val permissionsForCallNotifications = listOf(
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.READ_CALL_LOG
+    )
+
+    val permissionsForMessageNotifications =
+        if (isDeviceSmsCapable) listOf(Manifest.permission.RECEIVE_SMS) else listOf()
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         PermissionBox(
-            permissions = listOf(
-                Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.READ_CALL_LOG
-            ),
+            permissions = permissionsForCallNotifications + permissionsForMessageNotifications
         ) {
             content()
         }
