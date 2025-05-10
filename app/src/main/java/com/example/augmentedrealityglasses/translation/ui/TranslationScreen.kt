@@ -74,15 +74,21 @@ fun TranslationScreen(
         ) {
             Text("Translate")
         }
+
         if (viewModel.uiState.isDownloadingLanguageModel) {
             DisplayModelDownloading()
         }
+        else{
+            if(viewModel.uiState.isModelNotAvailable){
+                DisplayModelMissing { viewModel.downloadLanguageModel() }
+            }
+        }
+
     }
 
     /*
     todo, check if the device has a microphone otherwise disable the feature
-
- */
+    */
 
 }
 
@@ -102,6 +108,32 @@ private fun DisplayModelDownloading(){
                 Text("Downloading the model")
                 Spacer(modifier = Modifier.height(8.dp)) //could be removed
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+        }
+    }
+}
+
+@Composable
+private fun DisplayModelMissing(onClickDownload: () -> Unit){
+    var showDialog by remember { mutableStateOf(true) }
+    if(showDialog) {
+        Dialog(onDismissRequest = { showDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                tonalElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .width(IntrinsicSize.Min),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("This model is not available on the device, download it in order to complete the translation")
+                    Spacer(modifier = Modifier.height(8.dp)) //could be removed
+                    Button(onClickDownload) {
+                        Text("Download")
+                    }
+                }
             }
         }
     }
