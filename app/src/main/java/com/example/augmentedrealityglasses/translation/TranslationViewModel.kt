@@ -75,15 +75,11 @@ class TranslationViewModel(
 
     fun translate() {
 
-        if (uiState.isRecording) {
-            stopRecording()
-        }
-
         translatorJob?.cancel()
 
         translatorJob = viewModelScope.launch {
             if (uiState.targetLanguage != null) {
-                identifySourceLanguage() //todo check if could ever happen that the initialization do not wait for the identification
+                identifySourceLanguage()
                 checkModelDownloaded()
                 if (!uiState.isModelNotAvailable) {
                     initializeTranslator()
@@ -123,7 +119,6 @@ class TranslationViewModel(
             uiState.copy(isModelNotAvailable = isSourceModelNotAvailable || isTargetModelNotAvailable)
     }
 
-    //todo add a button to download the language model if it is not already downloaded on the device
     fun downloadLanguageModel() {
         viewModelScope.launch {
             uiState = uiState.copy(isDownloadingLanguageModel = true)
@@ -155,8 +150,6 @@ class TranslationViewModel(
         ).await()
         isTargetModelNotAvailable = false
     }
-
-    //todo try to remove nested Tasks
 
     private suspend fun identifySourceLanguage() {
         val languageIdentification = LanguageIdentification.getClient()
@@ -204,7 +197,7 @@ class TranslationViewModel(
                 Log.d("SpeechRecognition", "Rms changed. Parameters: $params")
             }
 
-            override fun onBufferReceived(p0: ByteArray?) {
+            override fun onBufferReceived(value: ByteArray?) {
             }
 
             override fun onEndOfSpeech() {
@@ -232,6 +225,9 @@ class TranslationViewModel(
                 uiState = uiState.copy(
                     recognizedText = data.toString().removePrefix("[").removeSuffix("]")
                 )
+                if(uiState.targetLanguage != null){
+                    translate()
+                }
                 Log.d("SpeechRecognizer", "Speech recognition results received: $data")
             }
 
@@ -242,9 +238,13 @@ class TranslationViewModel(
                     recognizedText = data.toString().removePrefix("[").removeSuffix("]")
                 )
                 Log.d("SpeechRecognizer", "Speech recognition partial results received: $data")
+
+                if(uiState.targetLanguage != null){
+                    translate()
+                }
             }
 
-            override fun onEvent(p0: Int, p1: Bundle?) {
+            override fun onEvent(x: Int, y: Bundle?) {
             }
         }
     }

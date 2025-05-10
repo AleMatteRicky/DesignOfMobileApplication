@@ -77,9 +77,8 @@ fun TranslationScreen(
 
         if (viewModel.uiState.isDownloadingLanguageModel) {
             DisplayModelDownloading()
-        }
-        else{
-            if(viewModel.uiState.isModelNotAvailable){
+        } else {
+            if (viewModel.uiState.isModelNotAvailable) {
                 DisplayModelMissing { viewModel.downloadLanguageModel() }
             }
         }
@@ -93,7 +92,7 @@ fun TranslationScreen(
 }
 
 @Composable
-private fun DisplayModelDownloading(){
+private fun DisplayModelDownloading() {
     Dialog(onDismissRequest = { /* leaving this function empty avoids that the user close the dialog only by clicking outside it */ }) {
         Surface(
             shape = RoundedCornerShape(8.dp),
@@ -114,9 +113,9 @@ private fun DisplayModelDownloading(){
 }
 
 @Composable
-private fun DisplayModelMissing(onClickDownload: () -> Unit){
+private fun DisplayModelMissing(onClickDownload: () -> Unit) {
     var showDialog by remember { mutableStateOf(true) }
-    if(showDialog) {
+    if (showDialog) {
         Dialog(onDismissRequest = { showDialog = false }) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
