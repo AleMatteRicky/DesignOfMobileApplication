@@ -60,6 +60,8 @@ class TranslationViewModel(
         }
     }
 
+    //todo add exception handling for all the synchronous methods
+
     fun stopRecording() { //todo the recorder stops automatically after few seconds during which it does not receive audio input, change it
         recorder?.stopListening()
         recorder?.destroy()
@@ -123,46 +125,35 @@ class TranslationViewModel(
 
     //todo add a button to download the language model if it is not already downloaded on the device
     fun downloadLanguageModel() {
-        uiState = uiState.copy(isDownloadingLanguageModel = true)
-        if (isSourceModelNotAvailable) {
-            downloadSourceLanguageModel()
+        viewModelScope.launch {
+            uiState = uiState.copy(isDownloadingLanguageModel = true)
+            if (isSourceModelNotAvailable) {
+                downloadSourceLanguageModel()
+            }
+            if (isTargetModelNotAvailable) {
+                downloadTargetLanguageModel()
+            }
+            uiState =
+                uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
+            uiState = uiState.copy(isDownloadingLanguageModel = false)
         }
-        if (isTargetModelNotAvailable) {
-            downloadTargetLanguageModel()
-        }
-        uiState =
-            uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
-        uiState = uiState.copy(isDownloadingLanguageModel = false)
+
     }
 
-    private fun downloadSourceLanguageModel() {
+    private suspend fun downloadSourceLanguageModel() {
         modelManager.download(
             TranslateRemoteModel.Builder(uiState.sourceLanguage!!).build(),
             DownloadConditions.Builder().build()
-        )
-            .addOnSuccessListener {
-                Log.d("Correct", "Download of source language succeeded")
-                isSourceModelNotAvailable = false
-            }
-            .addOnFailureListener {
-                Log.d("Error", "Download of source language failed")
-                //todo add error handling
-            }
+        ).await()
+        isSourceModelNotAvailable = false
     }
 
-    private fun downloadTargetLanguageModel() {
+    private suspend fun downloadTargetLanguageModel() {
         modelManager.download(
             TranslateRemoteModel.Builder(uiState.targetLanguage!!).build(),
             DownloadConditions.Builder().build()
-        )
-            .addOnSuccessListener {
-                Log.d("Correct", "Download of target language succeeded")
-                isTargetModelNotAvailable = false
-            }
-            .addOnFailureListener {
-                Log.d("Error", "Download of target language failed")
-                //todo add error handling
-            }
+        ).await()
+        isTargetModelNotAvailable = false
     }
 
     //todo try to remove nested Tasks
