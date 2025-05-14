@@ -1,6 +1,7 @@
 package com.example.augmentedrealityglasses.weather.network
 
 import com.google.gson.annotations.SerializedName
+import java.util.Date
 
 data class APIWeatherCondition(
     @SerializedName("weather")
@@ -9,7 +10,7 @@ data class APIWeatherCondition(
     val main: APIMain,
     val sys: APISys,
     val name: String,
-    val dt: String
+    val dt: Date
 ) {
     val weather: APIWeather
         get() = _weather[0]
@@ -39,7 +40,7 @@ data class APIWeatherForecasts(
 )
 
 data class APIForecast(
-    val dt: String,
+    val dt: Date,
     val main: APIMain,
     @SerializedName("weather")
     private val _weather: List<APIWeather>,

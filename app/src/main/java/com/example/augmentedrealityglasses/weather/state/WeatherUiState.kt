@@ -1,9 +1,10 @@
 package com.example.augmentedrealityglasses.weather.state
 
+import java.util.Date
+
 
 data class WeatherUiState(
-    val conditions: List<WeatherCondition>,
-    val shownTimestamp: String
+    val conditions: List<WeatherCondition>
 )
 
 data class WeatherCondition(
@@ -11,7 +12,7 @@ data class WeatherCondition(
     val description: String,
     val temp: String,
     val pressure: String,
-    val timestamp: String,
+    val dateTime: Date,
     val isCurrent: Boolean
 )
 

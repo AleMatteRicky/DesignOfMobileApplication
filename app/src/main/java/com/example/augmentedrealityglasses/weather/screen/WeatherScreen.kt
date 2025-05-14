@@ -1,9 +1,6 @@
 package com.example.augmentedrealityglasses.weather.screen
 
 import android.Manifest
-import android.content.Context
-import android.text.format.DateFormat.is24HourFormat
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -21,9 +18,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -39,13 +37,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.augmentedrealityglasses.weather.constants.Constants
+import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 
 @Composable
 fun WeatherScreen(
@@ -164,55 +163,9 @@ fun WeatherScreen(
                         )
                     }
                 }
-                Text(
-                    text = if (viewModel.geolocationEnabled) "Current location: ${viewModel.location.getFullName()}" else "Searched location: ${viewModel.location.getFullName()}",
-                    color = if (viewModel.geolocationEnabled) Color.Red else Color.Black
-                )
-//                Text(
-//                    text = "Latitude: ${viewModel.location.lat}"
-//                )
-//                Text(
-//                    text = "Longitude: ${viewModel.location.lon}"
-//                )
+
                 Spacer(modifier = Modifier.height(16.dp))
-                Row {
-                    ForecastDropdown(
-                        viewModel,
-                        context
-                    )
-                    Button(
-                        onClick = { viewModel.showCurrentWeather() }
-                    ) {
-                        Text(
-                            text = "Current weather"
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = if (viewModel.isCurrentWeatherShown()) "Date and time (current): ${
-                        formatDate(
-                            viewModel.weatherState.shownTimestamp, context
-                        ).orEmpty()
-                    }" else "Date and time: ${
-                        formatDate(
-                            viewModel.weatherState.shownTimestamp,
-                            context
-                        ).orEmpty()
-                    }"
-                )
-                Text(
-                    text = "Info: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.main}"
-                )
-                Text(
-                    text = "Description: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.description}"
-                )
-                Text(
-                    text = "Temperature: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.temp} °C"
-                )
-                Text(
-                    text = "Pressure: ${viewModel.weatherState.conditions.find { condition -> condition.timestamp == viewModel.weatherState.shownTimestamp }?.pressure} hPa"
-                )
+
                 Row(modifier = Modifier.fillMaxWidth()) {
                     TextField(
                         value = viewModel.query,
@@ -235,7 +188,7 @@ fun WeatherScreen(
                         )
                     }
                 }
-
+                //FIXME: fix the UI when displaying locations found by the api (and also the "no result" Text)
                 LazyColumn {
                     items(viewModel.searchedLocations) { location ->
                         Text(
@@ -259,13 +212,35 @@ fun WeatherScreen(
                         text = "No results found"
                     )
                 }
-
+                //FIXME: wrong place
                 if (viewModel.errorVisible) {
                     Text(
                         color = Color.Red,
                         text = viewModel.errorMessage
                     )
                 }
+
+                Text(
+                    text = if (viewModel.geolocationEnabled) "Current location: ${viewModel.location.getFullName()}" else "Searched location: ${viewModel.location.getFullName()}",
+                    color = if (viewModel.geolocationEnabled) Color.Red else Color.Black
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                //Current weather info
+                val current = viewModel.getCurrentWeather()
+
+                if (current != null) {
+                    Condition(current)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                //Forecast weather
+                Forecasts(
+                    conditions = viewModel.getForecasts(),
+                    dayShown = viewModel.dayShown,
+                    onDayChange = { viewModel.changeDay(it) }
+                )
             }
             Button(
                 onClick = { onNavigateToHome() },
@@ -281,66 +256,126 @@ fun WeatherScreen(
     }
 }
 
+//Composable that displays a specific weather condition
 @Composable
-fun ForecastDropdown(
-    viewModel: WeatherViewModel,
-    context: Context
+fun Condition(
+    condition: WeatherCondition
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            val dateFormat = SimpleDateFormat("dd MMMM yyyy HH:mm", Locale.getDefault())
 
-    Column {
-        Box(modifier = Modifier
-            .clickable { expanded = true }
-            .background(Color.LightGray.copy(alpha = 0.3f), shape = RoundedCornerShape(8.dp))
-            .padding(12.dp)
-        ) {
             Text(
-                text = "Select date and time of forecast"
+                text = "Date and time: ${dateFormat.format(condition.dateTime)}"
             )
-        }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            viewModel.weatherState.conditions.filter { condition -> !condition.isCurrent }
-                .forEach { forecast ->
-                    DropdownMenuItem(
-                        text = { Text(formatDate(forecast.timestamp, context) ?: "") },
-                        onClick = {
-                            expanded = false
-                            viewModel.showWeatherForecast(forecast.timestamp)
-                        }
-                    )
-                }
+            Text(
+                text = "Info: ${condition.main}"
+            )
+            Text(
+                text = "Description: ${condition.description}"
+            )
+            Text(
+                text = "Temperature: ${condition.temp}"
+            )
+            Text(
+                text = "Pressure: ${condition.pressure}"
+            )
         }
     }
 }
 
-fun formatDate(timestampSeconds: String, context: Context): String? {
-    if (timestampSeconds != "") {
-        try {
-            val date = Date((timestampSeconds.toLong()) * 1000)
-            val timeZone = TimeZone.getDefault().id
-            val is24HourFormat = is24HourFormat(context)
+//Composable that shows forecasts
+@Composable
+fun Forecasts(
+    conditions: List<WeatherCondition>,
+    dayShown: Date,
+    onDayChange: (Date) -> Unit
+) {
+    val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
 
-            val pattern = if (is24HourFormat) {
-                "dd/MM/yyyy HH:mm:ss" // 24h
-            } else {
-                "dd/MM/yyyy hh:mm:ss a" // 12h with AM/PM
+    //This function normalizes the given Date by setting its time to midnight (00:00:00.000), effectively removing the time portion and leaving only the date (year, month, day)
+    fun normalizeDate(date: Date): Date {
+        val cal = Calendar.getInstance().apply {
+            time = date
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return cal.time
+    }
+
+    //It contains all available days related to weather conditions
+    val availableDays: List<Date> = conditions
+        .map { normalizeDate(it.dateTime) }
+        .distinct()
+        .sorted()
+
+    val normalizedDayShown = normalizeDate(dayShown)
+
+    val currentIndex = availableDays.indexOfFirst { it == normalizedDayShown }
+
+    val filteredConditions = conditions.filter {
+        normalizeDate(it.dateTime) == normalizedDayShown
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Button(
+                onClick = {
+                    if (currentIndex > 0) {
+                        onDayChange(availableDays[currentIndex - 1])
+                    }
+                },
+                enabled = currentIndex > 0
+            ) {
+                Text("<")
             }
 
-            val format = SimpleDateFormat(pattern, Locale.getDefault())
+            Text(
+                text = dateFormat.format(normalizedDayShown),
+                modifier = Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.titleMedium
+            )
 
-            format.timeZone =
-                TimeZone.getTimeZone(timeZone)
-
-            return format.format(date)
-        } catch (e: NumberFormatException) {
-            Log.d("formatDate", "Error while formatting date: ${e.message}")
+            Button(
+                onClick = {
+                    if (currentIndex < availableDays.lastIndex) {
+                        onDayChange(availableDays[currentIndex + 1])
+                    }
+                },
+                enabled = currentIndex < availableDays.lastIndex
+            ) {
+                Text(">")
+            }
         }
-        return null
-    } else {
-        return timestampSeconds
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (filteredConditions.isEmpty()) {
+            Text("No conditions for the day")
+        } else {
+            //TODO: auto scroll up this when changing day
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(filteredConditions) { condition ->
+                    Condition(condition = condition)
+                }
+            }
+        }
     }
 }

@@ -32,6 +32,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.Date
 import kotlin.coroutines.resume
 
 class WeatherViewModel(
@@ -55,13 +56,14 @@ class WeatherViewModel(
     private val TAG = "weather_viewModel"
 
     //Main UI state
-    var weatherState by mutableStateOf(
+    private var weatherState by mutableStateOf(
         WeatherUiState(
-            listOf(),
-            ""
+            listOf()
         )
     )
-        private set
+
+    //Day shown
+    var dayShown by mutableStateOf(Date())
 
     //Selected location to display the weather conditions for
     var location by mutableStateOf(
@@ -123,7 +125,7 @@ class WeatherViewModel(
         )
     }
 
-    private fun updateConditionsAndShownTimestamp(
+    private fun updateConditionsAndDateToShow(
         newCurrentCondition: APIWeatherCondition,
         newForecasts: APIWeatherForecasts
     ) {
@@ -152,19 +154,21 @@ class WeatherViewModel(
             conditions = newConditions
         )
 
-        updateShownTimestamp(newCurrentCondition.dt)
-
+        changeDay(getMinDateOfAvailableForecasts())
     }
 
-    private fun updateShownTimestamp(newTimestamp: String) {
-        weatherState = weatherState.copy(
-            shownTimestamp = newTimestamp
-        )
+    fun changeDay(newDate: Date) {
+        dayShown = newDate
     }
 
-    fun isCurrentWeatherShown(): Boolean {
-        return weatherState.conditions.find { condition -> condition.timestamp == weatherState.shownTimestamp }?.isCurrent
-            ?: false
+    private fun getMinDateOfAvailableForecasts(): Date {
+        val date = getForecasts().map { condition -> condition.dateTime }.toList().minOrNull()
+
+        if (date != null) {
+            return date
+        }
+        Log.d(TAG, "no conditions in the list")
+        throw IllegalStateException()
     }
 
     private fun updateLocationState(
@@ -347,7 +351,7 @@ class WeatherViewModel(
                         when (val newForecasts = fetchForecastsInfo(result.lat, result.lon)) {
                             is APIResult.Success -> {
 
-                                updateConditionsAndShownTimestamp(
+                                updateConditionsAndDateToShow(
                                     newCurrentWeatherCondition.value,
                                     newForecasts.value
                                 )
@@ -409,7 +413,7 @@ class WeatherViewModel(
                                 )) {
                                     is APIResult.Success -> {
 
-                                        updateConditionsAndShownTimestamp(
+                                        updateConditionsAndDateToShow(
                                             newCurrentWeatherCondition.value,
                                             newForecasts.value
                                         )
@@ -456,7 +460,7 @@ class WeatherViewModel(
                         when (val newForecasts = fetchForecastsInfo(location.lat, location.lon)) {
                             is APIResult.Success -> {
 
-                                updateConditionsAndShownTimestamp(
+                                updateConditionsAndDateToShow(
                                     newCurrentWeatherCondition.value,
                                     newForecasts.value,
                                 )
@@ -501,7 +505,7 @@ class WeatherViewModel(
                             )) {
                                 is APIResult.Success -> {
 
-                                    updateConditionsAndShownTimestamp(
+                                    updateConditionsAndDateToShow(
                                         newCurrentWeatherCondition.value,
                                         newForecasts.value
                                     )
@@ -571,20 +575,14 @@ class WeatherViewModel(
         }
     }
 
-    fun showCurrentWeather() {
-        val currentWeather = weatherState.conditions.find { condition -> condition.isCurrent }
+    fun getCurrentWeather(): WeatherCondition? {
+        val weatherInfo = weatherState.conditions.find { condition -> condition.isCurrent }
 
-        if (currentWeather != null) {
-            updateShownTimestamp(currentWeather.timestamp)
-        } else {
-            Log.d(
-                TAG,
-                "There is no current weather condition. List size: ${weatherState.conditions.size}"
-            )
-        }
+        return weatherInfo
     }
 
-    fun showWeatherForecast(timeStamp: String) {
-        updateShownTimestamp(timeStamp)
+    fun getForecasts(): List<WeatherCondition> {
+        //FIXME: improve this: do not use filter to remove just one element from the list
+        return weatherState.conditions.filter { condition -> !condition.isCurrent }
     }
 }
