@@ -40,6 +40,15 @@ fun SelectLanguageButton(enabled: Boolean, viewModel: TranslationViewModel) {
         expanded = expanded,
         onDismissRequest = { expanded = false }
     ) {
+
+        DropdownMenuItem(
+            text = { Text("-") },
+            onClick = {
+                viewModel.selectTargetLanguage(null)
+                expanded = false
+            }
+        )
+
         for (language in TranslateLanguage.getAllLanguages()) {
             DropdownMenuItem(
                 text = { Text(getFullLengthName(language)) },
