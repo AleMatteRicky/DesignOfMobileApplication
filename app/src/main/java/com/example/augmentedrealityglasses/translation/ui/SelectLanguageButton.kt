@@ -49,16 +49,19 @@ fun SelectLanguageButton(enabled: Boolean, viewModel: TranslationViewModel) {
             }
         )
 
-        for (language in getAllLanguagesList(TranslateLanguage.getAllLanguages())) {
+        val sortedTagList = TranslateLanguage.getAllLanguages().sortedBy { tag ->
+            getFullLengthName(tag)
+        }
+
+        for (languageTag in sortedTagList) {
             DropdownMenuItem(
-                text = { Text(language) },
+                text = { Text(getFullLengthName(languageTag)) },
                 onClick = {
-                    viewModel.selectTargetLanguage(language)
+                    viewModel.selectTargetLanguage(languageTag)
                     expanded = false
                 }
             )
         }
-
     }
 }
 
@@ -66,13 +69,6 @@ private fun getFullLengthName(tag: String): String {
     val locale = Locale.forLanguageTag(tag)
 
     return locale.displayName
-}
-
-private fun getAllLanguagesList(languagesList: List<String>): List<String> {
-
-    val result = languagesList.map { language -> getFullLengthName(language) }
-
-    return result.sorted()
 }
 
 
