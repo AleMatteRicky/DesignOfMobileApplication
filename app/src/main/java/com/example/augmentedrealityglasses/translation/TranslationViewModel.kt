@@ -69,28 +69,30 @@ class TranslationViewModel(
         uiState = uiState.copy(isRecording = false)
     }
 
-    fun selectTargetLanguage(targetLanguage: String) {
-        uiState = uiState.copy(targetLanguage = targetLanguage)
+    fun selectTargetLanguage(targetLanguage: String?) {
+        uiState = uiState.copy(targetLanguage = targetLanguage, isModelNotAvailable = false) //isModelNotAvailable is set to false in order to force recomposition if the new target language need to be installed
     }
 
     fun translate() {
 
         translatorJob?.cancel()
 
-        translatorJob = viewModelScope.launch {
-            if (uiState.targetLanguage != null) {
-                identifySourceLanguage()
-                checkModelDownloaded()
-                if (!uiState.isModelNotAvailable) {
-                    initializeTranslator()
-                    translator?.translate(uiState.recognizedText)
-                        ?.addOnSuccessListener { translatedText ->
-                            Log.d("Translation succeeded", translatedText)
-                            uiState = uiState.copy(translatedText = translatedText)
-                        }
-                        ?.addOnFailureListener { exception ->
-                            Log.e("Translation failed", exception.toString())
-                        }
+        if(uiState.targetLanguage != null) {
+            translatorJob = viewModelScope.launch {
+                if (uiState.targetLanguage != null) {
+                    identifySourceLanguage()
+                    checkModelDownloaded()
+                    if (!uiState.isModelNotAvailable) {
+                        initializeTranslator()
+                        translator?.translate(uiState.recognizedText)
+                            ?.addOnSuccessListener { translatedText ->
+                                Log.d("Translation succeeded", translatedText)
+                                uiState = uiState.copy(translatedText = translatedText)
+                            }
+                            ?.addOnFailureListener { exception ->
+                                Log.e("Translation failed", exception.toString())
+                            }
+                    }
                 }
             }
         }
@@ -180,6 +182,14 @@ class TranslationViewModel(
             putExtra(
                 RecognizerIntent.EXTRA_PARTIAL_RESULTS, true
             )
+            putExtra(
+                RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
+                60000L
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,
+                60000L
+            )
         }
 
     }
@@ -201,6 +211,7 @@ class TranslationViewModel(
             }
 
             override fun onEndOfSpeech() {
+                //uiState = uiState.copy(isRecording = false)
             }
 
             override fun onError(error: Int) {
@@ -223,9 +234,9 @@ class TranslationViewModel(
                 val data: ArrayList<String>? =
                     results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 uiState = uiState.copy(
-                    recognizedText = data.toString().removePrefix("[").removeSuffix("]")
+                    recognizedText = data.toString().removePrefix("[").removeSuffix("]"),
                 )
-                if(uiState.targetLanguage != null){
+                if (uiState.targetLanguage != null) {
                     translate()
                 }
                 Log.d("SpeechRecognizer", "Speech recognition results received: $data")
@@ -239,7 +250,7 @@ class TranslationViewModel(
                 )
                 Log.d("SpeechRecognizer", "Speech recognition partial results received: $data")
 
-                if(uiState.targetLanguage != null){
+                if (uiState.targetLanguage != null) {
                     translate()
                 }
             }
