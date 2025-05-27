@@ -49,9 +49,9 @@ fun SelectLanguageButton(enabled: Boolean, viewModel: TranslationViewModel) {
             }
         )
 
-        for (language in TranslateLanguage.getAllLanguages()) {
+        for (language in getAllLanguagesList(TranslateLanguage.getAllLanguages())) {
             DropdownMenuItem(
-                text = { Text(getFullLengthName(language)) },
+                text = { Text(language) },
                 onClick = {
                     viewModel.selectTargetLanguage(language)
                     expanded = false
@@ -66,6 +66,13 @@ private fun getFullLengthName(tag: String): String {
     val locale = Locale.forLanguageTag(tag)
 
     return locale.displayName
+}
+
+private fun getAllLanguagesList(languagesList: List<String>): List<String> {
+
+    val result = languagesList.map { language -> getFullLengthName(language) }
+
+    return result.sorted()
 }
 
 
