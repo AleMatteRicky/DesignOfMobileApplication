@@ -80,18 +80,19 @@ class TranslationViewModel(
         if(uiState.targetLanguage != null) {
             translatorJob = viewModelScope.launch {
                 if (uiState.targetLanguage != null) {
-                    identifySourceLanguage()
-                    checkModelDownloaded()
-                    if (!uiState.isModelNotAvailable) {
-                        initializeTranslator()
-                        translator?.translate(uiState.recognizedText)
-                            ?.addOnSuccessListener { translatedText ->
-                                Log.d("Translation succeeded", translatedText)
-                                uiState = uiState.copy(translatedText = translatedText)
-                            }
-                            ?.addOnFailureListener { exception ->
-                                Log.e("Translation failed", exception.toString())
-                            }
+                    if(identifySourceLanguage()) {
+                        checkModelDownloaded()
+                        if (!uiState.isModelNotAvailable) {
+                            initializeTranslator()
+                            translator?.translate(uiState.recognizedText)
+                                ?.addOnSuccessListener { translatedText ->
+                                    Log.d("Translation succeeded", translatedText)
+                                    uiState = uiState.copy(translatedText = translatedText)
+                                }
+                                ?.addOnFailureListener { exception ->
+                                    Log.e("Translation failed", exception.toString())
+                                }
+                        }
                     }
                 }
             }
@@ -153,15 +154,17 @@ class TranslationViewModel(
         isTargetModelNotAvailable = false
     }
 
-    private suspend fun identifySourceLanguage() {
+    private suspend fun identifySourceLanguage() : Boolean { //True if the identification is succesfull, False otherwise
         val languageIdentification = LanguageIdentification.getClient()
         val tag = languageIdentification.identifyLanguage(uiState.recognizedText).await()
         if (tag != "und") {
             uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
             //todo tag could be not supported by mlkit translate
             //todo
+            return true
         } else {
             Log.e("Undefined Language", "Exception")
+            return false
         }
     }
 
@@ -250,7 +253,7 @@ class TranslationViewModel(
                 )
                 Log.d("SpeechRecognizer", "Speech recognition partial results received: $data")
 
-                if (uiState.targetLanguage != null) {
+                if (uiState.targetLanguage != null && uiState.recognizedText != "") {
                     translate()
                 }
             }
