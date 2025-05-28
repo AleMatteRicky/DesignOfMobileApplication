@@ -196,18 +196,17 @@ class BleDevice(
 
                 private fun enableNotifications(
                     gatt: BluetoothGatt,
-                    characteristic: BluetoothGattCharacteristic
+                    characteristic: BluetoothGattCharacteristic,
+                    useAck: Boolean=true
                 ) {
                     gatt.setCharacteristicNotification(characteristic, true)
-
-                    /*
-                    val CLIENT_CHARACTERISTIC_CONFIG_UUID : UUID = UUID.fromString("00002902–0000–1000–8000–00805f9b34fb")
-                    val descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
-                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)  {
+                    val descriptor = characteristic.getDescriptor(DESCRIPTOR_UUID)
+                    val value = if(useAck) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE else BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        descriptor.value = value
                         gatt.writeDescriptor(descriptor)
                     } else {
-                        gatt.writeDescriptor(descriptor, descriptor.value)
+                        gatt.writeDescriptor(descriptor, value)
                     }
                 }
 
