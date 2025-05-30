@@ -64,4 +64,7 @@ class ConnectViewModel(
         bleManager.close()
     }
 
+    fun sendData(msg:String) {
+        bleManager.send(msg)
+    }
 }
