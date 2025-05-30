@@ -6,6 +6,8 @@ data class TranslationUiState(
     val recognizeLanguage: Boolean = true,
     val isRecording: Boolean = false,
     val recognizedText: String = "",
-    val translatedText: String = ""
+    val translatedText: String = "",
+    val isDownloadingLanguageModel: Boolean = false,
+    val isModelNotAvailable: Boolean = false
 )
 

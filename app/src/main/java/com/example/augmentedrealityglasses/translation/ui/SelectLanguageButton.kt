@@ -40,16 +40,28 @@ fun SelectLanguageButton(enabled: Boolean, viewModel: TranslationViewModel) {
         expanded = expanded,
         onDismissRequest = { expanded = false }
     ) {
-        for (language in TranslateLanguage.getAllLanguages()) {
+
+        DropdownMenuItem(
+            text = { Text("-") },
+            onClick = {
+                viewModel.selectTargetLanguage(null)
+                expanded = false
+            }
+        )
+
+        val sortedTagList = TranslateLanguage.getAllLanguages().sortedBy { tag ->
+            getFullLengthName(tag)
+        }
+
+        for (languageTag in sortedTagList) {
             DropdownMenuItem(
-                text = { Text(getFullLengthName(language)) },
+                text = { Text(getFullLengthName(languageTag)) },
                 onClick = {
-                    viewModel.selectTargetLanguage(language)
+                    viewModel.selectTargetLanguage(languageTag)
                     expanded = false
                 }
             )
         }
-
     }
 }
 
