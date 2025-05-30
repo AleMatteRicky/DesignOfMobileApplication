@@ -5,7 +5,9 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothStatusCodes
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -41,7 +43,7 @@ class BleDevice(
 ) : RemoteDevice {
     private var _deviceConnectionState: DeviceConnectionState = DeviceConnectionState.None
     private val TAG = "BleDevice"
-    private var service: BluetoothGattService? = null
+    private val busy = Any()
 
     private fun handleFlowTransmissionError(operation: String) {
         Log.d(TAG, "Failing in transmitting $operation down the stream")
@@ -55,62 +57,71 @@ class BleDevice(
                     status: Int,
                     newState: Int,
                 ) {
-                    super.onConnectionStateChange(gatt, status, newState)
-                    _deviceConnectionState =
-                        _deviceConnectionState.copy(gatt = gatt, connectionState = newState)
+                    synchronized(busy) {
+                        super.onConnectionStateChange(gatt, status, newState)
 
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
-                        if (newState == BluetoothGatt.STATE_CONNECTED) {
-                            Log.d(TAG, "Connection has been established :)")
-                            Log.d(TAG, "Discover services")
-                            _deviceConnectionState.gatt?.discoverServices()
+                        _deviceConnectionState =
+                            _deviceConnectionState.copy(gatt = gatt, connectionState = newState)
+
+                        if (status == BluetoothGatt.GATT_SUCCESS) {
+                            if (newState == BluetoothGatt.STATE_CONNECTED) {
+                                Log.d(TAG, "Connection has been established :)")
+                                Log.d(TAG, "Discover services")
+                                _deviceConnectionState.gatt?.discoverServices()
+                            } else {
+                                Log.d(TAG, "Disconnection")
+                            }
                         } else {
-                            Log.d(TAG, "Disconnection")
+                            // TODO
+                            // Here you should handle the error returned in status based on the constants
+                            // https://developer.android.com/reference/android/bluetooth/BluetoothGatt#summary
+                            // For example for GATT_INSUFFICIENT_ENCRYPTION or
+                            // GATT_INSUFFICIENT_AUTHENTICATION you should create a bond.
+                            // https://developer.android.com/reference/android/bluetooth/BluetoothDevice#createBond()
+                            Log.d(TAG, "An error happened: $status")
                         }
-                    } else {
-                        // TODO
-                        // Here you should handle the error returned in status based on the constants
-                        // https://developer.android.com/reference/android/bluetooth/BluetoothGatt#summary
-                        // For example for GATT_INSUFFICIENT_ENCRYPTION or
-                        // GATT_INSUFFICIENT_AUTHENTICATION you should create a bond.
-                        // https://developer.android.com/reference/android/bluetooth/BluetoothDevice#createBond()
-                        Log.d(TAG, "An error happened: $status")
-                    }
 
-                    trySendBlocking(_deviceConnectionState)
-                        .onFailure {
-                            handleFlowTransmissionError("connection state")
-                        }
+                        trySendBlocking(_deviceConnectionState)
+                            .onFailure {
+                                handleFlowTransmissionError("connection state")
+                            }
+                    }
                 }
 
                 override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
-                    super.onMtuChanged(gatt, mtu, status)
-                    _deviceConnectionState = _deviceConnectionState.copy(gatt = gatt, mtu = mtu)
-                    trySendBlocking(_deviceConnectionState)
-                        .onFailure {
-                            handleFlowTransmissionError("mtu")
-                        }
+                    synchronized(busy) {
+                        super.onMtuChanged(gatt, mtu, status)
+                        _deviceConnectionState = _deviceConnectionState.copy(gatt = gatt, mtu = mtu)
+                        trySendBlocking(_deviceConnectionState)
+                            .onFailure {
+                                handleFlowTransmissionError("mtu")
+                            }
+                    }
                 }
 
                 override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                    super.onServicesDiscovered(gatt, status)
-                    Log.d(TAG, "Services discovered: ${gatt.services}")
-                    val service = gatt.services.find { it.uuid == SERVICE_UUID }
-                    if (service == null) {
-                        Log.d(TAG, "Service NOT FOUND!!!")
-                        // TODO. it might require code for handling this situation. For now keep it null, it won't trigger any recomposition
-                    } else {
-                        Log.d(TAG, "Service found")
-                        Log.d(TAG, "Setting the characteristic notification to true")
-                        enableNotifications(gatt, service.getCharacteristic(CHARACTERISTIC_UUID))
-                    }
-
-
-                    _deviceConnectionState = _deviceConnectionState.copy(service = service)
-                    trySendBlocking(_deviceConnectionState)
-                        .onFailure {
-                            handleFlowTransmissionError("service discovery")
+                    synchronized(busy) {
+                        super.onServicesDiscovered(gatt, status)
+                        Log.d(TAG, "Services discovered: ${gatt.services}")
+                        val service = gatt.services.find { it.uuid == SERVICE_UUID }
+                        if (service == null) {
+                            Log.d(TAG, "Service NOT FOUND!!!")
+                            // TODO. it might require code for handling this situation. For now keep it null, it won't trigger any recomposition
+                        } else {
+                            Log.d(TAG, "Service found")
+                            Log.d(TAG, "Setting the characteristic notification to true")
+                            enableNotifications(
+                                gatt,
+                                service.getCharacteristic(CHARACTERISTIC_UUID_RX)
+                            )
                         }
+
+                        _deviceConnectionState = _deviceConnectionState.copy(service = service)
+                        trySendBlocking(_deviceConnectionState)
+                            .onFailure {
+                                handleFlowTransmissionError("service discovery")
+                            }
+                    }
                 }
 
                 override fun onCharacteristicWrite(
@@ -118,14 +129,16 @@ class BleDevice(
                     characteristic: BluetoothGattCharacteristic?,
                     status: Int,
                 ) {
-                    super.onCharacteristicWrite(gatt, characteristic, status)
-                    Log.d(TAG, "Characteristic $characteristic successfully written")
-                    _deviceConnectionState =
-                        _deviceConnectionState.copy(messageSent = status == BluetoothGatt.GATT_SUCCESS)
-                    trySendBlocking(_deviceConnectionState)
-                        .onFailure {
-                            handleFlowTransmissionError("characteristic written")
-                        }
+                    synchronized(busy) {
+                        super.onCharacteristicWrite(gatt, characteristic, status)
+                        Log.d(TAG, "Characteristic $characteristic successfully written")
+                        _deviceConnectionState =
+                            _deviceConnectionState.copy(messageSent = status == BluetoothGatt.GATT_SUCCESS)
+                        trySendBlocking(_deviceConnectionState)
+                            .onFailure {
+                                handleFlowTransmissionError("characteristic written")
+                            }
+                    }
                 }
 
                 override fun onCharacteristicChanged(
@@ -133,9 +146,11 @@ class BleDevice(
                     characteristic: BluetoothGattCharacteristic,
                     value: ByteArray
                 ) {
-                    super.onCharacteristicChanged(gatt, characteristic, value)
-                    Log.d(TAG, "Characteristic $characteristic changed")
-                    doOnRead(value)
+                    synchronized(busy) {
+                        super.onCharacteristicChanged(gatt, characteristic, value)
+                        Log.d(TAG, "Characteristic $characteristic changed")
+                        doOnRead(value)
+                    }
                 }
 
                 @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -143,10 +158,12 @@ class BleDevice(
                     gatt: BluetoothGatt?,
                     characteristic: BluetoothGattCharacteristic?
                 ) {
-                    super.onCharacteristicChanged(gatt, characteristic)
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        if (characteristic != null) {
-                            doOnRead(characteristic.value)
+                    synchronized(busy) {
+                        super.onCharacteristicChanged(gatt, characteristic)
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                            if (characteristic != null) {
+                                doOnRead(characteristic.value)
+                            }
                         }
                     }
                 }
@@ -157,9 +174,11 @@ class BleDevice(
                     characteristic: BluetoothGattCharacteristic,
                     status: Int,
                 ) {
-                    super.onCharacteristicRead(gatt, characteristic, status)
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        doOnRead(characteristic.value)
+                    synchronized(busy) {
+                        super.onCharacteristicRead(gatt, characteristic, status)
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                            doOnRead(characteristic.value)
+                        }
                     }
                 }
 
@@ -169,26 +188,26 @@ class BleDevice(
                     value: ByteArray,
                     status: Int,
                 ) {
-                    super.onCharacteristicRead(gatt, characteristic, value, status)
-                    doOnRead(value)
+                    synchronized(busy) {
+                        super.onCharacteristicRead(gatt, characteristic, value, status)
+                        doOnRead(value)
+                    }
                 }
 
                 private fun enableNotifications(
                     gatt: BluetoothGatt,
-                    characteristic: BluetoothGattCharacteristic
+                    characteristic: BluetoothGattCharacteristic,
+                    useAck: Boolean=true
                 ) {
                     gatt.setCharacteristicNotification(characteristic, true)
-
-                    /*
-                    val CLIENT_CHARACTERISTIC_CONFIG_UUID : UUID = UUID.fromString("00002902–0000–1000–8000–00805f9b34fb")
-                    val descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
-                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU)  {
+                    val descriptor = characteristic.getDescriptor(DESCRIPTOR_UUID)
+                    val value = if(useAck) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE else BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        descriptor.value = value
                         gatt.writeDescriptor(descriptor)
                     } else {
-                        gatt.writeDescriptor(descriptor, descriptor.value)
+                        gatt.writeDescriptor(descriptor, value)
                     }
-                     */
                 }
 
                 private fun doOnRead(value: ByteArray) {
@@ -202,14 +221,18 @@ class BleDevice(
             }
 
             Log.d(TAG, "Connecting to the gatt server")
-            val gatt = _device.connectGatt(context, false, gattCallback)
 
-            _deviceConnectionState = _deviceConnectionState.copy(gatt = gatt)
+            synchronized(busy) {
+                val gatt = _device.connectGatt(context, false, gattCallback)
+                _deviceConnectionState = _deviceConnectionState.copy(gatt = gatt)
+            }
 
             awaitClose {
                 Log.d(TAG, "Flow has been closed")
-                _deviceConnectionState.gatt?.close()
-                _deviceConnectionState = DeviceConnectionState.None
+                synchronized(busy) {
+                    _deviceConnectionState.gatt?.close()
+                    _deviceConnectionState = DeviceConnectionState.None
+                }
             }
         }
     }
@@ -220,35 +243,42 @@ class BleDevice(
     }
 
     override fun restoreConnection() {
-        require(_deviceConnectionState.gatt != null)
-        _deviceConnectionState.gatt?.connect()
+        synchronized(busy) {
+            require(_deviceConnectionState.gatt != null)
+            _deviceConnectionState.gatt?.connect()
+        }
     }
 
     override fun disconnect() {
-        _deviceConnectionState.gatt?.disconnect() ?: Log.d(TAG, "Gatt already disconnected")
+        synchronized(busy) {
+            _deviceConnectionState.gatt?.disconnect() ?: Log.d(TAG, "Gatt already disconnected")
+        }
     }
 
     // TODO. If the gatt is busy, the writeCharacteristic function might fail, hence we might need extra code to handle this case
     override fun send(msg: String) {
         val data = msg.toByteArray()
-        val characteristic = _deviceConnectionState.service?.getCharacteristic(CHARACTERISTIC_UUID)
-        _deviceConnectionState = _deviceConnectionState.copy(messageSent = false)
-        if (characteristic != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                _deviceConnectionState.gatt?.writeCharacteristic(
-                    characteristic,
-                    data,
-                    BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
-                )
+        synchronized(busy) {
+            val characteristic =
+                _deviceConnectionState.service!!.getCharacteristic(CHARACTERISTIC_UUID_TX)
+            _deviceConnectionState = _deviceConnectionState.copy(messageSent = false)
+            if (characteristic != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    require(_deviceConnectionState.gatt?.writeCharacteristic(
+                        characteristic,
+                        data,
+                        BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
+                    ) == BluetoothStatusCodes.SUCCESS)
+                } else {
+                    characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                    @Suppress("DEPRECATION")
+                    characteristic.value = data
+                    @Suppress("DEPRECATION")
+                    _deviceConnectionState.gatt?.writeCharacteristic(characteristic)
+                }
             } else {
-                characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-                @Suppress("DEPRECATION")
-                characteristic.value = data
-                @Suppress("DEPRECATION")
-                _deviceConnectionState.gatt?.writeCharacteristic(characteristic)
+                Log.d(TAG, "Invalid send operation: the wanted characteristic is not available")
             }
-        } else {
-            Log.d(TAG, "Invalid send operation: the wanted characteristic is not available")
         }
     }
 
@@ -256,4 +286,7 @@ class BleDevice(
         _deviceConnectionState.gatt?.close() ?: Log.d(TAG, "Connection already closed")
     }
 
+    override fun isConnected() : Boolean {
+        return _deviceConnectionState.gatt != null
+    }
 }

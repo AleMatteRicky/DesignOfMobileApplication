@@ -67,6 +67,14 @@ fun ConnectScreen(
                 ) {
                     Text(text = "Close connection")
                 }
+                Button(
+                    onClick = {
+                        viewModel.sendData("")//max = 13 char per message
+                    }
+                ) {
+                    Text("send data")
+                }
+
             }
         }
     }

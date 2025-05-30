@@ -8,14 +8,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.device.BleDevice
-import com.example.augmentedrealityglasses.ble.device.BleManager
+import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
 
 class FindDeviceViewModel(
-    private val bleManager: BleManager
+    private val bleManager: RemoteDeviceManager
 ) : ViewModel() {
 
     fun connect(device: BluetoothDevice) {
-        bleManager.setDataSource(BleDevice(device))
+        bleManager.setDeviceToManage(BleDevice(device))
         bleManager.connect()
     }
 
