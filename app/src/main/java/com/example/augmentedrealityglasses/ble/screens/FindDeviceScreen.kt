@@ -59,7 +59,7 @@ private val TAG = "FindDeviceScreen"
 fun FindDeviceScreen(
     viewModel: FindDeviceViewModel,
     navigateOnError: () -> Unit,
-    navigateOnConnect: () -> Unit,
+    navigateOnFeatures: () -> Unit
 ) {
     val notGranted = ActivityCompat.checkSelfPermission(
         LocalContext.current,
@@ -91,7 +91,7 @@ fun FindDeviceScreen(
         Log.d(TAG, "Selected device: $it ")
         scanning = false
         viewModel.connect(it)
-        navigateOnConnect()
+        navigateOnFeatures()
     }
 
     val devices = remember {
