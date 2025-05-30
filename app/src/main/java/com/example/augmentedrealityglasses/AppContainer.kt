@@ -2,6 +2,7 @@ package com.example.augmentedrealityglasses
 
 import android.content.Context
 import com.example.augmentedrealityglasses.ble.device.BleManager
+import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
 import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
 
 /**
@@ -9,6 +10,7 @@ import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
  */
 interface AppContainer {
     val bleManager: RemoteDeviceManager
+    val weatherAPIRepository: WeatherRepositoryImpl
 }
 
 /**
@@ -19,4 +21,6 @@ class DefaultAppContainer(
 ) : AppContainer {
     override val bleManager: RemoteDeviceManager =
         BleManager(context)
+    override val weatherAPIRepository: WeatherRepositoryImpl =
+        WeatherRepositoryImpl()
 }

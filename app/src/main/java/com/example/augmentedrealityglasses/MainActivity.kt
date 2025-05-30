@@ -21,6 +21,7 @@ import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.ui.TranslationScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
+import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.mlkit.nl.translate.TranslateLanguage
 
 class MainActivity : ComponentActivity() {
@@ -98,7 +99,14 @@ class MainActivity : ComponentActivity() {
                     ) //todo update with system language from settings
                 }
                 composable(ScreenName.WEATHER_SCREEN.name) {
-                    WeatherScreen()
+                    WeatherScreen(
+                        viewModel = viewModel(factory = WeatherViewModel.Factory),
+                        onNavigateToHome = {
+                            navController.navigate(
+                                route = ScreenName.HOME.name
+                            )
+                        }
+                    )
                 }
             }
         }
