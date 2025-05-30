@@ -58,6 +58,19 @@ class TranslationViewModel(
 
     var isTargetModelNotAvailable = false
 
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = this[APPLICATION_KEY] as App
+                val bleManager = application.container.bleManager
+                TranslationViewModel (
+                    systemLanguage = TranslateLanguage.ITALIAN,
+                    application = application,
+                    bleManager = bleManager
+                )
+            }
+        }
+    }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startRecording() {
