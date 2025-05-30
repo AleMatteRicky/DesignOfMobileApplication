@@ -63,10 +63,5 @@ class BleManager(
         Log.d(TAG, "Connection closed")
         // reset the state
         scope.coroutineContext.cancelChildren()
-        _bleDevice?.close()
-    }
-
-    override fun isConnected(): Boolean {
-        return _bleDevice?.isConnected() ?: false
     }
 }

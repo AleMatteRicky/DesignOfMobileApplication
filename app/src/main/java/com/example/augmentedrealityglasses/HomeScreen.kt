@@ -13,6 +13,7 @@ fun HomeScreen(
     onNavigateToTranslation: () -> Unit,
     onNavigateToWeather: () -> Unit,
     onNavigateToBLE: () -> Unit,
+    onNavigateToConnect: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -36,6 +37,13 @@ fun HomeScreen(
             },
         ) {
             Text(text = "Ble")
+        }
+        Button(
+            onClick = {
+                onNavigateToConnect()
+            }
+        ) {
+            Text("Connect Screen")
         }
     }
 }

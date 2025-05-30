@@ -86,17 +86,20 @@ void loop() {
   if (deviceConnected) {
     // read incoming messages
     // TODO: generalize to a specific protocol
+    /*
     if (uxQueueMessagesWaiting(msgQueue) != 0) {
       handleMsg(msgQueue);
     } else {
-      /*
       Serial.println("Sending msg: " + msg);      
-      */
       String msg = "Counter=" + String(i);
 
       pTxCharacteristic->setValue(msg);
       pTxCharacteristic->indicate();
       i+=1;
+    }
+    */
+    if (uxQueueMessagesWaiting(msgQueue) != 0) {
+      handleMsg(msgQueue);
     }
   }
 
@@ -133,6 +136,7 @@ void handleMsg(QueueHandle_t msgQueue) {
       for (int i = 0; i < sz; i++) {
           Serial.print(msg[i]);
       }
+      Serial.print("\n");
     }
     Serial.println("*********");
   }

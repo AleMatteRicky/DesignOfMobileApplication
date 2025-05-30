@@ -12,11 +12,6 @@ interface RemoteDevice {
     fun connect(context: Context): Flow<DeviceConnectionState>
 
     /**
-     * @return true if the remote device is connected, false otherwise
-     */
-    fun isConnected() : Boolean
-
-    /**
      * Restore the connection previously established. The method differs from connect because
      * it does not create a new connection
      */
@@ -33,10 +28,12 @@ interface RemoteDevice {
      */
     fun disconnect()
 
+    /*
     /**
      * Closes the bluetooth gatt client on this device. In contrast with disconnect(), this method forgets
      * all information about the device to which the application was connected to hence requiring the communication
      * to start over.
      */
     fun close()
+     */
 }

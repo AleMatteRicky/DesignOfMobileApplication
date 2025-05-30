@@ -19,11 +19,6 @@ interface RemoteDeviceManager{
      */
     fun receiveUpdates(): Flow<DeviceConnectionState>
 
-     /**
-     * @return true if the remote device is connected, false otherwise
-     */
-    fun isConnected() : Boolean
-
     /**
      * Restore the connection previously established. The method differs from connect because
      * it does not create a new connection

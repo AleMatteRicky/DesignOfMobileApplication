@@ -32,11 +32,6 @@ data class DeviceConnectionState(
     }
 }
 
-/*
-TODO: add callback and other functions to send and receive updates
-TODO: add the callback onCharacteristicChanged to be notified about changes in the characteristic. This requires calling setCharacteristicNotification(characteristic,enabled)
-*/
-
 @SuppressLint("MissingPermission")
 class BleDevice(
     private val _device: BluetoothDevice,
@@ -230,14 +225,17 @@ class BleDevice(
             awaitClose {
                 Log.d(TAG, "Flow has been closed")
                 synchronized(busy) {
-                    _deviceConnectionState.gatt?.close()
+                    Log.d(TAG, "Closing connection")
+                    send("disconnect")
+                    _deviceConnectionState.gatt!!.disconnect()
+                    _deviceConnectionState.gatt!!.close()
                     _deviceConnectionState = DeviceConnectionState.None
                 }
             }
         }
     }
 
-    // entry point to establish a connection and prepare the flow to exposes the information regarding the connection
+    // entry point to establish a connection and prepare the flow to expose the information regarding the connection
     override fun connect(context: Context): Flow<DeviceConnectionState> {
         return initializeConnection(context)
     }
@@ -257,6 +255,7 @@ class BleDevice(
 
     // TODO. If the gatt is busy, the writeCharacteristic function might fail, hence we might need extra code to handle this case
     override fun send(msg: String) {
+        Log.d(TAG, "Sending data $msg")
         val data = msg.toByteArray()
         synchronized(busy) {
             val characteristic =
