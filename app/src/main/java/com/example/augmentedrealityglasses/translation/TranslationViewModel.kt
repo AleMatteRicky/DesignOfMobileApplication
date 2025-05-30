@@ -14,7 +14,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModel
 import com.google.mlkit.common.model.RemoteModelManager
@@ -29,7 +36,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class TranslationViewModel(
-    private val systemLanguage: String, application: Application
+    private val systemLanguage: String,
+    private val application: Application,
+    private val bleManager: RemoteDeviceManager
 ) : AndroidViewModel(application) {
     var uiState by mutableStateOf(TranslationUiState())
         private set
@@ -88,6 +97,9 @@ class TranslationViewModel(
                                 ?.addOnSuccessListener { translatedText ->
                                     Log.d("Translation succeeded", translatedText)
                                     uiState = uiState.copy(translatedText = translatedText)
+                                    //send translated text to esp32
+                                    Log.d("send ",translatedText)
+                                    bleManager.send(uiState.translatedText)
                                 }
                                 ?.addOnFailureListener { exception ->
                                     Log.e("Translation failed", exception.toString())
@@ -154,7 +166,7 @@ class TranslationViewModel(
         isTargetModelNotAvailable = false
     }
 
-    private suspend fun identifySourceLanguage() : Boolean { //True if the identification is succesfull, False otherwise
+    private suspend fun identifySourceLanguage() : Boolean { //True if the identification is successful, False otherwise
         val languageIdentification = LanguageIdentification.getClient()
         val tag = languageIdentification.identifyLanguage(uiState.recognizedText).await()
         if (tag != "und") {
@@ -170,7 +182,7 @@ class TranslationViewModel(
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun initializeSpeechRecognizer() {
-        recorder = createSpeechRecognizer(getApplication())
+        recorder = createSpeechRecognizer(application)
 
         recorder?.setRecognitionListener(createRecognitionListener())
 
@@ -253,8 +265,14 @@ class TranslationViewModel(
                 )
                 Log.d("SpeechRecognizer", "Speech recognition partial results received: $data")
 
-                if (uiState.targetLanguage != null && uiState.recognizedText != "") {
-                    translate()
+                if(uiState.recognizedText != "") {
+                    if (uiState.targetLanguage != null) {
+                        translate()
+                    }
+                    else{
+                        Log.d("send", uiState.recognizedText)
+                        bleManager.send(uiState.recognizedText)
+                    }
                 }
             }
 
