@@ -2,6 +2,7 @@ package com.example.augmentedrealityglasses.translation
 
 import android.Manifest
 import android.app.Application
+import android.bluetooth.BluetoothProfile
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognitionListener
@@ -58,6 +59,20 @@ class TranslationViewModel(
 
     var isTargetModelNotAvailable = false
 
+    private val TAG: String = "TranslationViewModel"
+
+    var isConnected by mutableStateOf(false)
+        private set
+
+    init {
+        viewModelScope.launch {
+            bleManager.receiveUpdates()
+                .collect { connectionState ->
+                    isConnected = connectionState.connectionState == BluetoothProfile.STATE_CONNECTED
+                }
+        }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -111,7 +126,7 @@ class TranslationViewModel(
                                     Log.d("Translation succeeded", translatedText)
                                     uiState = uiState.copy(translatedText = translatedText)
                                     //send translated text to esp32
-                                    Log.d("send ",translatedText)
+                                    Log.d(TAG,translatedText)
                                     bleManager.send(uiState.translatedText)
                                 }
                                 ?.addOnFailureListener { exception ->
@@ -276,7 +291,7 @@ class TranslationViewModel(
                 uiState = uiState.copy(
                     recognizedText = data.toString().removePrefix("[").removeSuffix("]")
                 )
-                Log.d("SpeechRecognizer", "Speech recognition partial results received: $data")
+                Log.d(TAG, "Speech recognition partial results received: $data")
 
                 if(uiState.recognizedText != "") {
                     if (uiState.targetLanguage != null) {
