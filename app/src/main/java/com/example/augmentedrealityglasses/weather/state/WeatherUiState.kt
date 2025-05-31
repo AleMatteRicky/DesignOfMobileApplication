@@ -1,57 +1,35 @@
 package com.example.augmentedrealityglasses.weather.state
 
-import com.google.gson.annotations.SerializedName
+import java.util.Date
+
 
 data class WeatherUiState(
-    val condition: WeatherCondition
+    val conditions: List<WeatherCondition>
 )
 
 data class WeatherCondition(
-    @SerializedName("weather")
-    private val _weather: List<Weather>,
-    val coord: Coord,
-    val main: Main,
-    val sys: Sys,
-    val name: String
-) {
-    val weather: Weather
-        get() = _weather[0]
-}
-
-data class Weather(
     val main: String,
-    val description: String
-)
-
-data class Coord(
-    val lat: String,
-    val lon: String
-)
-
-data class Main(
+    val description: String,
     val temp: String,
-    val pressure: String
-)
-
-data class Sys(
-    val country: String
+    val pressure: String,
+    val dateTime: Date,
+    val isCurrent: Boolean
 )
 
 data class WeatherLocation(
-    var name: String,
-    var lat: String,
-    var lon: String,
-    var country: String,
-    var state: String?
+    val name: String,
+    val lat: String,
+    val lon: String,
+    val country: String,
+    val state: String?
 ) {
     fun getFullName(): String {
-        return if(this.name.isEmpty()){
+        return if (this.name.isEmpty()) {
             ""
-        }else if (this.state.isNullOrEmpty()) {
+        } else if (this.state.isNullOrEmpty()) {
             this.name + " (" + this.country + ")"
         } else {
-            this.name + ", " + this.state.orEmpty() + " (" + this.country + ")"
+            this.name + ", " + this.state + " (" + this.country + ")"
         }
-
     }
 }
