@@ -170,9 +170,10 @@ fun WeatherScreen(
                     TextField(
                         value = viewModel.query,
                         onValueChange = { viewModel.query = it },
-                        label = { Text("Query") },
+                        label = { Text("Location") },
                         modifier = Modifier
-                            .weight(0.75f)
+                            .weight(0.75f),
+                        singleLine = true
                     )
                     Button(
                         onClick = {
