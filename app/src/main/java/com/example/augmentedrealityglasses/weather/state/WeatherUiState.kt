@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.weather.state
 
+import com.example.augmentedrealityglasses.weather.constants.Constants
 import java.util.Date
 
 
@@ -14,7 +15,11 @@ data class WeatherCondition(
     val pressure: String,
     val dateTime: Date,
     val isCurrent: Boolean
-)
+) {
+    override fun toString(): String {
+        return this.dateTime.toString() + " - " + "T: " + this.temp + Constants.TEMPERATURE_UNIT + "; P: " + this.pressure + Constants.PRESSURE_UNIT
+    }
+}
 
 data class WeatherLocation(
     val name: String,
@@ -30,6 +35,14 @@ data class WeatherLocation(
             this.name + " (" + this.country + ")"
         } else {
             this.name + ", " + this.state + " (" + this.country + ")"
+        }
+    }
+
+    override fun toString(): String {
+        return if (this.name.isEmpty()) {
+            ""
+        } else {
+            this.name + " (" + this.country + ")"
         }
     }
 }

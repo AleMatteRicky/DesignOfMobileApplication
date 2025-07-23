@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.APIResult
 import com.example.augmentedrealityglasses.weather.network.APIWeatherCondition
@@ -36,7 +37,8 @@ import java.util.Date
 import kotlin.coroutines.resume
 
 class WeatherViewModel(
-    private val repository: WeatherRepositoryImpl
+    private val repository: WeatherRepositoryImpl,
+    private val bleManager: RemoteDeviceManager
 ) : ViewModel() {
 
     //Initialize the viewModel
@@ -45,8 +47,11 @@ class WeatherViewModel(
             initializer {
                 val weatherAPIRepository =
                     (this[APPLICATION_KEY] as App).container.weatherAPIRepository
+                val bleManager =
+                    (this[APPLICATION_KEY] as App).container.bleManager
                 WeatherViewModel(
-                    repository = weatherAPIRepository
+                    repository = weatherAPIRepository,
+                    bleManager = bleManager
                 )
             }
         }
@@ -155,6 +160,9 @@ class WeatherViewModel(
         )
 
         changeDay(getMinDateOfAvailableForecasts())
+
+        //send updates to ESP (just the current condition)
+        bleManager.send(newConditions.first { cond -> cond.isCurrent }.toString())
     }
 
     fun changeDay(newDate: Date) {
@@ -185,6 +193,9 @@ class WeatherViewModel(
             country = country,
             state = state
         )
+
+        //send updates to the ESP
+        bleManager.send(location.toString())
     }
 
     fun hideNoResult() {
