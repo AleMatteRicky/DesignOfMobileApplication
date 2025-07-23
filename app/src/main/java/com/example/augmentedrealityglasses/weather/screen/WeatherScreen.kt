@@ -135,6 +135,10 @@ fun WeatherScreen(
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
+                Text(
+                    text = if (viewModel.isExtDeviceConnected) "Device connected" else "Device not connected",
+                    color = if (viewModel.isExtDeviceConnected) Color.Green else Color.Red
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
