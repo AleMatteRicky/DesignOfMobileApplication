@@ -15,6 +15,8 @@ object Constants {
     const val NUMBER_OF_TIMESTAMPS_FORECAST = "40" //max value: 40
 
     const val API_UNIT_OF_MEASUREMENT = "metric"
+    const val TEMPERATURE_UNIT = "°C"
+    const val PRESSURE_UNIT = "hPa"
 
     const val ERROR_GENERIC_CURRENT_WEATHER = "Generic error while fetching current weather information. Try again"
     const val ERROR_NETWORK_CURRENT_WEATHER = "Network error while fetching current weather information. Try again"

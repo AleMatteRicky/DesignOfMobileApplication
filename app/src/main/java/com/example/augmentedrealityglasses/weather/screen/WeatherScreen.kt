@@ -280,10 +280,10 @@ fun Condition(
                 text = "Description: ${condition.description}"
             )
             Text(
-                text = "Temperature: ${condition.temp}"
+                text = "Temperature: ${condition.temp} ${Constants.TEMPERATURE_UNIT}"
             )
             Text(
-                text = "Pressure: ${condition.pressure}"
+                text = "Pressure: ${condition.pressure} ${Constants.PRESSURE_UNIT}"
             )
         }
     }
