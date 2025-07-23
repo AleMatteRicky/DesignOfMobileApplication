@@ -3,6 +3,7 @@ package com.example.augmentedrealityglasses.weather.viewmodel
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -57,6 +58,21 @@ class WeatherViewModel(
         }
     }
 
+    // Start listening for Bluetooth packets
+    init {
+        viewModelScope.launch {
+            try {
+                bleManager.receiveUpdates()
+                    .collect { connectionState ->
+                        isExtDeviceConnected =
+                            connectionState.connectionState == BluetoothProfile.STATE_CONNECTED
+                    }
+            } catch (_: IllegalArgumentException) {
+
+            }
+        }
+    }
+
     //Tag for logging
     private val TAG = "weather_viewModel"
 
@@ -66,6 +82,10 @@ class WeatherViewModel(
             listOf()
         )
     )
+
+    // Tracks the Bluetooth connection status with the external device
+    var isExtDeviceConnected by mutableStateOf(false)
+        private set
 
     //Day shown
     var dayShown by mutableStateOf(Date())
@@ -110,6 +130,14 @@ class WeatherViewModel(
 
     fun clearSearchedLocationList() {
         _searchedLocations.clear()
+    }
+
+    private fun sendBluetoothMessage(msg: String) {
+        if (isExtDeviceConnected) {
+            bleManager.send(msg)
+        } else {
+            Log.d(TAG, "External device not connected")
+        }
     }
 
     fun getGeolocationPermissions(context: Context): Map<String, Boolean> {
@@ -162,7 +190,7 @@ class WeatherViewModel(
         changeDay(getMinDateOfAvailableForecasts())
 
         //send updates to ESP (just the current condition)
-        bleManager.send(newConditions.first { cond -> cond.isCurrent }.toString())
+        sendBluetoothMessage(newConditions.first { cond -> cond.isCurrent }.toString())
     }
 
     fun changeDay(newDate: Date) {
@@ -195,7 +223,7 @@ class WeatherViewModel(
         )
 
         //send updates to the ESP
-        bleManager.send(location.toString())
+        sendBluetoothMessage(location.toString())
     }
 
     fun hideNoResult() {
