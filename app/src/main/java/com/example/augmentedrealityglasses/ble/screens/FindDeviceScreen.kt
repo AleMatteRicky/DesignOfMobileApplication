@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,13 +62,13 @@ fun FindDeviceScreen(
     navigateOnError: () -> Unit,
     navigateOnFeatures: () -> Unit
 ) {
-    val notGranted = ActivityCompat.checkSelfPermission(
+    val granted = ActivityCompat.checkSelfPermission(
         LocalContext.current,
         Manifest.permission.BLUETOOTH_CONNECT
-    ) != PackageManager.PERMISSION_GRANTED
+    ) == PackageManager.PERMISSION_GRANTED
 
     require(
-        !notGranted
+        granted
     )
 
     val context = LocalContext.current
@@ -81,9 +82,17 @@ fun FindDeviceScreen(
         return
     }
 
-    // variable to know whether to continue scanning or not
+    val pairedDevices = remember {
+        mutableStateListOf(*adapter.bondedDevices.toTypedArray())
+    }
+
+    val esp32Dev = pairedDevices.find({
+        device ->
+            device.address.equals("20:43:A8:6A:ED:2A")
+    })
+
     var scanning by remember {
-        mutableStateOf(true)
+        mutableStateOf(esp32Dev == null)
     }
 
     // TODO. add virtual view to manage the state
@@ -96,10 +105,6 @@ fun FindDeviceScreen(
 
     val devices = remember {
         mutableStateListOf<BluetoothDevice>()
-    }
-
-    val pairedDevices = remember {
-        mutableStateListOf(*adapter.bondedDevices.toTypedArray())
     }
 
     // TODO: use as a single value
@@ -131,6 +136,7 @@ fun FindDeviceScreen(
                 // If we find our GATT server sample let's highlight it
                 val serviceUuids = scanResult.scanRecord?.serviceUuids.orEmpty()
                 if (serviceUuids.contains(ParcelUuid(SERVICE_UUID))) {
+                    Log.d(TAG, "We've found the service")
                     if (!serverDevices.contains(scanResult.device)) {
                         serverDevices.add(scanResult.device)
                     }
@@ -145,56 +151,78 @@ fun FindDeviceScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(54.dp)
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(text = "Available devices", style = MaterialTheme.typography.titleSmall)
-            if (scanning) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-            } else {
-                IconButton(
-                    onClick = {
-                        devices.clear()
-                        scanning = true
-                    },
-                ) {
-                    Icon(imageVector = Icons.Rounded.Refresh, contentDescription = null)
+    if (scanning) {
+        Column(Modifier.fillMaxSize()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(54.dp)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(text = "Available devices", style = MaterialTheme.typography.titleSmall)
+                if (scanning) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                } else {
+                    IconButton(
+                        onClick = {
+                            devices.clear()
+                            scanning = true
+                        },
+                    ) {
+                        Icon(imageVector = Icons.Rounded.Refresh, contentDescription = null)
+                    }
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (devices.isEmpty()) {
+                    item {
+                        Text(text = "No devices found")
+                    }
+                }
+                items(devices) { item ->
+                    BluetoothDeviceItem(
+                        bluetoothDevice = item,
+                        isSampleServer = serverDevices.contains(item),
+                        onConnect = myConnect,
+                    )
+                }
+
+                if (pairedDevices.isNotEmpty()) {
+                    item {
+                        Text(text = "Saved devices", style = MaterialTheme.typography.titleSmall)
+                    }
+                    items(pairedDevices) {
+                        BluetoothDeviceItem(
+                            bluetoothDevice = it,
+                            onConnect = myConnect,
+                        )
+                    }
                 }
             }
         }
+    } else {
+        Column(Modifier.fillMaxSize()) {
+            Text(text = "Do you want to automatically connect to the device?")
 
-        LazyColumn(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (devices.isEmpty()) {
-                item {
-                    Text(text = "No devices found")
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Button(onClick = {
+                    require(esp32Dev != null)
+                    myConnect(esp32Dev)
+                }) {
+                    Text("Yes")
                 }
-            }
-            items(devices) { item ->
-                BluetoothDeviceItem(
-                    bluetoothDevice = item,
-                    isSampleServer = serverDevices.contains(item),
-                    onConnect = myConnect,
-                )
-            }
 
-            if (pairedDevices.isNotEmpty()) {
-                item {
-                    Text(text = "Saved devices", style = MaterialTheme.typography.titleSmall)
-                }
-                items(pairedDevices) {
-                    BluetoothDeviceItem(
-                        bluetoothDevice = it,
-                        onConnect = myConnect,
-                    )
+                Button(onClick = {
+                    // trigger the scanning
+                    scanning = true
+                }) {
+                    Text("No")
                 }
             }
         }

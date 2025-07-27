@@ -1,16 +1,27 @@
 package com.example.augmentedrealityglasses.ble.device
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED
+import android.bluetooth.BluetoothDevice.BOND_BONDED
+import android.bluetooth.BluetoothDevice.BOND_BONDING
+import android.bluetooth.BluetoothDevice.BOND_NONE
 import android.bluetooth.BluetoothDevice.TRANSPORT_LE
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
+import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothStatusCodes
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.onFailure
@@ -52,6 +63,7 @@ class BleDevice(
     private var _deviceConnectionState: DeviceConnectionState = DeviceConnectionState.None
     private val TAG = "BleDevice"
     private val characteristicMaxChars = 13
+    private var prevBondState = BOND_BONDING
 
     // use a queue to have a single separate thread to manage ble events
     val taskQueue = ConcurrentLinkedQueue<Runnable>()
@@ -106,6 +118,101 @@ class BleDevice(
         }
     }
 
+    /*
+    Receiver to monitor the state of the bonding process. One may ask, why not using the onConnectionStateChange,
+    since it is capable of handling bond states?
+    The reason is that the callback is invoked only once with the current state of the bonding process,
+     which is BOND_BONDING at the beginning or BOND_BONDED on future sessions, assuming the process has successfully completed.
+    Any other event does not trigger the callback, hence the receiver is needed.
+     */
+    private val bondingReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        val TAG = "BondingReceiver"
+
+        /*
+        Bonding loose cannot immediately be detected by the BLE stack if the ESP32 has
+        bounded to another device. In this case, the broadcast receiver gets immediately a BOND_BONDED
+        followed by a BOND_NONE. To detect this kind of changes, prevBondState is used.
+        */
+        override fun onReceive(context: Context, intent: Intent) {
+            taskQueue.add {
+                val action = intent.action
+
+                if (ACTION_BOND_STATE_CHANGED == action) {
+                    Log.d(TAG, "bonding state changed")
+
+                    val device = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    } else {
+                        intent.getParcelableExtra(
+                            BluetoothDevice.EXTRA_DEVICE,
+                            BluetoothDevice::class.java
+                        )
+                    }
+
+                    val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
+
+                    // Ignore updates for other devices
+                    if (_deviceConnectionState.gatt == null ||
+                        !device?.getAddress()
+                            .equals(_deviceConnectionState.gatt!!.getDevice().getAddress())
+                    )
+                        return@add
+
+                    when (bondState) {
+                        BOND_BONDING -> {
+                            Log.d(TAG, "bondState == Bonding, waiting to complete")
+                        }
+
+                        BOND_BONDED -> {
+                            Log.d(
+                                TAG,
+                                "bondState == Bond_Bonded, bonding completed, start discovering the service"
+                            )
+                            _deviceConnectionState.gatt?.discoverServices()?.let {
+                                require(it) {
+                                    "failure in starting the discovery of the service"
+                                }
+                            }
+                        }
+
+                        BOND_NONE -> {
+                            // the bond with the device was lost, disconnect and reconnect again
+                            if (prevBondState == BOND_BONDED) {
+                                Log.d(TAG, "Bonding was lost")
+                            } else {
+                                Log.d(TAG, "Bonding failed")
+                            }
+                            _deviceConnectionState.gatt?.disconnect()
+                        }
+                    }
+                }
+                // why is it needed?
+                else if (BluetoothDevice.ACTION_PAIRING_REQUEST == action) {
+                    Log.d(TAG, "Received pairing request")
+                    /*
+                    val device = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    } else {
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+                    }
+                     */
+
+                    val pairingVariant = intent.getIntExtra(
+                        BluetoothDevice.EXTRA_PAIRING_VARIANT,
+                        BluetoothDevice.ERROR
+                    )
+
+                    if (pairingVariant == BluetoothDevice.PAIRING_VARIANT_PASSKEY_CONFIRMATION) {
+                        val passkey = intent.getIntExtra(BluetoothDevice.EXTRA_PAIRING_KEY, -1)
+                        // TODO: add logic to share the content to the UI to trigger an alert containing the information on the key
+                        Log.d(TAG, "Confirm the received passkey $passkey")
+                    }
+                }
+            }
+        }
+
+    }
+
 
     init {
         worker.start()
@@ -132,9 +239,30 @@ class BleDevice(
 
                         if (status == BluetoothGatt.GATT_SUCCESS) {
                             if (newState == BluetoothGatt.STATE_CONNECTED) {
-                                Log.d(TAG, "Connection has been established :)")
-                                Log.d(TAG, "Discover services")
-                                _deviceConnectionState.gatt?.discoverServices()
+                                if (_device.bondState == BOND_NONE) {
+                                    Log.d(
+                                        TAG,
+                                        "bondState=Bond -> bonding failed"
+                                    )
+                                    disconnect()
+                                } else if (_device.bondState == BOND_BONDED) {
+                                    prevBondState = BOND_BONDED
+                                    Log.d(
+                                        TAG,
+                                        "Inside onConnectionStateChange: bondState == BOND_BONDED"
+                                    )
+                                    _deviceConnectionState.gatt?.discoverServices()?.let {
+                                        require(it) {
+                                            "failure in starting the discovery of the service"
+                                        }
+                                    }
+                                } else {
+                                    prevBondState = BOND_BONDING
+                                    Log.d(
+                                        TAG,
+                                        "Inside onConnectionStateChange: bondState == BONDING"
+                                    )
+                                }
                             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                                 Log.d(TAG, "Cleaning stuff up")
                                 gatt.close()
@@ -263,8 +391,26 @@ class BleDevice(
 
             taskQueue.add {
                 Log.d(TAG, "Connecting to the gatt server")
-                val gatt = _device.connectGatt(context, false, gattCallback, TRANSPORT_LE)
-                _deviceConnectionState = _deviceConnectionState.copy(gatt = gatt)
+
+                // Register for bonding state changes
+                val filter = IntentFilter(ACTION_BOND_STATE_CHANGED)
+                filter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST)
+                context.registerReceiver(bondingReceiver, filter);
+
+                // connect
+
+                // hack to show the popup
+                val bluetoothManager: BluetoothManager =
+                    checkNotNull(context.getSystemService(BluetoothManager::class.java))
+                val adapter: BluetoothAdapter? = bluetoothManager.getAdapter()
+                adapter?.startDiscovery()
+                val handler = Handler(Looper.getMainLooper())
+                handler.postDelayed({
+                    adapter?.cancelDiscovery()
+
+                    val gatt = _device.connectGatt(context, false, gattCallback, TRANSPORT_LE)
+                    _deviceConnectionState = _deviceConnectionState.copy(gatt = gatt)
+                }, 1000)
             }
 
             awaitClose {
