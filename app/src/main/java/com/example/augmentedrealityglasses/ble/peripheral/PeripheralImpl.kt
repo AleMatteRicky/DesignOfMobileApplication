@@ -42,8 +42,8 @@ class PeripheralImpl(
     val device: BluetoothDevice,
     override val name: String,
     override val paired: Boolean,
-    val bluetoothGattCallback: BluetoothGattCallback = BluetoothGattCallbackImpl(device),
     val context: Context,
+    val bluetoothGattCallback: BluetoothGattCallback = BluetoothGattCallbackImpl(device),
     val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : Peripheral {
     private val TAG = PeripheralImpl::class.qualifiedName
