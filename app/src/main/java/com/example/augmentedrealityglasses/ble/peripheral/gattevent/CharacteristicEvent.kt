@@ -8,13 +8,12 @@ data class CharacteristicWriteEvent(
 ) : GattEvent()
 
 data class CharacteristicChangedEvent(
-    val status: Status,
     val characteristic: BluetoothGattCharacteristic,
-    val value: String
+    val value: ByteArray
 ) : GattEvent()
 
 data class CharacteristicReadEvent(
     val status: Status,
     val characteristic: BluetoothGattCharacteristic,
-    val value: String
+    val value: ByteArray
 ) : GattEvent()
