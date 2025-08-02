@@ -5,6 +5,7 @@ import com.example.augmentedrealityglasses.ble.characteristic.Characteristic
 interface WritableCharacteristic : Characteristic {
     /**
      * Write asynchronously the specified value to the characteristic
+     * @param value the value to write
      */
-    suspend fun write(value : String)
+    suspend fun write(value : ByteArray)
 }
