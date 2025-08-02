@@ -5,10 +5,11 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import com.example.augmentedrealityglasses.ble.GattOperationMutex
 import com.example.augmentedrealityglasses.ble.characteristic.Characteristic
+import com.example.augmentedrealityglasses.ble.characteristic.writable.dispatcher.MsgDispatcherImpl
 import com.example.augmentedrealityglasses.ble.characteristic.writable.message.Message
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.CharacteristicWriteEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.GattEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.Status
-import com.example.augmentedrealityglasses.ble.peripheral.gattevent.CharacteristicWriteEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.filter
@@ -22,24 +23,25 @@ class WritableCharacteristicImpl(
     val events: SharedFlow<GattEvent>,
     val gatt: BluetoothGatt,
     val characteristic: BluetoothGattCharacteristic,
-    val scope: CoroutineScope,
-    val context: Context
+    scope: CoroutineScope,
+    val context: Context,
 ) : WritableCharacteristic {
     private val maxSz = 13
 
     private val msgDispatcher =
-        com.example.augmentedrealityglasses.ble.characteristic.writable.dispatcher.MsgDispatcherImpl(
+        MsgDispatcherImpl(
             context
         )
 
-    override val properties: List<Characteristic.CharacteristicProperty> =
-        listOf(Characteristic.CharacteristicProperty.WRITE)
+    override val properties: Set<Characteristic.CharacteristicProperty> =
+        setOf(Characteristic.CharacteristicProperty.WRITE)
 
-    override suspend fun write(value: String) {
+    override suspend fun write(value: ByteArray) {
         // mutex used to have the messages sent in order
         return GattOperationMutex.withLock {
-            val toSend = value.chunked(maxSz).map { m -> m.toByteArray() }
-            for (data in toSend) {
+            val n = value.size
+            for (i in 0 until n step maxSz) {
+                val data = value.sliceArray(i until minOf(i + maxSz, n))
                 msgDispatcher.add(Message(data, gatt, characteristic))
             }
         }
@@ -65,5 +67,4 @@ class WritableCharacteristicImpl(
             cleanup()
         }
     }
-
 }
