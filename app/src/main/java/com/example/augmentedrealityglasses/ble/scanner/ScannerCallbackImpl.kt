@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-class ScannerCallbackImpl() : ScannerCallback() {
+class ScannerCallbackImpl() : ScanCallback() {
     private val _scanEvent : MutableSharedFlow<ScanEvent> = MutableSharedFlow(5)
     override val scanEvent : SharedFlow<ScanEvent> = _scanEvent.asSharedFlow()
 
