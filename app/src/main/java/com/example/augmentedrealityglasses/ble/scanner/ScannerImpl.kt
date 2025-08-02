@@ -9,21 +9,27 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.example.augmentedrealityglasses.ble.checkOtherwiseExec
+import com.example.augmentedrealityglasses.ble.peripheral.Peripheral
+import com.example.augmentedrealityglasses.ble.peripheral.PeripheralImpl
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
 
 class ScannerImpl(
     private val adapter: BluetoothAdapter,
-    private val scanCallback: ScannerCallbackImpl = ScannerCallbackImpl(),
     private val context: Context,
-    private val scope: CoroutineScope,
+    private val scanCallback: ScanCallback = ScannerCallbackImpl(),
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     private val settings: ScanSettings = ScanSettings.Builder()
         .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
         .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
@@ -34,34 +40,40 @@ class ScannerImpl(
 
     private var job: Job? = null
 
+    private lateinit var scannedPeripherals: Flow<Peripheral>
+
     override fun startScanning(
         timeout: Duration,
         filters: List<ScanFilter>
-    ): SharedFlow<ScanEvent> {
+    ): Flow<Peripheral> {
         checkScanningPermission()
 
         if (_isScanning.value)
-            return scanCallback.scanEvent
+            return scannedPeripherals
 
         job = scope.launch {
             delay(timeout)
             stopScanning()
         }
 
-        return scanCallback.scanEvent.onSubscription {
-            _isScanning.tryEmit(true)
-            adapter.bluetoothLeScanner.startScan(filters, settings, scanCallback)
-        }
+        scannedPeripherals = scanCallback.scanEvent
+            .onSubscription {
+                _isScanning.tryEmit(true)
+                adapter.bluetoothLeScanner.startScan(filters, settings, scanCallback)
+            }
+            .takeWhile { it is ScanSuccess }
+            .filterIsInstance<ScanSuccess>()
             .map {
-                if (it is ScanSuccess) {
-                    ScanSuccess(
-                        it.scanResult,
-                        adapter.bondedDevices.contains(it.scanResult!!.device)
-                    )
-                } else {
-                    it
-                }
-            } as SharedFlow<ScanEvent>
+                val device = it.scanResult.device
+                PeripheralImpl(
+                    device,
+                    device.address,
+                    adapter.bondedDevices.contains(device),
+                    context
+                )
+            }
+
+        return scannedPeripherals
     }
 
     override fun stopScanning() {
