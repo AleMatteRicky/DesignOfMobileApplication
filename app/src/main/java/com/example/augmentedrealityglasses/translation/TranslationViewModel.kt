@@ -65,12 +65,20 @@ class TranslationViewModel(
         private set
 
     init {
+
+        //FIXME: fix this in the proper branch
         viewModelScope.launch {
-            bleManager.receiveUpdates()
-                .collect { connectionState ->
-                    isConnected = connectionState.connectionState == BluetoothProfile.STATE_CONNECTED
-                }
+            try {
+                bleManager.receiveUpdates()
+                    .collect { connectionState ->
+                        isConnected =
+                            connectionState.connectionState == BluetoothProfile.STATE_CONNECTED
+                    }
+            } catch (_: IllegalArgumentException) {
+
+            }
         }
+
     }
 
     companion object {
