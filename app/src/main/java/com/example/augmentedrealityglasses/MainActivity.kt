@@ -112,12 +112,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable(ScreenName.WEATHER_SCREEN.name) {
                         WeatherScreen(
-                            viewModel = viewModel(factory = WeatherViewModel.Factory),
-                            onNavigateToHome = {
-                                navController.navigate(
-                                    route = ScreenName.HOME.name
-                                )
-                            }
+                            viewModel = viewModel(factory = WeatherViewModel.Factory)
                         )
                     }
 

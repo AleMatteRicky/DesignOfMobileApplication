@@ -48,8 +48,7 @@ import java.util.Locale
 
 @Composable
 fun WeatherScreen(
-    viewModel: WeatherViewModel,
-    onNavigateToHome: () -> Unit
+    viewModel: WeatherViewModel
 ) {
     //Context
     val context = LocalContext.current
