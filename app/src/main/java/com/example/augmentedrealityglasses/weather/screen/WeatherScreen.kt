@@ -247,16 +247,6 @@ fun WeatherScreen(
                     onDayChange = { viewModel.changeDay(it) }
                 )
             }
-            Button(
-                onClick = { onNavigateToHome() },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Home"
-                )
-            }
         }
     }
 }
