@@ -32,9 +32,9 @@ data class WeatherLocation(
         return if (this.name.isEmpty()) {
             ""
         } else if (this.state.isNullOrEmpty()) {
-            this.name + " (" + this.country + ")"
+            this.name + ", " + this.country
         } else {
-            this.name + ", " + this.state + " (" + this.country + ")"
+            this.name + ", " + this.country + " (" + this.state + ")"
         }
     }
 
