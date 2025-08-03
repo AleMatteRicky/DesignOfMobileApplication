@@ -15,9 +15,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
@@ -40,7 +42,8 @@ class ScannerImpl(
 
     private var job: Job? = null
 
-    private lateinit var scannedPeripherals: Flow<Peripheral>
+    private val _scannedPeripherals: MutableSharedFlow<Peripheral> = MutableSharedFlow(10)
+    override val scannedPeripherals: SharedFlow<Peripheral> = _scannedPeripherals.asSharedFlow()
 
     override fun startScanning(
         timeout: Duration,

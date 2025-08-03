@@ -6,10 +6,11 @@ import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 class BluetoothStateReceiver : BroadcastReceiver() {
     private val _bluetoothState = MutableSharedFlow<BluetoothState>(replay = 1)
-    val bluetoothState : SharedFlow<BluetoothState> = _bluetoothState
+    val bluetoothState : SharedFlow<BluetoothState> = _bluetoothState.asSharedFlow()
 
     override fun onReceive(context: Context?, intent: Intent?) {
         val action = intent?.action

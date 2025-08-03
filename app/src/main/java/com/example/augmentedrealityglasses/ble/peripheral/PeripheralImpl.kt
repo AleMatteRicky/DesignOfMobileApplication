@@ -54,10 +54,10 @@ class PeripheralImpl(
 
     private val _connectionState: MutableStateFlow<ConnectionState> =
         MutableStateFlow(ConnectionState.Closed)
-    override val connectionState: StateFlow<ConnectionState> = _connectionState
+    override val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
     private val _bondingState: MutableStateFlow<BondState> = MutableStateFlow(BondState.Unknown)
-    override val bondingState: StateFlow<BondState> = _bondingState
+    override val bondingState: StateFlow<BondState> = _bondingState.asStateFlow()
 
     override var services: List<Service> = emptyList()
         private set

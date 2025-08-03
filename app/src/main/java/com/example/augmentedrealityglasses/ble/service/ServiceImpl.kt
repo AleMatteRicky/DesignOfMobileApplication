@@ -5,6 +5,7 @@ import com.example.augmentedrealityglasses.ble.characteristic.readable.ReadableC
 import com.example.augmentedrealityglasses.ble.characteristic.writable.WritableCharacteristic
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 
 class ServiceImpl(
@@ -15,7 +16,7 @@ class ServiceImpl(
     override val uuid: UUID = service.uuid
 
     private val _isAvailable: MutableStateFlow<Boolean> = MutableStateFlow(true)
-    override val isAvailable: StateFlow<Boolean> = _isAvailable
+    override val isAvailable: StateFlow<Boolean> = _isAvailable.asStateFlow()
 
     override fun stopService() {
         _isAvailable.tryEmit(false)
