@@ -32,6 +32,7 @@ import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Date
@@ -127,6 +128,10 @@ class WeatherViewModel(
     var query by mutableStateOf("")
 
     // LOGIC FUNCTIONS
+
+    fun updateQuery(newQuery: String) {
+        query = newQuery
+    }
 
     fun clearSearchedLocationList() {
         _searchedLocations.clear()
@@ -379,44 +384,42 @@ class WeatherViewModel(
 
     private fun getWeatherByResult(result: WeatherLocation) {
         viewModelScope.launch {
-            if (searchedLocations.isNotEmpty()) {
 
-                //get weather infos of the result
-                when (val newCurrentWeatherCondition =
-                    fetchCurrentWeatherInfo(result.lat, result.lon)) {
-                    is APIResult.Success -> {
-                        //update weather and location states
+            //get weather infos of the result
+            when (val newCurrentWeatherCondition =
+                fetchCurrentWeatherInfo(result.lat, result.lon)) {
+                is APIResult.Success -> {
+                    //update weather and location states
 
-                        when (val newForecasts = fetchForecastsInfo(result.lat, result.lon)) {
-                            is APIResult.Success -> {
+                    when (val newForecasts = fetchForecastsInfo(result.lat, result.lon)) {
+                        is APIResult.Success -> {
 
-                                updateConditionsAndDateToShow(
-                                    newCurrentWeatherCondition.value,
-                                    newForecasts.value
-                                )
+                            updateConditionsAndDateToShow(
+                                newCurrentWeatherCondition.value,
+                                newForecasts.value
+                            )
 
-                                updateLocationState(
-                                    newCurrentWeatherCondition.value.name,
-                                    newCurrentWeatherCondition.value.coord.lat,
-                                    newCurrentWeatherCondition.value.coord.lon,
-                                    newCurrentWeatherCondition.value.sys.country,
-                                    result.state.orEmpty()
-                                )
+                            updateLocationState(
+                                newCurrentWeatherCondition.value.name,
+                                newCurrentWeatherCondition.value.coord.lat,
+                                newCurrentWeatherCondition.value.coord.lon,
+                                newCurrentWeatherCondition.value.sys.country,
+                                result.state.orEmpty()
+                            )
 
-                                //disable geolocationEnabled
-                                geolocationEnabled = false
+                            //disable geolocationEnabled
+                            geolocationEnabled = false
 
-                            }
+                        }
 
-                            else -> {
-                                //all the other cases already handled
-                            }
+                        else -> {
+                            //all the other cases already handled
                         }
                     }
+                }
 
-                    else -> {
-                        //all the other cases already handled
-                    }
+                else -> {
+                    //all the other cases already handled
                 }
             }
         }
@@ -428,7 +431,7 @@ class WeatherViewModel(
         fusedLocationClient: FusedLocationProviderClient,
         context: Context
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (geolocationEnabled) {
 
                 //fetch geolocation
@@ -523,7 +526,7 @@ class WeatherViewModel(
         fusedLocationClient: FusedLocationProviderClient,
         context: Context
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             //get geolocation infos
             //FIXME: run this in Dispatchers.IO?
             when (val geo = fetchGeolocation(fusedLocationClient, context)) {
@@ -594,6 +597,7 @@ class WeatherViewModel(
     }
 
     fun getWeatherOfSelectedLocation(result: WeatherLocation) {
+        query = ""
         getWeatherByResult(result)
     }
 

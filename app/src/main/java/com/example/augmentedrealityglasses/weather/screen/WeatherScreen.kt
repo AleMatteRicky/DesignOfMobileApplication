@@ -4,16 +4,21 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -109,7 +114,18 @@ fun WeatherScreen(
     }
 
     // ----  UI  ----
-    LocationAndBLEStatusBar(viewModel.location, viewModel.isExtDeviceConnected)
+    Column {
+        LocationAndBLEStatusBar(viewModel.location, viewModel.isExtDeviceConnected)
+        LocationManagerBar(
+            viewModel.query,
+            onQueryChange = { viewModel.updateQuery(it) },
+            onClickGeolocationIcon = {
+                viewModel.getGeolocationWeather(
+                    fusedLocationClient,
+                    context
+                )
+            })
+    }
 }
 
 @Composable
@@ -165,6 +181,61 @@ fun LocationAndBLEStatusBar(location: WeatherLocation, isExtDeviceConnected: Boo
                     modifier = Modifier.size(30.dp)
                 )
             }
+        }
+    }
+}
+
+//TODO: complete
+@Composable
+fun LocationManagerBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClickGeolocationIcon: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            OutlinedTextField(
+                value = query,
+                onValueChange = {
+                    onQueryChange(it)
+                },
+                placeholder = { Text("Search other locations") },
+                singleLine = true,
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.search),
+                        contentDescription = null,
+                    )
+                },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .height(56.dp)
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            IconButton(
+                onClick = onClickGeolocationIcon,
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(Color.Transparent)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.geolocation),
+                    contentDescription = null
+                )
+            }
+
         }
     }
 }
