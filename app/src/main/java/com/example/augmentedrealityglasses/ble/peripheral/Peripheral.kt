@@ -2,16 +2,17 @@ package com.example.augmentedrealityglasses.ble.peripheral
 
 import com.example.augmentedrealityglasses.ble.peripheral.bonding.BondState
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
-import com.example.augmentedrealityglasses.ble.service.Service
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import java.util.UUID
 
 /**
- * Class representing a peripheral
+ * Class representing the stub to communicate with the remote device
  */
 interface Peripheral {
     val mac : String
-    val name : String
-    val paired : Boolean
+    val name : String?
+    val areServicesAvailable : StateFlow<Boolean>
     val connectionState : StateFlow<ConnectionState>
     val bondingState : StateFlow<BondState>
     val services : List<Service>
@@ -19,12 +20,12 @@ interface Peripheral {
     /**
      * Disconnects from the peripheral.
      */
-    suspend fun disconnect()
+    fun disconnect()
 
     /**
-     * Close the peripheral, releasing any resource it was holding
+     * Closes the peripheral, releasing any resource it was holding
      */
-    suspend fun close()
+    fun close()
 
     /**
      * Connects to the peripheral
