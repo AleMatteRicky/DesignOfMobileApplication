@@ -1,8 +1,12 @@
 package com.example.augmentedrealityglasses.ble.device
 
-import kotlinx.coroutines.flow.Flow
+import android.bluetooth.BluetoothDevice
+import com.example.augmentedrealityglasses.ble.manager.BluetoothState
+import kotlinx.coroutines.flow.StateFlow
 
 interface RemoteDeviceManager{
+    val bluetoothState : StateFlow<BluetoothState>
+
     /**
      * Connects the remote device
      */
@@ -11,35 +15,22 @@ interface RemoteDeviceManager{
     /**
      * Sets the remote device that will be managed by this instance.
      */
-    fun setDeviceToManage(device: RemoteDevice)
+    fun setDeviceToManage(device: BluetoothDevice)
 
     /**
-     * Starts receiving updates from the remote device
-     * @return flow to consume the updates
+     * After a connection has been established, starts receiving updates from the remote device
+     * @return a shared flow to consume the updates
      */
-    fun receiveUpdates(): Flow<DeviceConnectionState>
-
-    /**
-     * Restore the connection previously established. The method differs from connect because
-     * it does not create a new connection
-     */
-    fun restoreConnection()
+    fun receiveUpdates(): StateFlow<RemoteDeviceData>
 
     /**
      * Sends the message to the remote device.
      * @property msg The message to send to the remote device
      */
-    fun send(msg: String)
+    suspend fun send(msg: String)
 
     /**
      * Disconnects the application from this device.
      */
     fun disconnect()
-
-    /**
-     * Closes the bluetooth gatt client on the device. In contrast with disconnect(), this method forgets
-     * all information about the device to which the application was connected to hence requiring the communication
-     * to start over.
-     */
-    fun close()
 }
