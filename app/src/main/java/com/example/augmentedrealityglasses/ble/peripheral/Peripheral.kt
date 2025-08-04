@@ -15,7 +15,6 @@ interface Peripheral {
     val areServicesAvailable : StateFlow<Boolean>
     val connectionState : StateFlow<ConnectionState>
     val bondingState : StateFlow<BondState>
-    val services : List<Service>
 
     /**
      * Disconnects from the peripheral.
