@@ -2,6 +2,7 @@ package com.example.augmentedrealityglasses.ble.scanner
 
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import android.content.Context
@@ -9,8 +10,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.example.augmentedrealityglasses.ble.checkOtherwiseExec
-import com.example.augmentedrealityglasses.ble.peripheral.Peripheral
-import com.example.augmentedrealityglasses.ble.peripheral.PeripheralImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -38,52 +37,49 @@ class ScannerImpl(
         .build()
 ) : Scanner {
     private val _isScanning: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    override val isScanning: SharedFlow<Boolean> = _isScanning
+    override val isScanning: SharedFlow<Boolean> = _isScanning.asStateFlow()
 
-    private var job: Job? = null
+    private var scanningTimeout: Job? = null
+    private var scanningResultsJob: Job? = null
 
-    private val _scannedPeripherals: MutableSharedFlow<Peripheral> = MutableSharedFlow(10)
-    override val scannedPeripherals: SharedFlow<Peripheral> = _scannedPeripherals.asSharedFlow()
+    private val _scannedPeripherals: MutableSharedFlow<BluetoothDevice> = MutableSharedFlow(10)
+    override val scannedDevices: SharedFlow<BluetoothDevice> = _scannedPeripherals.asSharedFlow()
 
     override fun startScanning(
         timeout: Duration,
         filters: List<ScanFilter>
-    ): Flow<Peripheral> {
+    ) {
         checkScanningPermission()
 
-        if (_isScanning.value)
-            return scannedPeripherals
-
-        job = scope.launch {
+        scanningTimeout = scope.launch {
             delay(timeout)
             stopScanning()
         }
 
-        scannedPeripherals = scanCallback.scanEvent
-            .onSubscription {
-                _isScanning.tryEmit(true)
-                adapter.bluetoothLeScanner.startScan(filters, settings, scanCallback)
-            }
-            .takeWhile { it is ScanSuccess }
-            .filterIsInstance<ScanSuccess>()
-            .map {
-                val device = it.scanResult.device
-                PeripheralImpl(
-                    device,
-                    device.address,
-                    adapter.bondedDevices.contains(device),
-                    context
-                )
-            }
-
-        return scannedPeripherals
+        scanningResultsJob = scope.launch {
+            scanCallback.scanEvent
+                .onSubscription {
+                    _isScanning.tryEmit(true)
+                    adapter.bluetoothLeScanner.startScan(filters, settings, scanCallback)
+                }
+                .takeWhile { it is ScanSuccess }
+                .filterIsInstance<ScanSuccess>()
+                .map {
+                    it.scanResult.device
+                }.collect {
+                    _scannedPeripherals.tryEmit(it)
+                }
+        }
     }
 
     override fun stopScanning() {
         if (!_isScanning.value)
             return
 
-        job?.cancel()
+        scanningTimeout?.cancel()
+        scanningTimeout = null
+        scanningResultsJob?.cancel()
+        scanningResultsJob = null
 
         checkScanningPermission()
 
