@@ -1,6 +1,5 @@
 package com.example.augmentedrealityglasses.ble.viewmodels
 
-import android.bluetooth.BluetoothGatt
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,12 +7,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
-import kotlinx.coroutines.launch
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 
 //FIXME: delete this in future, now just for testing
 data class UiMessageForTranslationState(
@@ -31,6 +28,8 @@ class TranslationViewModel(
     private val TAG = "TranslationViewModel"
 
     init {
+        /*
+        see: connect view model
         viewModelScope.launch {
             bleManager.receiveUpdates()
                 .collect { connectionState ->
@@ -40,10 +39,11 @@ class TranslationViewModel(
                     )
                 }
         }
+         */
     }
 
     fun send(msg: String) {
-        bleManager.send(msg)
+        //bleManager.send(msg)
         uiState = uiState.copy(msg = msg, isSending = true)
     }
 
@@ -56,7 +56,7 @@ class TranslationViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val bleManager = (this[APPLICATION_KEY] as App).container.bleManager
+                val bleManager = (this[APPLICATION_KEY] as App).container.proxy
                 TranslationViewModel(
                     bleManager = bleManager
                 )

@@ -1,5 +1,3 @@
-package com.example.augmentedrealityglasses.ble.screens
-
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -24,7 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,7 +47,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.augmentedrealityglasses.ble.device.SERVICE_UUID
+import com.example.augmentedrealityglasses.ble.devicedata.SERVICE_UUID
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import kotlinx.coroutines.delay
 
@@ -85,14 +82,21 @@ fun FindDeviceScreen(
     val pairedDevices = remember {
         mutableStateListOf(*adapter.bondedDevices.toTypedArray())
     }
+    /*
 
     val esp32Dev = pairedDevices.find({
         device ->
+            // MAC of the esp32
             device.address.equals("20:43:A8:6A:ED:2A")
     })
 
     var scanning by remember {
         mutableStateOf(esp32Dev == null)
+    }
+     */
+
+    var scanning by remember {
+        mutableStateOf(true)
     }
 
     // TODO. add virtual view to manage the state
@@ -151,30 +155,29 @@ fun FindDeviceScreen(
         }
     }
 
-    if (scanning) {
-        Column(Modifier.fillMaxSize()) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(54.dp)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(text = "Available devices", style = MaterialTheme.typography.titleSmall)
-                if (scanning) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                } else {
-                    IconButton(
-                        onClick = {
-                            devices.clear()
-                            scanning = true
-                        },
-                    ) {
-                        Icon(imageVector = Icons.Rounded.Refresh, contentDescription = null)
-                    }
+    Column(Modifier.fillMaxSize()) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(54.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text = "Available devices", style = MaterialTheme.typography.titleSmall)
+            if (scanning) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+            } else {
+                IconButton(
+                    onClick = {
+                        devices.clear()
+                        scanning = true
+                    },
+                ) {
+                    Icon(imageVector = Icons.Rounded.Refresh, contentDescription = null)
                 }
             }
+        }
 
             LazyColumn(
                 modifier = Modifier.padding(16.dp),
@@ -193,41 +196,41 @@ fun FindDeviceScreen(
                     )
                 }
 
-                if (pairedDevices.isNotEmpty()) {
-                    item {
-                        Text(text = "Saved devices", style = MaterialTheme.typography.titleSmall)
-                    }
-                    items(pairedDevices) {
-                        BluetoothDeviceItem(
-                            bluetoothDevice = it,
-                            onConnect = myConnect,
-                        )
-                    }
+            if (pairedDevices.isNotEmpty()) {
+                item {
+                    Text(text = "Saved devices", style = MaterialTheme.typography.titleSmall)
                 }
-            }
-        }
-    } else {
-        Column(Modifier.fillMaxSize()) {
-            Text(text = "Do you want to automatically connect to the device?")
-
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Button(onClick = {
-                    require(esp32Dev != null)
-                    myConnect(esp32Dev)
-                }) {
-                    Text("Yes")
-                }
-
-                Button(onClick = {
-                    // trigger the scanning
-                    scanning = true
-                }) {
-                    Text("No")
+                items(pairedDevices) {
+                    BluetoothDeviceItem(
+                        bluetoothDevice = it,
+                        onConnect = myConnect,
+                    )
                 }
             }
         }
     }
 }
+/*
+Column(Modifier.fillMaxSize()) {
+    Text(text = "Do you want to automatically connect to the device?")
+
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Button(onClick = {
+            require(esp32Dev != null)
+            myConnect(esp32Dev)
+        }) {
+            Text("Yes")
+        }
+
+        Button(onClick = {
+            // trigger the scanning
+            scanning = true
+        }) {
+            Text("No")
+        }
+    }
+}
+ */
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -296,7 +299,12 @@ private fun BluetoothScanEffect(
         val observer = LifecycleEventObserver { _, event ->
             // Start scanning once the app is in foreground and stop when in background
             if (event == Lifecycle.Event.ON_START) {
-                adapter.bluetoothLeScanner.startScan(null, scanSettings, leScanCallback)
+                adapter.bluetoothLeScanner.startScan(
+                    null,
+                    scanSettings,
+                    leScanCallback
+                )
+
             } else if (event == Lifecycle.Event.ON_STOP) {
                 adapter.bluetoothLeScanner.stopScan(leScanCallback)
             }

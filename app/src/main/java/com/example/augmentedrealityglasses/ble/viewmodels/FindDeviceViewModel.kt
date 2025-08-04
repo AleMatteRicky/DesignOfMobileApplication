@@ -7,22 +7,21 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.ble.device.BleDevice
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 
 class FindDeviceViewModel(
     private val bleManager: RemoteDeviceManager
 ) : ViewModel() {
 
     fun connect(device: BluetoothDevice) {
-        bleManager.setDeviceToManage(BleDevice(device))
+        bleManager.setDeviceToManage(device)
         bleManager.connect()
     }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val bleManager = (this[APPLICATION_KEY] as App).container.bleManager
+                val bleManager = (this[APPLICATION_KEY] as App).container.proxy
                 FindDeviceViewModel(
                     bleManager = bleManager
                 )

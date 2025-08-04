@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses
 
+import FindDeviceScreen
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -19,7 +20,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.augmentedrealityglasses.ble.permissions.BluetoothSampleBox
 import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
-import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
