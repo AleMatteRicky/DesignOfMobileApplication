@@ -1,14 +1,14 @@
 package com.example.augmentedrealityglasses.ble.manager
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothDevice.ACTION_BOND_STATE_CHANGED
 import android.content.Context
 import android.content.IntentFilter
-import com.example.augmentedrealityglasses.ble.manager.monitor.Monitor
-import com.example.augmentedrealityglasses.ble.manager.monitor.MonitorImpl
+import com.example.augmentedrealityglasses.ble.manager.monitor.SessionMonitor
+import com.example.augmentedrealityglasses.ble.manager.monitor.SessionMonitorImpl
 import com.example.augmentedrealityglasses.ble.peripheral.Peripheral
-import com.example.augmentedrealityglasses.ble.scanner.Scanner
-import com.example.augmentedrealityglasses.ble.scanner.ScannerImpl
+import com.example.augmentedrealityglasses.ble.peripheral.PeripheralImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -20,30 +20,27 @@ class BluetoothManagerImpl(
     private val context: Context,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 ) : BluetoothManager {
-    private val TAG = BluetoothManagerImpl::class.qualifiedName
+
+    companion object {
+        private val TAG = BluetoothManagerImpl::class.simpleName
+    }
 
     override val bluetoothOn: StateFlow<BluetoothState>
-
-    override val scanner: Scanner
 
     override var closed: Boolean = false
         private set
 
-    private val peripherals: MutableList<Peripheral> = ArrayList()
-
     private val bluetoothStateReceiver: BluetoothStateReceiver
 
-    private val monitors : MutableList<Monitor> = ArrayList()
+    private val monitors: MutableList<SessionMonitor> = ArrayList()
 
     init {
-        // setup scanner
         val bluetoothManager: android.bluetooth.BluetoothManager =
             context.getSystemService(android.bluetooth.BluetoothManager::class.java)
         val adapter: BluetoothAdapter? = bluetoothManager.adapter
         require(adapter != null) {
             "The device must support bluetooth"
         }
-        scanner = ScannerImpl(adapter, context)
 
         // monitor bluetooth state
         bluetoothStateReceiver = BluetoothStateReceiver()
@@ -53,25 +50,29 @@ class BluetoothManagerImpl(
         context.registerReceiver(bluetoothStateReceiver, filter)
     }
 
-    override fun manage(peripheral: Peripheral) {
-        // if not monitored yet, start monitoring it
-        if (!peripherals.contains(peripheral)) {
-            peripherals.add(peripheral)
-            monitor(peripheral)
+    override fun createStub(device: BluetoothDevice) : Peripheral {
+        val idx = monitors.indexOfFirst { it.peripheral.mac == device.address }
+
+        /* an existing session for the peripheral already exists, close the session and recreate a new one */
+        if (idx != -1) {
+            val currentMonitor = monitors[idx]
+            currentMonitor.close()
+            monitors.removeAt(idx)
         }
+        // create the stub, start managing it and return it
+        val peripheral : Peripheral = PeripheralImpl(device,context)
+        monitors.add(SessionMonitorImpl(peripheral))
+        return peripheral
     }
 
-    override fun getPeripheral(mac: String): Peripheral? {
-        return peripherals.find { it.mac == mac }
+    override fun getStub(mac: String): Peripheral? {
+        val peripheral = monitors.find { it.peripheral.mac == mac }?.peripheral
+        return peripheral
     }
 
     override fun close() {
         scope.cancel()
         context.unregisterReceiver(bluetoothStateReceiver)
         closed = true
-    }
-
-    fun monitor(peripheral: Peripheral) {
-        monitors.add(MonitorImpl(peripheral))
     }
 }
