@@ -19,7 +19,6 @@ import com.example.augmentedrealityglasses.ble.peripheral.gattevent.DescriptorWr
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.GattEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.Status
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +30,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.takeWhile
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicBoolean
 
 class ReadableCharacteristicImpl(
     override val uuid: UUID,
