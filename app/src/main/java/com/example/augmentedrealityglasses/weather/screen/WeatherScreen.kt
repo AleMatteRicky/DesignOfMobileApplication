@@ -309,6 +309,7 @@ fun LocationManagerBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
+            //FIXME: limit Text field width
             OutlinedTextField(
                 value = query,
                 onValueChange = {
