@@ -12,13 +12,18 @@ import com.example.augmentedrealityglasses.ble.GattOperationMutex
 import com.example.augmentedrealityglasses.ble.InvalidGattOperationException
 import com.example.augmentedrealityglasses.ble.characteristic.Characteristic
 import com.example.augmentedrealityglasses.ble.characteristic.checkBluetoothConnectPermission
+import com.example.augmentedrealityglasses.ble.characteristic.toCharacteristicProperties
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.CharacteristicChangedEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.CharacteristicReadEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.DescriptorWriteEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.GattEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.Status
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.firstOrNull
@@ -26,6 +31,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.takeWhile
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 
 class ReadableCharacteristicImpl(
     override val uuid: UUID,
@@ -34,20 +40,12 @@ class ReadableCharacteristicImpl(
     val characteristic: BluetoothGattCharacteristic,
     val descriptors: Set<BluetoothGattDescriptor>,
     val context: Context,
-    additionalProperties: Set<Characteristic.CharacteristicProperty>,
 ) : ReadableCharacteristic {
-    override val properties: Set<Characteristic.CharacteristicProperty>
+    override val properties: Set<Characteristic.CharacteristicProperty> =
+        characteristic.properties.toCharacteristicProperties()
 
-    init {
-        // If a property can be written, it will implement the WritableCharacteristic interface, here
-        // only properties related to readable characteristics
-        additionalProperties.filter { it != Characteristic.CharacteristicProperty.WRITE }
-        properties =
-            additionalProperties +
-                    setOf(
-                        Characteristic.CharacteristicProperty.READ
-                    )
-    }
+    private val _isNotifyEnabled = MutableStateFlow(false)
+    override val isNotifyEnabled: StateFlow<Boolean> = _isNotifyEnabled.asStateFlow()
 
     override fun subscribe(): Flow<ByteArray> {
         return events.takeWhile { !it.isServiceInvalidatedEvent }
@@ -83,11 +81,11 @@ class ReadableCharacteristicImpl(
 
     override suspend fun setNotify(enable: Boolean): Boolean {
         if (enable
-            && (!properties.contains(Characteristic.CharacteristicProperty.NOTIFY)
+            && !(properties.contains(Characteristic.CharacteristicProperty.NOTIFY)
                     ||
-                    !properties.contains(Characteristic.CharacteristicProperty.INDICATE))
+                    properties.contains(Characteristic.CharacteristicProperty.INDICATE))
         )
-            throw IllegalStateException("This notification cannot support notification/indication")
+            throw IllegalArgumentException("This notification cannot support notification/indication")
 
         val descriptor = descriptors.firstOrNull()
 
@@ -118,7 +116,10 @@ class ReadableCharacteristicImpl(
                 .filterIsInstance<DescriptorWriteEvent>()
                 .filter { it.descriptor == descriptor }
                 .firstOrNull()
-            success != null
+
+            val res = success != null
+            _isNotifyEnabled.emit(res)
+            res
         }
     }
 }
