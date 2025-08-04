@@ -9,14 +9,17 @@ import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 class BondingReceiver(
     val deviceAddress: String
 ) : BroadcastReceiver() {
-    private val _bondingEvent = MutableSharedFlow<BondEvent>(1)
-    val bondingEvent: SharedFlow<BondEvent> = _bondingEvent
+    private val _bondingEvent = MutableSharedFlow<BondEvent>(5)
+    val bondingEvent: SharedFlow<BondEvent> = _bondingEvent.asSharedFlow()
 
-    private val TAG = BondingReceiver::class.qualifiedName
+    companion object  {
+        private val TAG = BondingReceiver::class.qualifiedName
+    }
 
     override fun onReceive(context: Context?, intent: Intent?) {
         val action = intent?.action
@@ -36,8 +39,11 @@ class BondingReceiver(
 
             val bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1)
 
+            val actionRefersToTheBondingStateOfTheDevice : Boolean =
+                device?.address.equals(deviceAddress)
+
             // Ignore updates for other devices
-            if (device == null || device.address == null || device.address.equals(deviceAddress))
+            if (!actionRefersToTheBondingStateOfTheDevice)
                 return
 
             _bondingEvent.tryEmit(
