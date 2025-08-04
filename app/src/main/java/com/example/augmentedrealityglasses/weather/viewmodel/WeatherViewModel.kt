@@ -20,7 +20,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.APIResult
 import com.example.augmentedrealityglasses.weather.network.APIWeatherCondition
@@ -50,7 +51,7 @@ class WeatherViewModel(
                 val weatherAPIRepository =
                     (this[APPLICATION_KEY] as App).container.weatherAPIRepository
                 val bleManager =
-                    (this[APPLICATION_KEY] as App).container.bleManager
+                    (this[APPLICATION_KEY] as App).container.proxy
                 WeatherViewModel(
                     repository = weatherAPIRepository,
                     bleManager = bleManager
@@ -66,7 +67,7 @@ class WeatherViewModel(
                 bleManager.receiveUpdates()
                     .collect { connectionState ->
                         isExtDeviceConnected =
-                            connectionState.connectionState == BluetoothProfile.STATE_CONNECTED
+                            connectionState.connectionState is ConnectionState.Connected
                     }
             } catch (_: IllegalArgumentException) {
 
@@ -140,7 +141,9 @@ class WeatherViewModel(
 
     private fun sendBluetoothMessage(msg: String) {
         if (isExtDeviceConnected) {
-            bleManager.send(msg)
+            viewModelScope.launch {
+                bleManager.send(msg)
+            }
         } else {
             Log.d(TAG, "External device not connected")
         }

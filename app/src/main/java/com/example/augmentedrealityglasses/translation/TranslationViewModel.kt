@@ -2,7 +2,6 @@ package com.example.augmentedrealityglasses.translation
 
 import android.Manifest
 import android.app.Application
-import android.bluetooth.BluetoothProfile
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognitionListener
@@ -21,8 +20,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
-import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModel
 import com.google.mlkit.common.model.RemoteModelManager
@@ -72,7 +71,7 @@ class TranslationViewModel(
                 bleManager.receiveUpdates()
                     .collect { connectionState ->
                         isConnected =
-                            connectionState.connectionState == BluetoothProfile.STATE_CONNECTED
+                            connectionState.connectionState is ConnectionState.Connected
                     }
             } catch (_: IllegalArgumentException) {
 
@@ -85,7 +84,7 @@ class TranslationViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = this[APPLICATION_KEY] as App
-                val bleManager = application.container.bleManager
+                val bleManager = application.container.proxy
                 TranslationViewModel (
                     systemLanguage = TranslateLanguage.ITALIAN,
                     application = application,
@@ -135,7 +134,9 @@ class TranslationViewModel(
                                     uiState = uiState.copy(translatedText = translatedText)
                                     //send translated text to esp32
                                     Log.d(TAG,translatedText)
-                                    bleManager.send(uiState.translatedText)
+                                    viewModelScope.launch {
+                                        bleManager.send(uiState.translatedText)
+                                    }
                                 }
                                 ?.addOnFailureListener { exception ->
                                     Log.e("Translation failed", exception.toString())
@@ -307,7 +308,9 @@ class TranslationViewModel(
                     }
                     else{
                         Log.d("send", uiState.recognizedText)
-                        bleManager.send(uiState.recognizedText)
+                        viewModelScope.launch {
+                            bleManager.send(uiState.recognizedText)
+                        }
                     }
                 }
             }
