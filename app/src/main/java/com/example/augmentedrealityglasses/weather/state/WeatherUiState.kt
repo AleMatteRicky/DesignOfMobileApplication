@@ -11,11 +11,16 @@ data class WeatherUiState(
 data class WeatherCondition(
     val main: String,
     val description: String,
-    val temp: String,
-    val pressure: String,
+    val id: Int,
+    val temp: Int,
+    val feelsLike: Int,
+    val tempMin: Int,
+    val tempMax: Int,
+    val pressure: Int,
     val dateTime: Date,
     val isCurrent: Boolean
 ) {
+    //TODO (for ble)
     override fun toString(): String {
         return this.dateTime.toString() + " - " + "T: " + this.temp + Constants.TEMPERATURE_UNIT + "; P: " + this.pressure + Constants.PRESSURE_UNIT
     }

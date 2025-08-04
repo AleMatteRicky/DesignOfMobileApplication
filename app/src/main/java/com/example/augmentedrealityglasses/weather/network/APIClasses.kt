@@ -2,6 +2,7 @@ package com.example.augmentedrealityglasses.weather.network
 
 import com.google.gson.annotations.SerializedName
 import java.util.Date
+import kotlin.math.roundToInt
 
 data class APIWeatherCondition(
     @SerializedName("weather")
@@ -18,8 +19,15 @@ data class APIWeatherCondition(
 
 data class APIWeather(
     val main: String,
-    val description: String
-)
+
+    @SerializedName("id")
+    val _id: String,
+
+    val description: String //FIXME: maybe delete this
+) {
+    val id: Int
+        get() = _id.toInt()
+}
 
 data class APICoord(
     val lat: String,
@@ -27,9 +35,37 @@ data class APICoord(
 )
 
 data class APIMain(
-    val temp: String,
-    val pressure: String
-)
+    @SerializedName("temp")
+    private val _temp: String,
+
+    @SerializedName("feels_like")
+    private val _feels_like: String,
+
+    @SerializedName("temp_min")
+    private val _temp_min: String,
+
+    @SerializedName("temp_max")
+    private val _temp_max: String,
+
+    @SerializedName("pressure")
+    private val _pressure: String
+) {
+    //TODO: handle "exceptions"
+    val temp: Int
+        get() = _temp.toDoubleOrNull()?.roundToInt() ?: 0
+
+    val feels_like: Int
+        get() = _feels_like.toDoubleOrNull()?.roundToInt() ?: 0
+
+    val temp_min: Int
+        get() = _temp_min.toDoubleOrNull()?.roundToInt() ?: 0
+
+    val temp_max: Int
+        get() = _temp_max.toDoubleOrNull()?.roundToInt() ?: 0
+
+    val pressure: Int
+        get() = _pressure.toDoubleOrNull()?.roundToInt() ?: 0
+}
 
 data class APISys(
     val country: String

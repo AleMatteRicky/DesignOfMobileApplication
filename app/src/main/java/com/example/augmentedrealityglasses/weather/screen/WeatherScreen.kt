@@ -3,6 +3,7 @@ package com.example.augmentedrealityglasses.weather.screen
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -34,8 +35,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.weather.constants.Constants
+import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
@@ -116,6 +119,12 @@ fun WeatherScreen(
     // ----  UI  ----
     Column {
         LocationAndBLEStatusBar(viewModel.location, viewModel.isExtDeviceConnected)
+
+        val currentCondition = viewModel.getCurrentWeather()
+        if (currentCondition != null) {
+            CurrentWeatherBar(currentCondition)
+        }
+
         LocationManagerBar(
             viewModel.query,
             onQueryChange = { viewModel.updateQuery(it) },
@@ -171,18 +180,115 @@ fun LocationAndBLEStatusBar(location: WeatherLocation, isExtDeviceConnected: Boo
             if (isExtDeviceConnected) {
                 Icon(
                     painter = painterResource(id = R.drawable.bluetooth_connected),
-                    contentDescription = null,
+                    contentDescription = "Device connected",
                     modifier = Modifier.size(30.dp)
                 )
             } else {
                 Icon(
                     painter = painterResource(id = R.drawable.bluetooth_disabled),
-                    contentDescription = null,
+                    contentDescription = "Device not connected",
                     modifier = Modifier.size(30.dp)
                 )
             }
         }
     }
+}
+
+@Composable
+fun CurrentWeatherBar(
+    condition: WeatherCondition
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text(
+                text = "${condition.temp}°",
+                fontSize = 45.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = condition.main,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = R.drawable.arrow_upward),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .padding(end = 2.dp),
+                    tint = Color.Gray
+                )
+                Text(text = "${condition.tempMax}°", fontSize = 14.sp, color = Color.Gray)
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Text(text = "/", color = Color.Gray)
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Icon(
+                    painter = painterResource(id = R.drawable.arrow_downward),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .padding(end = 2.dp),
+                    tint = Color.Gray
+                )
+                Text(text = "${condition.tempMin}°", fontSize = 14.sp, color = Color.Gray)
+            }
+
+            Text(
+                text = "Feels Like: ${condition.feelsLike}°",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 10.dp)
+            )
+        }
+
+        //TODO: put the correct icon
+        Image(
+            painter = painterResource(id = getWeatherIconId(condition.id)),
+            contentDescription = null,
+            modifier = Modifier
+                .size(80.dp)
+        )
+    }
+}
+
+private fun getWeatherIconId(conditionId: Int): Int {
+    //TODO: add author's credits of pngs
+
+    var id = R.drawable.clear //TODO: handle exceptions
+
+    //TODO: use constants
+    if (conditionId in 200..232) {
+        // Thunderstorm
+        id = R.drawable.thunderstorm
+    } else if (conditionId in 300..531) {
+        // Drizzle or Rain
+        id = R.drawable.rain
+    } else if (conditionId in 600..622) {
+        //Snow
+        id = R.drawable.snow
+    } else if (conditionId == 800) {
+        //Clear
+        id = R.drawable.clear
+    } else if (conditionId in 801..804) {
+        //Clouds
+        id = R.drawable.clouds
+    }
+
+    return id
 }
 
 //TODO: complete

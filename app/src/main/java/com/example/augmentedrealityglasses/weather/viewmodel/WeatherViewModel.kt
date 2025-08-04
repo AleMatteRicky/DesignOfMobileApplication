@@ -89,6 +89,7 @@ class WeatherViewModel(
         private set
 
     //Day shown
+    //TODO: change name
     var dayShown by mutableStateOf(Date())
 
     //Selected location to display the weather conditions for
@@ -171,7 +172,11 @@ class WeatherViewModel(
             WeatherCondition(
                 newCurrentCondition.weather.main,
                 newCurrentCondition.weather.description,
+                newCurrentCondition.weather.id,
                 newCurrentCondition.main.temp,
+                newCurrentCondition.main.feels_like,
+                newCurrentCondition.main.temp_min,
+                newCurrentCondition.main.temp_max,
                 newCurrentCondition.main.pressure,
                 newCurrentCondition.dt,
                 true
@@ -181,7 +186,11 @@ class WeatherViewModel(
                     WeatherCondition(
                         forecast.weather.main,
                         forecast.weather.description,
+                        forecast.weather.id,
                         forecast.main.temp,
+                        forecast.main.feels_like,
+                        forecast.main.temp_min,
+                        forecast.main.temp_max,
                         forecast.main.pressure,
                         forecast.dt,
                         false
