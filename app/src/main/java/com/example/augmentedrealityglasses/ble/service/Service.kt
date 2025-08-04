@@ -1,7 +1,6 @@
 package com.example.augmentedrealityglasses.ble.service
 
-import com.example.augmentedrealityglasses.ble.characteristic.readable.ReadableCharacteristic
-import com.example.augmentedrealityglasses.ble.characteristic.writable.WritableCharacteristic
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
@@ -18,17 +17,30 @@ interface Service {
     val isAvailable : StateFlow<Boolean>
 
     /**
-     * List of writable characteristics supported by the service
+     * List of UUIDs of writable characteristics supported by the service
      */
-    val writableCharacteristics : List<WritableCharacteristic>
+    val writableCharacteristicsUUIDs : List<UUID>
 
     /**
-     * List of readable characteristics supported by the service
+     * List of UUIDs of readable characteristics supported by the service
      */
-    val readableCharacteristics : List<ReadableCharacteristic>
+    val readableCharacteristicsUUIDs : List<UUID>
 
     /**
-     * Stop the service
+     * Writes the specified value to the characteristic
+     * @param characteristicUUID UUID of the characteristic to write
+     * @param value to be written
+     */
+    suspend fun writeCharacteristic(characteristicUUID: UUID, value: ByteArray)
+
+    /**
+     * Subscribes to the changes of the provided characteristic
+     * @param characteristicUUID UUID of the characteristic to be subscribed
+     */
+    suspend fun subscribeCharacteristic(characteristicUUID: UUID) : Flow<ByteArray>
+
+    /**
+     * Stops the service
      */
     fun stopService()
 }
