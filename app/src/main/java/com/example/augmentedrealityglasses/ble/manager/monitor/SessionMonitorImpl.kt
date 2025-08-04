@@ -11,20 +11,22 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
-class MonitorImpl(
-    override val peripheral: Peripheral
-) : Monitor {
-    private val TAG = Monitor::class.qualifiedName
-
-    var toClose: AtomicBoolean = AtomicBoolean(false)
-
+class SessionMonitorImpl(
+    override val peripheral: Peripheral,
     val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+) : SessionMonitor {
+
+    companion object {
+        private val TAG = SessionMonitorImpl::class.simpleName
+    }
+
+    private var toClose: AtomicBoolean = AtomicBoolean(false)
 
     override fun close() {
         scope.cancel()
     }
 
-    private suspend fun disconnectPeripheral() {
+    private fun disconnectPeripheral() {
         peripheral.disconnect()
         scope.launch {
             delay(2000)
@@ -40,7 +42,6 @@ class MonitorImpl(
                 when (it) {
                     BondState.Bonded -> {
                         Log.d(TAG, "Bonding completed successfully")
-                        peripheral.discoverServices()
                     }
 
                     BondState.Bonding -> {
@@ -64,18 +65,12 @@ class MonitorImpl(
         scope.launch {
             peripheral.connectionState.collect {
                 if (it is ConnectionState.Connected) {
-                    var discover = true
                     if (it.bondState == BondState.Bonded) {
                         Log.d(TAG, "Bonding established successfully")
                     } else if (it.bondState == BondState.None) {
                         Log.d(TAG, "No bonding")
                     } else if (it.bondState == BondState.Bonding) {
                         Log.d(TAG, "Bonding, wait")
-                        discover = false
-                    }
-
-                    if (discover) {
-                        peripheral.discoverServices()
                     }
                 } else if (it is ConnectionState.Disconnected) {
                     if (it.userInitiatedDisconnection) {

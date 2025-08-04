@@ -5,7 +5,7 @@ import com.example.augmentedrealityglasses.ble.peripheral.Peripheral
 /**
  * Monitors the peripheral's state
  */
-interface Monitor {
+interface SessionMonitor {
     val peripheral : Peripheral
 
     fun close()
