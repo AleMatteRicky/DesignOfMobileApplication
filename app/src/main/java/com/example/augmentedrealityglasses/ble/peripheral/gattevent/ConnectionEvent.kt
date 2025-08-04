@@ -9,6 +9,7 @@ class ConnectionEvent(
 ) : GattEvent()
 
 sealed class ConnectionState {
+    data object Initial : ConnectionState()
     data object Closed : ConnectionState()
     data object Connecting : ConnectionState()
     data class Connected(val bondState: BondState): ConnectionState()
