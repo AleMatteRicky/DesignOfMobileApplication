@@ -37,13 +37,10 @@ class WritableCharacteristicImpl(
         setOf(Characteristic.CharacteristicProperty.WRITE)
 
     override suspend fun write(value: ByteArray) {
-        // mutex used to have the messages sent in order
-        return GattOperationMutex.withLock {
-            val n = value.size
-            for (i in 0 until n step maxSz) {
-                val data = value.sliceArray(i until minOf(i + maxSz, n))
-                msgDispatcher.add(Message(data, gatt, characteristic))
-            }
+        val n = value.size
+        for (i in 0 until n step maxSz) {
+            val data = value.sliceArray(i until minOf(i + maxSz, n))
+            msgDispatcher.add(Message(data, gatt, characteristic))
         }
     }
 
