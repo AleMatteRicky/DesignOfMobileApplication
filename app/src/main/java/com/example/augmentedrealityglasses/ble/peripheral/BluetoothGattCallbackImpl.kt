@@ -18,13 +18,14 @@ import com.example.augmentedrealityglasses.ble.peripheral.gattevent.genStatus
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.toConnectionState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 class BluetoothGattCallbackImpl(
     val device: BluetoothDevice,
 ) : BluetoothGattCallback() {
     private val _events: MutableSharedFlow<GattEvent> =
         MutableSharedFlow(replay = 5, extraBufferCapacity = 128)
-    override val events: SharedFlow<GattEvent> = _events
+    override val events: SharedFlow<GattEvent> = _events.asSharedFlow()
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     override fun onConnectionStateChange(
@@ -71,7 +72,6 @@ class BluetoothGattCallbackImpl(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic
     ) {
-        // Copy the byte array so we have a threadsafe copy
         val value = ByteArray(characteristic.value.size)
         characteristic.value.copyInto(value)
         _events.tryEmit(CharacteristicChangedEvent(characteristic, value))
@@ -83,5 +83,10 @@ class BluetoothGattCallbackImpl(
         status: Int
     ) {
         _events.tryEmit(DescriptorWriteEvent(descriptor, status.genStatus()))
+    }
+
+
+    companion object {
+        val TAG = BluetoothGattCallbackImpl::class.simpleName
     }
 }
