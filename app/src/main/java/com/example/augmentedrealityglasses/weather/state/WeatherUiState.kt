@@ -12,6 +12,7 @@ data class WeatherCondition(
     val main: String,
     val description: String,
     val id: Int,
+    val icon: String,
     val temp: Int,
     val feelsLike: Int,
     val tempMin: Int,

@@ -257,7 +257,7 @@ fun CurrentWeatherBar(
 
         //TODO: put the correct icon
         Image(
-            painter = painterResource(id = getWeatherIconId(condition.id)),
+            painter = painterResource(id = getWeatherIconId(condition.id, condition.icon)),
             contentDescription = null,
             modifier = Modifier
                 .size(80.dp)
@@ -265,7 +265,7 @@ fun CurrentWeatherBar(
     }
 }
 
-private fun getWeatherIconId(conditionId: Int): Int {
+private fun getWeatherIconId(conditionId: Int, iconId: String): Int {
     //TODO: add author's credits of pngs
 
     var id = R.drawable.clear //TODO: handle exceptions
@@ -280,9 +280,12 @@ private fun getWeatherIconId(conditionId: Int): Int {
     } else if (conditionId in 600..622) {
         //Snow
         id = R.drawable.snow
-    } else if (conditionId == 800) {
-        //Clear
+    } else if (conditionId == 800 && iconId == "01d") {
+        //Clear (day)
         id = R.drawable.clear
+    } else if (conditionId == 800 && iconId == "01n") {
+        //Clear (night)
+        id = R.drawable.clear_night
     } else if (conditionId in 801..804) {
         //Clouds
         id = R.drawable.clouds

@@ -3,7 +3,6 @@ package com.example.augmentedrealityglasses.weather.viewmodel
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -69,7 +68,7 @@ class WeatherViewModel(
                         isExtDeviceConnected =
                             connectionState.connectionState is ConnectionState.Connected
                     }
-            } catch (_: IllegalArgumentException) {
+            } catch (_: Exception) {
 
             }
         }
@@ -176,6 +175,7 @@ class WeatherViewModel(
                 newCurrentCondition.weather.main,
                 newCurrentCondition.weather.description,
                 newCurrentCondition.weather.id,
+                newCurrentCondition.weather.icon,
                 newCurrentCondition.main.temp,
                 newCurrentCondition.main.feels_like,
                 newCurrentCondition.main.temp_min,
@@ -190,6 +190,7 @@ class WeatherViewModel(
                         forecast.weather.main,
                         forecast.weather.description,
                         forecast.weather.id,
+                        forecast.weather.icon,
                         forecast.main.temp,
                         forecast.main.feels_like,
                         forecast.main.temp_min,
