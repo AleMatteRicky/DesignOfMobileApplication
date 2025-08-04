@@ -29,10 +29,25 @@ interface Peripheral {
     /**
      * Connects to the peripheral
      */
-    suspend fun connect()
+    fun connect()
 
     /**
-     * Discover services
+     * Sends the provided value to the specified service's characteristic
+     * @param characteristicUUID of the characteristic to be written
+     * @param value to write
      */
-    suspend fun discoverServices() : List<Service>
+    suspend fun send(serviceUUID: UUID, characteristicUUID: UUID, value : ByteArray)
+
+    /**
+     * Subscribes to the changes of the specified service's characteristic
+     * @param serviceUUID of the characteristic's service
+     * @param characteristicUUID of the characteristic to be subscribed to
+     * @result flow of string values coming from the characteristic
+     */
+    suspend fun subscribe(serviceUUID: UUID, characteristicUUID: UUID) : Flow<String>
+
+    /**
+     * Discovers the services provided by the peripheral
+     */
+    suspend fun discoverServices()
 }
