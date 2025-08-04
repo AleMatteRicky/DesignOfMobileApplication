@@ -1,6 +1,5 @@
 package com.example.augmentedrealityglasses.ble.viewmodels
 
-import android.bluetooth.BluetoothProfile
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +12,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import kotlinx.coroutines.launch
 
 data class UiDeviceConnectionState(
@@ -22,7 +22,7 @@ data class UiDeviceConnectionState(
 
 // TODO. add SavedStateHandle to retain UI logic after process' death
 class ConnectViewModel(
-    private val bleManager: RemoteDeviceManager
+    private val proxy: RemoteDeviceManager
 ) : ViewModel() {
     private val TAG: String = "ConnectViewModel"
 
@@ -32,11 +32,11 @@ class ConnectViewModel(
     init {
         Log.d(TAG, "Creating the ConnectViewModel again")
         viewModelScope.launch {
-            bleManager.receiveUpdates()
+            proxy.receiveUpdates()
                 .collect { connectionState ->
                     uiState =
                         uiState.copy(
-                            isConnected = connectionState.connectionState == BluetoothProfile.STATE_CONNECTED,
+                            isConnected = connectionState.connectionState is ConnectionState.Connected,
                             msg = connectionState.messageReceived
                         )
                 }
@@ -47,9 +47,9 @@ class ConnectViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val bleManager = (this[APPLICATION_KEY] as App).container.bleManager
+                val proxy = (this[APPLICATION_KEY] as App).container.proxy
                 ConnectViewModel(
-                    bleManager = bleManager
+                    proxy = proxy
                 )
             }
         }
@@ -61,10 +61,12 @@ class ConnectViewModel(
     }
 
     fun closeConnection() {
-        bleManager.close()
+        proxy.disconnect()
     }
 
     fun sendData(msg:String) {
-        bleManager.send(msg)
+        viewModelScope.launch {
+            proxy.send(msg)
+        }
     }
 }
