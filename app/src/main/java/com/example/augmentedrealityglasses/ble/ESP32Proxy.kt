@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ESP32Proxy(
@@ -70,13 +71,14 @@ class ESP32Proxy(
         jobs.forEach { it.cancel() }
         jobs.clear()
 
+        val peripheral = bluetoothManager.getStub(ESP32MAC)!!
+
         jobs.add(scope.launch {
-            bluetoothManager.getStub(ESP32MAC)!!.connectionState
-                .collect {
-                    val curPeriConState = _peripheralConnectionState.value
-                    _peripheralConnectionState.emit(
-                        curPeriConState.copy(connectionState = it)
-                    )
+            peripheral.connectionState
+                .collect { state ->
+                    _peripheralConnectionState.update {
+                        it.copy(connectionState = state)
+                    }
                 }
         }
         )
@@ -84,18 +86,16 @@ class ESP32Proxy(
         jobs.add(
             // receive updates from the peripheral
             scope.launch {
-                val peripheral = bluetoothManager.getStub(ESP32MAC)!!
-
                 if (!peripheral.areServicesAvailable.value) {
                     peripheral.discoverServices()
                 }
 
-                peripheral.subscribe(SERVICE_UUID, CHARACTERISTIC_UUID_RX).collect {
-                    val curPeriConState = _peripheralConnectionState.value
-                    _peripheralConnectionState.emit(
-                        curPeriConState.copy(messageReceived = it)
-                    )
-                }
+                peripheral.subscribe(SERVICE_UUID, CHARACTERISTIC_UUID_RX)
+                    .collect { msg ->
+                        _peripheralConnectionState.update {
+                            it.copy(messageReceived = msg)
+                        }
+                    }
             }
         )
     }
