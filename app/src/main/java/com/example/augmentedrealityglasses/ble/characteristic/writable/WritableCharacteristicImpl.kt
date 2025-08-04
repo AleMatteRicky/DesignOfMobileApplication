@@ -3,14 +3,17 @@ package com.example.augmentedrealityglasses.ble.characteristic.writable
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
-import com.example.augmentedrealityglasses.ble.GattOperationMutex
 import com.example.augmentedrealityglasses.ble.characteristic.Characteristic
+import com.example.augmentedrealityglasses.ble.characteristic.toCharacteristicProperties
+import com.example.augmentedrealityglasses.ble.characteristic.writable.dispatcher.MsgDispatcher
 import com.example.augmentedrealityglasses.ble.characteristic.writable.dispatcher.MsgDispatcherImpl
 import com.example.augmentedrealityglasses.ble.characteristic.writable.message.Message
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.CharacteristicWriteEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.GattEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.Status
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
@@ -23,18 +26,17 @@ class WritableCharacteristicImpl(
     val events: SharedFlow<GattEvent>,
     val gatt: BluetoothGatt,
     val characteristic: BluetoothGattCharacteristic,
-    scope: CoroutineScope,
     val context: Context,
+    val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : WritableCharacteristic {
     private val maxSz = 13
 
-    private val msgDispatcher =
-        MsgDispatcherImpl(
-            context
-        )
+    private var msgDispatcher : MsgDispatcher = MsgDispatcherImpl(
+        context
+    )
 
     override val properties: Set<Characteristic.CharacteristicProperty> =
-        setOf(Characteristic.CharacteristicProperty.WRITE)
+        characteristic.properties.toCharacteristicProperties()
 
     override suspend fun write(value: ByteArray) {
         val n = value.size
@@ -46,6 +48,7 @@ class WritableCharacteristicImpl(
 
     suspend fun cleanup() {
         msgDispatcher.close()
+        scope.cancel("Characteristic has finished writing")
     }
 
     init {
