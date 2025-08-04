@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.ble.device
+package com.example.augmentedrealityglasses.ble.devicedata
 
 import android.bluetooth.BluetoothDevice
 import com.example.augmentedrealityglasses.ble.manager.BluetoothState

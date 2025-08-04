@@ -2,11 +2,11 @@ package com.example.augmentedrealityglasses.ble
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import com.example.augmentedrealityglasses.ble.device.CHARACTERISTIC_UUID_RX
-import com.example.augmentedrealityglasses.ble.device.CHARACTERISTIC_UUID_TX
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceData
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
-import com.example.augmentedrealityglasses.ble.device.SERVICE_UUID
+import com.example.augmentedrealityglasses.ble.devicedata.CHARACTERISTIC_UUID_RX
+import com.example.augmentedrealityglasses.ble.devicedata.CHARACTERISTIC_UUID_TX
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceData
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.devicedata.SERVICE_UUID
 import com.example.augmentedrealityglasses.ble.manager.BluetoothManager
 import com.example.augmentedrealityglasses.ble.manager.BluetoothManagerImpl
 import com.example.augmentedrealityglasses.ble.manager.BluetoothState

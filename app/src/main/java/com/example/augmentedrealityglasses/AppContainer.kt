@@ -3,7 +3,7 @@ package com.example.augmentedrealityglasses
 import android.content.Context
 import com.example.augmentedrealityglasses.ble.ESP32Proxy
 import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 
 /**
  * Dependency Injection container at the application level.
