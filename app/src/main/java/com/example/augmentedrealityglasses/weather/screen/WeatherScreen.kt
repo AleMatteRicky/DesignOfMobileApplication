@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
-import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
@@ -128,11 +127,21 @@ fun WeatherScreen(
 
     // ----  UI  ----
     Column {
-        LocationAndBLEStatusBar(viewModel.location, viewModel.isExtDeviceConnected)
+        LocationAndBLEStatusBar(
+            viewModel.location.getFullName(),
+            viewModel.isExtDeviceConnected
+        )
 
         val currentCondition = viewModel.getCurrentWeather()
         if (currentCondition != null) {
-            CurrentWeatherBar(currentCondition)
+            CurrentWeatherBar(
+                currentCondition.temp,
+                currentCondition.tempMax,
+                currentCondition.tempMin,
+                currentCondition.feelsLike,
+                currentCondition.main,
+                currentCondition.iconId
+            )
         }
 
         LocationManagerBar(
@@ -143,7 +152,8 @@ fun WeatherScreen(
                     fusedLocationClient,
                     context
                 )
-            })
+            }
+        )
 
         var conditions = viewModel.getAllConditions()
         if (conditions.isNotEmpty()) {
@@ -156,7 +166,7 @@ fun WeatherScreen(
 }
 
 @Composable
-fun LocationAndBLEStatusBar(location: WeatherLocation, isExtDeviceConnected: Boolean) {
+fun LocationAndBLEStatusBar(locationName: String, isExtDeviceConnected: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,7 +184,7 @@ fun LocationAndBLEStatusBar(location: WeatherLocation, isExtDeviceConnected: Boo
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 //FIXME: handle long texts
-                text = location.getFullName(),
+                text = locationName,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
@@ -214,7 +224,12 @@ fun LocationAndBLEStatusBar(location: WeatherLocation, isExtDeviceConnected: Boo
 
 @Composable
 fun CurrentWeatherBar(
-    condition: WeatherCondition
+    temperature: Int,
+    maxTemperature: Int,
+    minTemperature: Int,
+    feelsLike: Int,
+    conditionName: String,
+    iconId: Int
 ) {
     Row(
         modifier = Modifier
@@ -225,12 +240,12 @@ fun CurrentWeatherBar(
     ) {
         Column {
             Text(
-                text = "${condition.temp}°",
+                text = "${temperature}°",
                 fontSize = 45.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = condition.main,
+                text = conditionName,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -246,7 +261,7 @@ fun CurrentWeatherBar(
                         .padding(end = 2.dp),
                     tint = Color.Gray
                 )
-                Text(text = "${condition.tempMax}°", fontSize = 14.sp, color = Color.Gray)
+                Text(text = "${maxTemperature}°", fontSize = 14.sp, color = Color.Gray)
 
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -262,11 +277,11 @@ fun CurrentWeatherBar(
                         .padding(end = 2.dp),
                     tint = Color.Gray
                 )
-                Text(text = "${condition.tempMin}°", fontSize = 14.sp, color = Color.Gray)
+                Text(text = "${minTemperature}°", fontSize = 14.sp, color = Color.Gray)
             }
 
             Text(
-                text = "Feels Like: ${condition.feelsLike}°",
+                text = "Feels Like: ${feelsLike}°",
                 fontSize = 14.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 10.dp)
@@ -274,8 +289,8 @@ fun CurrentWeatherBar(
         }
 
         Image(
-            painter = painterResource(id = condition.iconId),
-            contentDescription = condition.main,
+            painter = painterResource(id = iconId),
+            contentDescription = conditionName,
             modifier = Modifier
                 .size(80.dp)
         )
@@ -380,7 +395,13 @@ fun DailyForecastsPanel(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(forecasts) { forecast ->
-                    DailyForecastItem(forecast)
+                    DailyForecastItem(
+                        forecast.isCurrent,
+                        forecast.dateTime,
+                        forecast.iconId,
+                        forecast.main,
+                        forecast.temp
+                    )
                 }
             }
         }
@@ -389,7 +410,11 @@ fun DailyForecastsPanel(
 
 @Composable
 fun DailyForecastItem(
-    condition: WeatherCondition
+    isCurrent: Boolean,
+    dateTime: Date,
+    iconId: Int,
+    conditionName: String,
+    temperature: Int
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -398,19 +423,19 @@ fun DailyForecastItem(
             .padding(horizontal = 7.dp)
     ) {
         Text(
-            text = if (condition.isCurrent) "Now" else formatDate(condition.dateTime),
+            text = if (isCurrent) "Now" else formatDate(dateTime),
             style = MaterialTheme.typography.bodySmall.copy(
                 fontWeight = FontWeight.Bold
             )
         )
         Image(
-            painter = painterResource(id = condition.iconId),
-            contentDescription = condition.main,
+            painter = painterResource(id = iconId),
+            contentDescription = conditionName,
             modifier = Modifier
                 .size(30.dp)
         )
         Text(
-            text = "${condition.temp}°",
+            text = "${temperature}°",
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
