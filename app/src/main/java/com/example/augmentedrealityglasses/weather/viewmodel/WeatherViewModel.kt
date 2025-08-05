@@ -641,4 +641,8 @@ class WeatherViewModel(
         //FIXME: improve this: do not use filter to remove just one element from the list
         return weatherState.conditions.filter { condition -> !condition.isCurrent }
     }
+
+    fun getAllConditions(): List<WeatherCondition> {
+        return weatherState.conditions
+    }
 }

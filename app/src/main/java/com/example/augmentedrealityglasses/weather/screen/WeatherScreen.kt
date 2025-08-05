@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +16,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +50,9 @@ import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun WeatherScreen(
@@ -134,6 +144,14 @@ fun WeatherScreen(
                     context
                 )
             })
+
+        var conditions = viewModel.getAllConditions()
+        if (conditions.isNotEmpty()) {
+            conditions =
+                conditions.sortedBy { it.dateTime }.take(Constants.DAILY_CONDITIONS_TO_SHOW)
+
+            DailyForecastsPanel(conditions)
+        }
     }
 }
 
@@ -255,43 +273,13 @@ fun CurrentWeatherBar(
             )
         }
 
-        //TODO: put the correct icon
         Image(
-            painter = painterResource(id = getWeatherIconId(condition.id, condition.icon)),
-            contentDescription = null,
+            painter = painterResource(id = condition.iconId),
+            contentDescription = condition.main,
             modifier = Modifier
                 .size(80.dp)
         )
     }
-}
-
-private fun getWeatherIconId(conditionId: Int, iconId: String): Int {
-    //TODO: add author's credits of pngs
-
-    var id = R.drawable.clear //TODO: handle exceptions
-
-    //TODO: use constants
-    if (conditionId in 200..232) {
-        // Thunderstorm
-        id = R.drawable.thunderstorm
-    } else if (conditionId in 300..531) {
-        // Drizzle or Rain
-        id = R.drawable.rain
-    } else if (conditionId in 600..622) {
-        //Snow
-        id = R.drawable.snow
-    } else if (conditionId == 800 && iconId == "01d") {
-        //Clear (day)
-        id = R.drawable.clear
-    } else if (conditionId == 800 && iconId == "01n") {
-        //Clear (night)
-        id = R.drawable.clear_night
-    } else if (conditionId in 801..804) {
-        //Clouds
-        id = R.drawable.clouds
-    }
-
-    return id
 }
 
 //TODO: complete
@@ -348,4 +336,89 @@ fun LocationManagerBar(
 
         }
     }
+}
+
+//TODO: Add gradient to the right side
+@Composable
+fun DailyForecastsPanel(
+    forecasts: List<WeatherCondition>
+) {
+    // Enables snapping to the start of each item during horizontal scroll.
+    val listState = rememberLazyListState()
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Daily forecasts (updated every 3 hours)",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                thickness = 1.dp,
+                color = Color.LightGray
+            )
+            LazyRow(
+                // Enables snapping to the start of each item during horizontal scroll.
+                state = listState,
+                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
+
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(forecasts) { forecast ->
+                    DailyForecastItem(forecast)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DailyForecastItem(
+    condition: WeatherCondition
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(horizontal = 7.dp)
+    ) {
+        Text(
+            text = if (condition.isCurrent) "Now" else formatDate(condition.dateTime),
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.Bold
+            )
+        )
+        Image(
+            painter = painterResource(id = condition.iconId),
+            contentDescription = condition.main,
+            modifier = Modifier
+                .size(30.dp)
+        )
+        Text(
+            text = "${condition.temp}°",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+            )
+        )
+    }
+}
+
+fun formatDate(date: Date): String {
+    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
 }
