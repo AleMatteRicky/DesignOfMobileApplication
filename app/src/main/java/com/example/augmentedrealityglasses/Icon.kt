@@ -7,6 +7,12 @@ enum class Icon {
         override fun getID(): Int {
             return R.drawable.mic
         }
+    },
+
+    STOP{
+        override fun getID(): Int {
+            return R.drawable.stop
+        }
     };
 
     abstract fun getID(): Int //todo add a parameter which determines the theme of the app
