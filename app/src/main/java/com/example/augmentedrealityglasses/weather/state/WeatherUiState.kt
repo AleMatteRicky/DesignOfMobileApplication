@@ -87,3 +87,11 @@ data class WeatherLocation(
         }
     }
 }
+
+data class DayCondition(
+    val date: Date,
+    val isCurrent: Boolean,
+    val iconId: Int,
+    val tempMin: Int,
+    val tempMax: Int
+)
