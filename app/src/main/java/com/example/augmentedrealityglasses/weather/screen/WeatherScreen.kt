@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -45,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.weather.constants.Constants
+import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
@@ -125,6 +129,12 @@ fun WeatherScreen(
         }
     }
 
+    //Handle auto scroll on left of "Daily forecasts panel" when changing the day
+    val dailyListState = rememberLazyListState()
+    LaunchedEffect(viewModel.selectedDay) {
+        dailyListState.animateScrollToItem(0)
+    }
+
     // ----  UI  ----
     Column {
         LocationAndBLEStatusBar(
@@ -158,9 +168,17 @@ fun WeatherScreen(
         var conditions = viewModel.getAllConditions()
         if (conditions.isNotEmpty()) {
             conditions =
-                conditions.sortedBy { it.dateTime }.take(Constants.DAILY_CONDITIONS_TO_SHOW)
+                conditions.sortedBy { it.dateTime }
+                    .filter { condition -> condition.dateTime >= viewModel.selectedDay }
+                    .take(Constants.DAILY_CONDITIONS_TO_SHOW)
 
-            DailyForecastsPanel(conditions)
+            DailyForecastsPanel(conditions, dailyListState)
+
+            MultipleDaysForecastsPanel(
+                forecasts = viewModel.getDaysConditions(),
+                onItemClick = { viewModel.changeSelectedDay(it) },
+                isSelectedDay = { viewModel.selectedDay == it }
+            )
         }
     }
 }
@@ -170,7 +188,8 @@ fun LocationAndBLEStatusBar(locationName: String, isExtDeviceConnected: Boolean)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 20.dp),
+            .padding(horizontal = 16.dp)
+            .padding(top = 20.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -234,7 +253,8 @@ fun CurrentWeatherBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp)
+            .padding(top = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -356,10 +376,9 @@ fun LocationManagerBar(
 //TODO: Add gradient to the right side
 @Composable
 fun DailyForecastsPanel(
-    forecasts: List<WeatherCondition>
+    forecasts: List<WeatherCondition>,
+    listState: LazyListState
 ) {
-    // Enables snapping to the start of each item during horizontal scroll.
-    val listState = rememberLazyListState()
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -389,7 +408,7 @@ fun DailyForecastsPanel(
             LazyRow(
                 // Enables snapping to the start of each item during horizontal scroll.
                 state = listState,
-                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState),
+                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState), // Enables snapping to the start of each item during horizontal scroll.
 
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -446,4 +465,137 @@ fun DailyForecastItem(
 
 fun formatDate(date: Date): String {
     return SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
+}
+
+@Composable
+fun MultipleDaysForecastsPanel(
+    forecasts: List<DayCondition>,
+    onItemClick: (Date) -> Unit,
+    isSelectedDay: (Date) -> Boolean
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .padding(top = 8.dp)
+            .fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Next days forecasts",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                thickness = 1.dp,
+                color = Color.LightGray
+            )
+
+            LazyColumn {
+                items(forecasts) { forecast ->
+                    MultipleDaysForecastsItem(
+                        isSelected = isSelectedDay(forecast.date),
+                        isCurrentDay = forecast.isCurrent,
+                        date = forecast.date,
+                        iconId = forecast.iconId,
+                        tempMax = forecast.tempMax,
+                        tempMin = forecast.tempMin,
+                        onClick = { onItemClick(forecast.date) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MultipleDaysForecastsItem(
+    isSelected: Boolean,
+    isCurrentDay: Boolean,
+    date: Date,
+    iconId: Int,
+    tempMax: Int,
+    tempMin: Int,
+    onClick: () -> Unit
+) {
+    val backgroundColor = if (isSelected) Color.Black else Color.Transparent
+    val contentColor = if (isSelected) Color.White else Color.Black
+
+    //Disable item's click when already selected
+    val clickableModifier = if (isSelected) {
+        Modifier //not clickable
+    } else {
+        Modifier.clickable(onClick = onClick) //clickable
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(clickableModifier)
+            .background(backgroundColor, shape = RoundedCornerShape(10.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = if (isCurrentDay) "Today" else getDayName(date),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = contentColor
+            ),
+            modifier = Modifier.weight(1f)
+        )
+
+        Image(
+            painter = painterResource(id = iconId),
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        //FIXME: handle spacing when there are no min/max temperatures
+        if (!isCurrentDay) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = R.drawable.arrow_upward),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .padding(end = 2.dp),
+                    tint = contentColor
+                )
+                Text(text = "${tempMax}°", fontSize = 14.sp, color = contentColor)
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Text(text = "/", color = contentColor)
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Icon(
+                    painter = painterResource(id = R.drawable.arrow_downward),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .padding(end = 2.dp),
+                    tint = contentColor
+                )
+                Text(text = "${tempMin}°", fontSize = 14.sp, color = contentColor)
+            }
+        }
+    }
+}
+
+fun getDayName(date: Date): String {
+    //TODO: language setting
+    val format = SimpleDateFormat("EEEE", Locale.ENGLISH) //It provides the complete name of the day
+    return format.format(date)
 }
