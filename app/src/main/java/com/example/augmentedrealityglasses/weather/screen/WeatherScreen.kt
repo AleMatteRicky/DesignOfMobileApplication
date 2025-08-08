@@ -6,6 +6,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +17,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,11 +48,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.weather.constants.Constants
+import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
-import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun WeatherScreen(
@@ -116,13 +129,29 @@ fun WeatherScreen(
         }
     }
 
+    //Handle auto scroll on left of "Daily forecasts panel" when changing the day
+    val dailyListState = rememberLazyListState()
+    LaunchedEffect(viewModel.selectedDay) {
+        dailyListState.animateScrollToItem(0)
+    }
+
     // ----  UI  ----
     Column {
-        LocationAndBLEStatusBar(viewModel.location, viewModel.isExtDeviceConnected)
+        LocationAndBLEStatusBar(
+            viewModel.location.getFullName(),
+            viewModel.isExtDeviceConnected
+        )
 
         val currentCondition = viewModel.getCurrentWeather()
         if (currentCondition != null) {
-            CurrentWeatherBar(currentCondition)
+            CurrentWeatherBar(
+                currentCondition.temp,
+                currentCondition.tempMax,
+                currentCondition.tempMin,
+                currentCondition.feelsLike,
+                currentCondition.main,
+                currentCondition.iconId
+            )
         }
 
         LocationManagerBar(
@@ -133,16 +162,34 @@ fun WeatherScreen(
                     fusedLocationClient,
                     context
                 )
-            })
+            }
+        )
+
+        var conditions = viewModel.getAllConditions()
+        if (conditions.isNotEmpty()) {
+            conditions =
+                conditions.sortedBy { it.dateTime }
+                    .filter { condition -> condition.dateTime >= viewModel.selectedDay }
+                    .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+
+            DailyForecastsPanel(conditions, dailyListState)
+
+            MultipleDaysForecastsPanel(
+                forecasts = viewModel.getDaysConditions(),
+                onItemClick = { viewModel.changeSelectedDay(it) },
+                isSelectedDay = { viewModel.selectedDay == it }
+            )
+        }
     }
 }
 
 @Composable
-fun LocationAndBLEStatusBar(location: WeatherLocation, isExtDeviceConnected: Boolean) {
+fun LocationAndBLEStatusBar(locationName: String, isExtDeviceConnected: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 20.dp),
+            .padding(horizontal = 16.dp)
+            .padding(top = 20.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -156,7 +203,7 @@ fun LocationAndBLEStatusBar(location: WeatherLocation, isExtDeviceConnected: Boo
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 //FIXME: handle long texts
-                text = location.getFullName(),
+                text = locationName,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.SemiBold,
                     color = Color.Black
@@ -196,23 +243,29 @@ fun LocationAndBLEStatusBar(location: WeatherLocation, isExtDeviceConnected: Boo
 
 @Composable
 fun CurrentWeatherBar(
-    condition: WeatherCondition
+    temperature: Int,
+    maxTemperature: Int,
+    minTemperature: Int,
+    feelsLike: Int,
+    conditionName: String,
+    iconId: Int
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp)
+            .padding(top = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
             Text(
-                text = "${condition.temp}°",
+                text = "${temperature}°",
                 fontSize = 45.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = condition.main,
+                text = conditionName,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -228,7 +281,7 @@ fun CurrentWeatherBar(
                         .padding(end = 2.dp),
                     tint = Color.Gray
                 )
-                Text(text = "${condition.tempMax}°", fontSize = 14.sp, color = Color.Gray)
+                Text(text = "${maxTemperature}°", fontSize = 14.sp, color = Color.Gray)
 
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -244,51 +297,24 @@ fun CurrentWeatherBar(
                         .padding(end = 2.dp),
                     tint = Color.Gray
                 )
-                Text(text = "${condition.tempMin}°", fontSize = 14.sp, color = Color.Gray)
+                Text(text = "${minTemperature}°", fontSize = 14.sp, color = Color.Gray)
             }
 
             Text(
-                text = "Feels Like: ${condition.feelsLike}°",
+                text = "Feels Like: ${feelsLike}°",
                 fontSize = 14.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 10.dp)
             )
         }
 
-        //TODO: put the correct icon
         Image(
-            painter = painterResource(id = getWeatherIconId(condition.id)),
-            contentDescription = null,
+            painter = painterResource(id = iconId),
+            contentDescription = conditionName,
             modifier = Modifier
                 .size(80.dp)
         )
     }
-}
-
-private fun getWeatherIconId(conditionId: Int): Int {
-    //TODO: add author's credits of pngs
-
-    var id = R.drawable.clear //TODO: handle exceptions
-
-    //TODO: use constants
-    if (conditionId in 200..232) {
-        // Thunderstorm
-        id = R.drawable.thunderstorm
-    } else if (conditionId in 300..531) {
-        // Drizzle or Rain
-        id = R.drawable.rain
-    } else if (conditionId in 600..622) {
-        //Snow
-        id = R.drawable.snow
-    } else if (conditionId == 800) {
-        //Clear
-        id = R.drawable.clear
-    } else if (conditionId in 801..804) {
-        //Clouds
-        id = R.drawable.clouds
-    }
-
-    return id
 }
 
 //TODO: complete
@@ -345,4 +371,231 @@ fun LocationManagerBar(
 
         }
     }
+}
+
+//TODO: Add gradient to the right side
+@Composable
+fun DailyForecastsPanel(
+    forecasts: List<WeatherCondition>,
+    listState: LazyListState
+) {
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Daily forecasts (updated every 3 hours)",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                thickness = 1.dp,
+                color = Color.LightGray
+            )
+            LazyRow(
+                // Enables snapping to the start of each item during horizontal scroll.
+                state = listState,
+                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState), // Enables snapping to the start of each item during horizontal scroll.
+
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(forecasts) { forecast ->
+                    DailyForecastItem(
+                        forecast.isCurrent,
+                        forecast.dateTime,
+                        forecast.iconId,
+                        forecast.main,
+                        forecast.temp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DailyForecastItem(
+    isCurrent: Boolean,
+    dateTime: Date,
+    iconId: Int,
+    conditionName: String,
+    temperature: Int
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(horizontal = 7.dp)
+    ) {
+        Text(
+            text = if (isCurrent) "Now" else formatDate(dateTime),
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.Bold
+            )
+        )
+        Image(
+            painter = painterResource(id = iconId),
+            contentDescription = conditionName,
+            modifier = Modifier
+                .size(30.dp)
+        )
+        Text(
+            text = "${temperature}°",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+            )
+        )
+    }
+}
+
+fun formatDate(date: Date): String {
+    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
+}
+
+@Composable
+fun MultipleDaysForecastsPanel(
+    forecasts: List<DayCondition>,
+    onItemClick: (Date) -> Unit,
+    isSelectedDay: (Date) -> Boolean
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .padding(top = 8.dp)
+            .fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Next days forecasts",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                thickness = 1.dp,
+                color = Color.LightGray
+            )
+
+            LazyColumn {
+                items(forecasts) { forecast ->
+                    MultipleDaysForecastsItem(
+                        isSelected = isSelectedDay(forecast.date),
+                        isCurrentDay = forecast.isCurrent,
+                        date = forecast.date,
+                        iconId = forecast.iconId,
+                        tempMax = forecast.tempMax,
+                        tempMin = forecast.tempMin,
+                        onClick = { onItemClick(forecast.date) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MultipleDaysForecastsItem(
+    isSelected: Boolean,
+    isCurrentDay: Boolean,
+    date: Date,
+    iconId: Int,
+    tempMax: Int,
+    tempMin: Int,
+    onClick: () -> Unit
+) {
+    val backgroundColor = if (isSelected) Color.Black else Color.Transparent
+    val contentColor = if (isSelected) Color.White else Color.Black
+
+    //Disable item's click when already selected
+    val clickableModifier = if (isSelected) {
+        Modifier //not clickable
+    } else {
+        Modifier.clickable(onClick = onClick) //clickable
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(clickableModifier)
+            .background(backgroundColor, shape = RoundedCornerShape(10.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = if (isCurrentDay) "Today" else getDayName(date),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = contentColor
+            ),
+            modifier = Modifier.weight(1f)
+        )
+
+        Image(
+            painter = painterResource(id = iconId),
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        //FIXME: handle spacing when there are no min/max temperatures
+        if (!isCurrentDay) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = R.drawable.arrow_upward),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .padding(end = 2.dp),
+                    tint = contentColor
+                )
+                Text(text = "${tempMax}°", fontSize = 14.sp, color = contentColor)
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Text(text = "/", color = contentColor)
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Icon(
+                    painter = painterResource(id = R.drawable.arrow_downward),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .padding(end = 2.dp),
+                    tint = contentColor
+                )
+                Text(text = "${tempMin}°", fontSize = 14.sp, color = contentColor)
+            }
+        }
+    }
+}
+
+fun getDayName(date: Date): String {
+    //TODO: language setting
+    val format = SimpleDateFormat("EEEE", Locale.ENGLISH) //It provides the complete name of the day
+    return format.format(date)
 }

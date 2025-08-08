@@ -3,7 +3,6 @@ package com.example.augmentedrealityglasses.weather.viewmodel
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -20,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.weather.constants.Constants
@@ -27,6 +27,7 @@ import com.example.augmentedrealityglasses.weather.network.APIResult
 import com.example.augmentedrealityglasses.weather.network.APIWeatherCondition
 import com.example.augmentedrealityglasses.weather.network.APIWeatherForecasts
 import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
+import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.GeolocationResult
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
@@ -36,6 +37,7 @@ import com.google.android.gms.location.Priority
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.Calendar
 import java.util.Date
 import kotlin.coroutines.resume
 
@@ -69,7 +71,7 @@ class WeatherViewModel(
                         isExtDeviceConnected =
                             connectionState.connectionState is ConnectionState.Connected
                     }
-            } catch (_: IllegalArgumentException) {
+            } catch (_: Exception) {
 
             }
         }
@@ -89,9 +91,9 @@ class WeatherViewModel(
     var isExtDeviceConnected by mutableStateOf(false)
         private set
 
-    //Day shown
-    //TODO: change name
-    var dayShown by mutableStateOf(Date())
+    //Selected day (in "Next days forecasts" panel)
+    var selectedDay by mutableStateOf(Date())
+        private set
 
     //Selected location to display the weather conditions for
     var location by mutableStateOf(
@@ -176,6 +178,7 @@ class WeatherViewModel(
                 newCurrentCondition.weather.main,
                 newCurrentCondition.weather.description,
                 newCurrentCondition.weather.id,
+                newCurrentCondition.weather.icon,
                 newCurrentCondition.main.temp,
                 newCurrentCondition.main.feels_like,
                 newCurrentCondition.main.temp_min,
@@ -190,6 +193,7 @@ class WeatherViewModel(
                         forecast.weather.main,
                         forecast.weather.description,
                         forecast.weather.id,
+                        forecast.weather.icon,
                         forecast.main.temp,
                         forecast.main.feels_like,
                         forecast.main.temp_min,
@@ -204,14 +208,14 @@ class WeatherViewModel(
             conditions = newConditions
         )
 
-        changeDay(getMinDateOfAvailableForecasts())
+        changeSelectedDay(getMinDateOfAvailableForecasts())
 
         //send updates to ESP (just the current condition)
         sendBluetoothMessage(newConditions.first { cond -> cond.isCurrent }.toString())
     }
 
-    fun changeDay(newDate: Date) {
-        dayShown = newDate
+    fun changeSelectedDay(newDate: Date) {
+        selectedDay = startOfDay(newDate)
     }
 
     private fun getMinDateOfAvailableForecasts(): Date {
@@ -639,5 +643,46 @@ class WeatherViewModel(
     fun getForecasts(): List<WeatherCondition> {
         //FIXME: improve this: do not use filter to remove just one element from the list
         return weatherState.conditions.filter { condition -> !condition.isCurrent }
+    }
+
+    fun getAllConditions(): List<WeatherCondition> {
+        return weatherState.conditions
+    }
+
+    fun getDaysConditions(): List<DayCondition> {
+        return weatherState.conditions.groupBy { condition -> startOfDay(condition.dateTime) }
+            .map { (date, conditions) ->
+                DayCondition(
+                    date = date,
+                    isCurrent = conditions.any { condition ->
+                        condition.isCurrent
+                    },
+                    iconId = getDailyIconForConditions(conditions),
+                    tempMin = conditions.minOf { it.tempMin },
+                    tempMax = conditions.maxOf { it.tempMax }
+                )
+            }
+            .sortedBy { it.date }
+    }
+
+    /**
+     * It allows to compare Date objects just by day, month and year (setting all the other parameters to 0)
+     */
+    private fun startOfDay(date: Date): Date {
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.time
+    }
+
+    /**
+     * Returns the appropriate icon ID to represent the day's weather based on a list of conditions.
+     */
+    private fun getDailyIconForConditions(conditions: List<WeatherCondition>): Int {
+        //TODO
+        return R.drawable.clear
     }
 }

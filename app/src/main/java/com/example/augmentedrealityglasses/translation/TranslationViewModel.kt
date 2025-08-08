@@ -73,7 +73,7 @@ class TranslationViewModel(
                         isConnected =
                             connectionState.connectionState is ConnectionState.Connected
                     }
-            } catch (_: IllegalArgumentException) {
+            } catch (_: Exception) {
 
             }
         }

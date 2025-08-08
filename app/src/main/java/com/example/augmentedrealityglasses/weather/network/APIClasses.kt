@@ -23,6 +23,8 @@ data class APIWeather(
     @SerializedName("id")
     val _id: String,
 
+    val icon: String,
+
     val description: String //FIXME: maybe delete this
 ) {
     val id: Int
