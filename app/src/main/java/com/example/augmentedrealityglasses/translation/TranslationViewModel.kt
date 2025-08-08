@@ -134,9 +134,10 @@ class TranslationViewModel(
                                     uiState = uiState.copy(translatedText = translatedText)
                                     //send translated text to esp32
                                     Log.d(TAG,translatedText)
-                                    viewModelScope.launch {
-                                        bleManager.send(uiState.translatedText)
-                                    }
+                                    //todo update with version with ble and without ble
+//                                    viewModelScope.launch {
+//                                        bleManager.send(uiState.translatedText)
+//                                    }
                                 }
                                 ?.addOnFailureListener { exception ->
                                     Log.e("Translation failed", exception.toString())
@@ -309,7 +310,8 @@ class TranslationViewModel(
                     else{
                         Log.d("send", uiState.recognizedText)
                         viewModelScope.launch {
-                            bleManager.send(uiState.recognizedText)
+                            //todo update with version with ble and without ble
+                            //bleManager.send(uiState.recognizedText)
                         }
                     }
                 }
