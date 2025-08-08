@@ -1,13 +1,24 @@
 package com.example.augmentedrealityglasses.ble.scanner
 
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanFilter
-import kotlinx.coroutines.flow.SharedFlow
+import android.bluetooth.le.ScanSettings
+import kotlinx.coroutines.flow.Flow
 import kotlin.time.Duration
 
+/**
+ * API to scan for devices
+ */
 interface Scanner {
-    fun startScanning(timeout: Duration, filters : List<ScanFilter>)
-    fun stopScanning()
-    val scannedDevices : SharedFlow<BluetoothDevice>
-    val isScanning : SharedFlow<Boolean>
+    /**
+     * Scans for devices
+     * @param timeout the maximum amount of time to scan for devices
+     * @param filters the filters to apply
+     * @param settings to apply when scanning
+     * @return flow of ScanEvent to inform about the scanning process
+     */
+    fun scan(
+        timeout: Duration,
+        filters: List<ScanFilter>?,
+        settings: ScanSettings
+    ): Flow<ScanEvent>
 }
