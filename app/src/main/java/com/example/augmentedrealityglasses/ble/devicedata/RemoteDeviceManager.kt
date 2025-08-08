@@ -18,6 +18,11 @@ interface RemoteDeviceManager{
     fun setDeviceToManage(device: BluetoothDevice)
 
     /**
+     * True iff the device has been set
+     */
+    fun isDeviceSet() : Boolean
+
+    /**
      * After a connection has been established, starts receiving updates from the remote device
      * @return a shared flow to consume the updates
      */

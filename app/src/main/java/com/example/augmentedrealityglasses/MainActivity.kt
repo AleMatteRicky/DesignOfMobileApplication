@@ -1,7 +1,8 @@
 package com.example.augmentedrealityglasses
 
-import FindDeviceScreen
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -14,12 +15,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.augmentedrealityglasses.ble.permissions.BluetoothSampleBox
 import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
+import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
@@ -59,8 +63,25 @@ class MainActivity : ComponentActivity() {
                     }
                     composable(ScreenName.FIND_DEVICE.name) {
                         BluetoothSampleBox {
+                            val bluetoothManager: BluetoothManager =
+                                checkNotNull(applicationContext.getSystemService(BluetoothManager::class.java))
+                            val adapter: BluetoothAdapter? = bluetoothManager.adapter
+
+                            // TODO: make the control at the beginning not making clickable the icon in case bluetooth is not supported, instead of checking it here
+                            require(adapter != null) {
+                                "Bluetooth must be supported by this device"
+                            }
+
+                            val extras = MutableCreationExtras().apply {
+                                set(FindDeviceViewModel.ADAPTER_KEY, adapter)
+                                set(APPLICATION_KEY, application)
+                            }
+
                             FindDeviceScreen(
-                                viewModel = viewModel(factory = FindDeviceViewModel.Factory),
+                                viewModel = viewModel(
+                                    factory = FindDeviceViewModel.Factory,
+                                    extras = extras
+                                ),
                                 navigateOnError = {
                                     Log.d(TAG, "Error occurred during scanning")
                                     navController.navigate(ScreenName.ERROR_SCREEN.name)
