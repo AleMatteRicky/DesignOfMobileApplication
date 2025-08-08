@@ -44,6 +44,8 @@ class ESP32Proxy(
 
     private val jobs: MutableList<Job> = mutableListOf()
 
+    private var isDeviceSet = false
+
     override fun connect() {
         require(_device != null) {
             "Device not yet set despite the request to use it"
@@ -60,6 +62,11 @@ class ESP32Proxy(
         }
 
         _device = device
+        isDeviceSet = true
+    }
+
+    override fun isDeviceSet(): Boolean {
+        return isDeviceSet
     }
 
     /*
