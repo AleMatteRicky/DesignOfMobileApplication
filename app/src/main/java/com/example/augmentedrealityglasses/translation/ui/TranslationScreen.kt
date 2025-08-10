@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,7 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import androidx.compose.ui.window.Dialog
@@ -37,12 +41,16 @@ import com.example.augmentedrealityglasses.translation.TranslationViewModel
 fun TranslationScreen(
     onNavigateToHome: () -> Unit,
     viewModel: TranslationViewModel,
-    enabled: Boolean
+    enabled: Boolean,
+    navigationBarVisible: MutableState<Boolean>,
+    navigationBarHeight: Dp
 ) {
 
     BoxWithConstraints(
         //todo check if it does support vertical scrolling
-        modifier = Modifier.fillMaxSize().background(Color(0xFFFAFAFA))
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFAFAFA))
     ) {
         val recordButtonSize = 65.dp
         var newMaxHeight = recordButtonSize + 10.dp
@@ -54,7 +62,8 @@ fun TranslationScreen(
                     x = (maxWidth - recordButtonSize) / 2,
                     y = maxHeight - newMaxHeight
                 )
-                .size(recordButtonSize)
+                .size(recordButtonSize),
+            navigationBarVisible = navigationBarVisible
         )
 
 
@@ -68,23 +77,37 @@ fun TranslationScreen(
             modifier = Modifier.align(Alignment.BottomStart)
         )
 
-        val languageSelectionBoxWidth = 0.8 * maxWidth
-        val languageSelectionBoxHeight = 0.07 * maxHeight
+        val languageSelectionBoxWidth = 0.8 * maxWidth //fills 80% of the parent width
+        val languageSelectionBoxHeight =
+            0.07 * (maxHeight + navigationBarHeight) //fills 7% of the parent width
         newMaxHeight = newMaxHeight + languageSelectionBoxHeight + 20.dp
 
         LanguageSelectionBox(
-            enabled, viewModel, modifier = Modifier.offset(
-                x = (maxWidth - languageSelectionBoxWidth) / 2,
-                y = maxHeight - newMaxHeight
-            )
+            enabled, viewModel, modifier = Modifier
+                .offset(
+                    x = (maxWidth - languageSelectionBoxWidth) / 2,
+                    y = maxHeight - newMaxHeight
+                )
+                .height(languageSelectionBoxHeight)
+                .width(languageSelectionBoxWidth)
         )
 
-        Button(
-            onClick = { viewModel.translate() },
-            modifier = Modifier.offset(x = 0.dp, y = 105.dp), enabled = enabled
-        ) {
-            Text("Translate")
-        }
+        val mainTextBoxHeight = 0.6 * (maxHeight + navigationBarHeight)
+
+        newMaxHeight = newMaxHeight + mainTextBoxHeight + 15.dp
+        MainTextBox(
+            viewModel,
+            Modifier
+                .offset(y = maxHeight - newMaxHeight)
+                .height(mainTextBoxHeight)
+        )
+
+//        Button(
+//            onClick = { viewModel.translate() },
+//            modifier = Modifier.offset(x = 0.dp, y = 105.dp), enabled = enabled
+//        ) {
+//            Text("Translate")
+//        }
 
         if (viewModel.uiState.isDownloadingLanguageModel) {
             DisplayModelDownloading()
