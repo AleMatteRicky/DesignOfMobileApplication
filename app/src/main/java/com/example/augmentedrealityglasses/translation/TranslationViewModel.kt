@@ -149,7 +149,7 @@ class TranslationViewModel(
         }
     }
 
-    fun initializeTranslator() {
+    private fun initializeTranslator() {
         val options = TranslatorOptions.Builder()
             .setSourceLanguage(uiState.sourceLanguage!!)
             .setTargetLanguage(uiState.targetLanguage!!)
@@ -264,7 +264,7 @@ class TranslationViewModel(
             }
 
             override fun onEndOfSpeech() {
-                //uiState = uiState.copy(isRecording = false)
+                //stopRecording() todo understand why it does not work
             }
 
             override fun onError(error: Int) {

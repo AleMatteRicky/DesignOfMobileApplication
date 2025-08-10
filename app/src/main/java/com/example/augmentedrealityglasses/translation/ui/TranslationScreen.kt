@@ -1,7 +1,7 @@
 package com.example.augmentedrealityglasses.translation.ui
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
@@ -27,7 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import androidx.compose.ui.window.Dialog
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
@@ -39,20 +40,24 @@ fun TranslationScreen(
     enabled: Boolean
 ) {
 
-    BoxWithConstraints( //todo check if it does support vertical scrolling
-        modifier = Modifier.fillMaxSize(),
+    BoxWithConstraints(
+        //todo check if it does support vertical scrolling
+        modifier = Modifier.fillMaxSize().background(Color(0xFFFAFAFA))
     ) {
         val recordButtonSize = 65.dp
+        var newMaxHeight = recordButtonSize + 10.dp
         RecordButton(
             enabled,
             viewModel,
             Modifier
                 .offset(
                     x = (maxWidth - recordButtonSize) / 2,
-                    y = maxHeight - recordButtonSize
+                    y = maxHeight - newMaxHeight
                 )
                 .size(recordButtonSize)
         )
+
+
 
         Text(
             text = viewModel.uiState.recognizedText,
@@ -62,12 +67,17 @@ fun TranslationScreen(
             text = viewModel.uiState.translatedText,
             modifier = Modifier.align(Alignment.BottomStart)
         )
-        Box(
-            modifier = Modifier.offset(x = 0.dp, y = 150.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            SelectLanguageButton(enabled, viewModel)
-        }
+
+        val languageSelectionBoxWidth = 0.8 * maxWidth
+        val languageSelectionBoxHeight = 0.07 * maxHeight
+        newMaxHeight = newMaxHeight + languageSelectionBoxHeight + 20.dp
+
+        LanguageSelectionBox(
+            enabled, viewModel, modifier = Modifier.offset(
+                x = (maxWidth - languageSelectionBoxWidth) / 2,
+                y = maxHeight - newMaxHeight
+            )
+        )
 
         Button(
             onClick = { viewModel.translate() },
