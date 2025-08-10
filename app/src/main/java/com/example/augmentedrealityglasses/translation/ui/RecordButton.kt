@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,7 +22,12 @@ import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 @SuppressLint("MissingPermission")
 @Composable
-fun RecordButton(enabled: Boolean, viewModel: TranslationViewModel, modifier: Modifier) {
+fun RecordButton(
+    enabled: Boolean,
+    viewModel: TranslationViewModel,
+    modifier: Modifier,
+    navigationBarVisible: MutableState<Boolean>
+) {
 
     var recordingSymbol by remember { mutableStateOf(Icon.MICROPHONE) }
 
@@ -36,14 +42,21 @@ fun RecordButton(enabled: Boolean, viewModel: TranslationViewModel, modifier: Mo
                 if (enabled) { // add an asking for permissions message
                     if (viewModel.uiState.isRecording) {
                         viewModel.stopRecording()
-                        recordingSymbol = Icon.MICROPHONE
                     } else {
                         viewModel.startRecording()
-                        recordingSymbol = Icon.STOP
                     }
                 }
             })
     ) {
+
+        if (viewModel.uiState.isRecording) {
+            recordingSymbol = Icon.STOP
+            navigationBarVisible.value = false
+        } else {
+            recordingSymbol = Icon.MICROPHONE
+            navigationBarVisible.value = true
+        }
+
         Image(
             painter = painterResource(id = recordingSymbol.getID()),
             contentDescription = "Recording status icon"
