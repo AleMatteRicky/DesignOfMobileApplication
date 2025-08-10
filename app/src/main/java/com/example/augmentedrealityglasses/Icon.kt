@@ -13,6 +13,12 @@ enum class Icon {
         override fun getID(): Int {
             return R.drawable.stop
         }
+    },
+
+    RIGHT_ARROW{
+        override fun getID(): Int {
+            return R.drawable.right_arrow
+        }
     };
 
     abstract fun getID(): Int //todo add a parameter which determines the theme of the app
