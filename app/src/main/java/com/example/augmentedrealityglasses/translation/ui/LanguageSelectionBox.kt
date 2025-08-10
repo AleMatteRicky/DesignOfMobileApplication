@@ -28,8 +28,6 @@ import com.example.augmentedrealityglasses.translation.TranslationViewModel
 fun LanguageSelectionBox(enabled: Boolean, viewModel: TranslationViewModel, modifier: Modifier) {
     Box(
         modifier = modifier
-            .fillMaxWidth(0.8f) //fills 80% of the parent width
-            .fillMaxHeight(0.07f) //fills 7% of the parent width
     ) {
         Box(
             modifier = Modifier

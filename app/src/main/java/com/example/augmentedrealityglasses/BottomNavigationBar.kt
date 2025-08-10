@@ -26,7 +26,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
-fun BottomNavigationBar(navController: NavController) {
+fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
     val items = listOf(
         BottomNavItem(
             "Home",
@@ -51,6 +51,7 @@ fun BottomNavigationBar(navController: NavController) {
     )
 
     NavigationBar(
+        modifier = modifier,
         containerColor = Color(0xFFFCF8F8) //FIXME: fix color
     ) {
         val currentDestination =

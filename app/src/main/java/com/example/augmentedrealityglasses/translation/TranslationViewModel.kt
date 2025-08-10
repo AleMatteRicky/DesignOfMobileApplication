@@ -264,7 +264,7 @@ class TranslationViewModel(
             }
 
             override fun onEndOfSpeech() {
-                //stopRecording() todo understand why it does not work
+                stopRecording()
             }
 
             override fun onError(error: Int) {
