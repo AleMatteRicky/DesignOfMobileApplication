@@ -57,6 +57,10 @@ fun SearchLocationsScreen(
 
     var previousQuery by remember { mutableStateOf(viewModel.query) }
 
+    LaunchedEffect(Unit) {
+        viewModel.updateQuery("")
+    }
+
     LaunchedEffect(viewModel.query) {
         val isKeyChanged = previousQuery != viewModel.query
         previousQuery = viewModel.query
