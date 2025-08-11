@@ -17,10 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
@@ -31,6 +29,7 @@ import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.augmentedrealityglasses.ble.permissions.BluetoothSampleBox
 import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
@@ -39,6 +38,7 @@ import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.ui.TranslationScreen
+import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 
@@ -82,7 +82,7 @@ class MainActivity : ComponentActivity() {
                                     route = ScreenName.TRANSLATION_SCREEN.name
                                 )
                             },
-                            onNavigateToWeather = { navController.navigate(ScreenName.WEATHER_SCREEN.name) },
+                            onNavigateToWeather = { navController.navigate(ScreenName.WEATHER_HOME_SCREEN.name) },
                             onNavigateToBLE = { navController.navigate(ScreenName.FIND_DEVICE.name) },
                             onNavigateToConnect = {
                                 navController.navigate(ScreenName.CONNECT_SCREEN.name)
@@ -162,10 +162,42 @@ class MainActivity : ComponentActivity() {
 
                         ) //todo update with system language from settings
                     }
-                    composable(ScreenName.WEATHER_SCREEN.name) {
-                        WeatherScreen(
-                            viewModel = viewModel(factory = WeatherViewModel.Factory)
-                        )
+
+                    navigation(
+                        startDestination = ScreenName.WEATHER_HOME_SCREEN.name,
+                        route = "WEATHER_GRAPH"
+                    ) {
+                        composable(ScreenName.WEATHER_HOME_SCREEN.name) {
+                            val parentEntry =
+                                remember { navController.getBackStackEntry("WEATHER_GRAPH") }
+                            val viewModel = viewModel<WeatherViewModel>(
+                                viewModelStoreOwner = parentEntry,
+                                factory = WeatherViewModel.Factory
+                            )
+
+                            WeatherScreen(
+                                onTextFieldClick = {
+                                    navController.navigate(ScreenName.WEATHER_SEARCH_LOCATIONS.name)
+                                },
+                                viewModel = viewModel
+                            )
+                        }
+
+                        composable(ScreenName.WEATHER_SEARCH_LOCATIONS.name) {
+                            val parentEntry =
+                                remember { navController.getBackStackEntry("WEATHER_GRAPH") }
+                            val viewModel = viewModel<WeatherViewModel>(
+                                viewModelStoreOwner = parentEntry,
+                                factory = WeatherViewModel.Factory
+                            )
+
+                            SearchLocationsScreen(
+                                onBackClick = {
+                                    navController.navigate(ScreenName.WEATHER_HOME_SCREEN.name)
+                                },
+                                viewModel = viewModel
+                            )
+                        }
                     }
 
                     //TODO

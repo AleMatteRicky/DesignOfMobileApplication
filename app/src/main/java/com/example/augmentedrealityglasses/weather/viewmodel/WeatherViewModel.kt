@@ -608,10 +608,6 @@ class WeatherViewModel(
         }
     }
 
-    fun getWeatherOfFirstResult() {
-        getWeatherByResult(searchedLocations[0])
-    }
-
     fun getWeatherOfSelectedLocation(result: WeatherLocation) {
         query = ""
         getWeatherByResult(result)
