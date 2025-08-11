@@ -11,8 +11,8 @@ data class WeatherUiState(
 data class WeatherCondition(
     val main: String,
     val description: String,
-    private val conditionId: Int,
-    private val apiIconName: String,
+    val conditionId: Int,
+    val apiIconName: String,
     val temp: Int,
     val feelsLike: Int,
     val tempMin: Int,

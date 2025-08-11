@@ -22,6 +22,9 @@ import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
+import com.example.augmentedrealityglasses.cache.Cache
+import com.example.augmentedrealityglasses.cache.CachePolicy
+import com.example.augmentedrealityglasses.cache.DefaultTimeProvider
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.APIResult
 import com.example.augmentedrealityglasses.weather.network.APIWeatherCondition
@@ -31,19 +34,26 @@ import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.GeolocationResult
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
+import com.example.augmentedrealityglasses.weather.state.WeatherSnapshot
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
+import com.example.augmentedrealityglasses.weather.state.createWeatherSnapshot
+import com.example.augmentedrealityglasses.weather.state.toModel
+import com.example.augmentedrealityglasses.weather.state.toModelList
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Date
 import kotlin.coroutines.resume
 
 class WeatherViewModel(
     private val repository: WeatherRepositoryImpl,
-    private val bleManager: RemoteDeviceManager
+    private val bleManager: RemoteDeviceManager,
+    private val cache: Cache,
+    private val cachePolicy: CachePolicy
 ) : ViewModel() {
 
     //Initialize the viewModel
@@ -54,9 +64,15 @@ class WeatherViewModel(
                     (this[APPLICATION_KEY] as App).container.weatherAPIRepository
                 val bleManager =
                     (this[APPLICATION_KEY] as App).container.proxy
+                val cache =
+                    (this[APPLICATION_KEY] as App).container.weatherCache
+                val cachePolicy =
+                    (this[APPLICATION_KEY] as App).container.weatherCachePolicy
                 WeatherViewModel(
                     repository = weatherAPIRepository,
-                    bleManager = bleManager
+                    bleManager = bleManager,
+                    cache = cache,
+                    cachePolicy = cachePolicy
                 )
             }
         }
@@ -133,6 +149,48 @@ class WeatherViewModel(
 
     // LOGIC FUNCTIONS
 
+    private fun saveWeatherSnapshotIntoCache() {
+        val snapshot = createWeatherSnapshot(
+            location = location,
+            conditions = weatherState.conditions
+        )
+
+        viewModelScope.launch(Dispatchers.IO) {
+            cache.set(
+                key = Constants.WEATHER_CACHE_KEY,
+                value = snapshot,
+                serializer = WeatherSnapshot.serializer(),
+                timeProvider = DefaultTimeProvider
+            )
+        }
+    }
+
+    suspend fun tryLoadDataFromCache(): Boolean {
+
+        val snap = withContext(Dispatchers.IO) {
+            cache.getIfValid(
+                key = Constants.WEATHER_CACHE_KEY,
+                policy = cachePolicy,
+                serializer = WeatherSnapshot.serializer(),
+                timeProvider = DefaultTimeProvider
+            )
+        } ?: return false
+
+        withContext(Dispatchers.IO) {
+
+            location = snap.location.toModel()
+            weatherState = weatherState.copy(
+                conditions = snap.conditions.toModelList()
+            )
+
+            changeSelectedDay(getMinDateOfAvailableConditions())
+
+            geolocationEnabled = true
+        }
+
+        return true
+    }
+
     fun updateQuery(newQuery: String) {
         query = newQuery
     }
@@ -167,6 +225,36 @@ class WeatherViewModel(
                 ACCESS_FINE_LOCATION, hasFineLocationPermission
             )
         )
+    }
+
+    private fun updateWeatherStateAndGeolocationFlag(
+        newCurrentCondition: APIWeatherCondition,
+        newForecasts: APIWeatherForecasts,
+        newGeolocationFlag: Boolean? = null,
+        newLocation: WeatherLocation? = null
+    ) {
+        updateConditionsAndDateToShow(
+            newCurrentCondition,
+            newForecasts
+        )
+
+        if (newLocation != null) {
+            updateLocationState(
+                name = newLocation.name,
+                lat = newLocation.lat,
+                lon = newLocation.lon,
+                country = newLocation.country,
+                state = newLocation.state ?: ""
+            )
+        }
+
+        if (newGeolocationFlag != null) {
+            geolocationEnabled = newGeolocationFlag
+        }
+
+        if (geolocationEnabled) {
+            saveWeatherSnapshotIntoCache()
+        }
     }
 
     private fun updateConditionsAndDateToShow(
@@ -208,7 +296,7 @@ class WeatherViewModel(
             conditions = newConditions
         )
 
-        changeSelectedDay(getMinDateOfAvailableForecasts())
+        changeSelectedDay(getMinDateOfAvailableConditions())
 
         //send updates to ESP (just the current condition)
         sendBluetoothMessage(newConditions.first { cond -> cond.isCurrent }.toString())
@@ -218,8 +306,8 @@ class WeatherViewModel(
         selectedDay = startOfDay(newDate)
     }
 
-    private fun getMinDateOfAvailableForecasts(): Date {
-        val date = getForecasts().map { condition -> condition.dateTime }.toList().minOrNull()
+    private fun getMinDateOfAvailableConditions(): Date {
+        val date = getAllConditions().map { condition -> condition.dateTime }.toList().minOrNull()
 
         if (date != null) {
             return date
@@ -243,7 +331,7 @@ class WeatherViewModel(
             state = state
         )
 
-        //send updates to the ESP
+        //send updates to the ESP //FIXME
         sendBluetoothMessage(location.toString())
     }
 
@@ -410,22 +498,18 @@ class WeatherViewModel(
                     when (val newForecasts = fetchForecastsInfo(result.lat, result.lon)) {
                         is APIResult.Success -> {
 
-                            updateConditionsAndDateToShow(
-                                newCurrentWeatherCondition.value,
-                                newForecasts.value
+                            updateWeatherStateAndGeolocationFlag(
+                                newCurrentCondition = newCurrentWeatherCondition.value,
+                                newForecasts = newForecasts.value,
+                                newGeolocationFlag = false,
+                                newLocation = WeatherLocation(
+                                    newCurrentWeatherCondition.value.name,
+                                    newCurrentWeatherCondition.value.coord.lat,
+                                    newCurrentWeatherCondition.value.coord.lon,
+                                    newCurrentWeatherCondition.value.sys.country,
+                                    result.state.orEmpty()
+                                )
                             )
-
-                            updateLocationState(
-                                newCurrentWeatherCondition.value.name,
-                                newCurrentWeatherCondition.value.coord.lat,
-                                newCurrentWeatherCondition.value.coord.lon,
-                                newCurrentWeatherCondition.value.sys.country,
-                                result.state.orEmpty()
-                            )
-
-                            //disable geolocationEnabled
-                            geolocationEnabled = false
-
                         }
 
                         else -> {
@@ -471,18 +555,17 @@ class WeatherViewModel(
                                 )) {
                                     is APIResult.Success -> {
 
-                                        updateConditionsAndDateToShow(
-                                            newCurrentWeatherCondition.value,
-                                            newForecasts.value
-                                        )
-
                                         // state not available with this API call
-                                        updateLocationState(
-                                            newCurrentWeatherCondition.value.name,
-                                            newCurrentWeatherCondition.value.coord.lat,
-                                            newCurrentWeatherCondition.value.coord.lon,
-                                            newCurrentWeatherCondition.value.sys.country,
-                                            ""
+                                        updateWeatherStateAndGeolocationFlag(
+                                            newCurrentCondition = newCurrentWeatherCondition.value,
+                                            newForecasts = newForecasts.value,
+                                            newLocation = WeatherLocation(
+                                                newCurrentWeatherCondition.value.name,
+                                                newCurrentWeatherCondition.value.coord.lat,
+                                                newCurrentWeatherCondition.value.coord.lon,
+                                                newCurrentWeatherCondition.value.sys.country,
+                                                ""
+                                            )
                                         )
                                     }
 
@@ -518,9 +601,9 @@ class WeatherViewModel(
                         when (val newForecasts = fetchForecastsInfo(location.lat, location.lon)) {
                             is APIResult.Success -> {
 
-                                updateConditionsAndDateToShow(
+                                updateWeatherStateAndGeolocationFlag(
                                     newCurrentWeatherCondition.value,
-                                    newForecasts.value,
+                                    newForecasts.value
                                 )
                             }
 
@@ -563,21 +646,19 @@ class WeatherViewModel(
                             )) {
                                 is APIResult.Success -> {
 
-                                    updateConditionsAndDateToShow(
-                                        newCurrentWeatherCondition.value,
-                                        newForecasts.value
-                                    )
-
                                     // state not available with this API call
-                                    updateLocationState(
-                                        newCurrentWeatherCondition.value.name,
-                                        newCurrentWeatherCondition.value.coord.lat,
-                                        newCurrentWeatherCondition.value.coord.lon,
-                                        newCurrentWeatherCondition.value.sys.country,
-                                        ""
+                                    updateWeatherStateAndGeolocationFlag(
+                                        newCurrentCondition = newCurrentWeatherCondition.value,
+                                        newForecasts = newForecasts.value,
+                                        newGeolocationFlag = true,
+                                        newLocation = WeatherLocation(
+                                            newCurrentWeatherCondition.value.name,
+                                            newCurrentWeatherCondition.value.coord.lat,
+                                            newCurrentWeatherCondition.value.coord.lon,
+                                            newCurrentWeatherCondition.value.sys.country,
+                                            ""
+                                        )
                                     )
-
-                                    geolocationEnabled = true
                                 }
 
                                 else -> {
@@ -634,11 +715,6 @@ class WeatherViewModel(
         val weatherInfo = weatherState.conditions.find { condition -> condition.isCurrent }
 
         return weatherInfo
-    }
-
-    fun getForecasts(): List<WeatherCondition> {
-        //FIXME: improve this: do not use filter to remove just one element from the list
-        return weatherState.conditions.filter { condition -> !condition.isCurrent }
     }
 
     fun getAllConditions(): List<WeatherCondition> {
