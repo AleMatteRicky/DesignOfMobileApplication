@@ -92,13 +92,12 @@ fun TranslationScreen(
                 .width(languageSelectionBoxWidth)
         )
 
-        val mainTextBoxHeight = 0.6 * (maxHeight + navigationBarHeight)
+        val mainTextBoxHeight = maxHeight - newMaxHeight - 15.dp
 
-        newMaxHeight = newMaxHeight + mainTextBoxHeight + 15.dp
+        //newMaxHeight = newMaxHeight + mainTextBoxHeight + 15.dp
         MainTextBox(
             viewModel,
             Modifier
-                .offset(y = maxHeight - newMaxHeight)
                 .height(mainTextBoxHeight)
         )
 
