@@ -19,7 +19,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.cache.Cache
@@ -37,6 +36,7 @@ import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.state.WeatherSnapshot
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
 import com.example.augmentedrealityglasses.weather.state.createWeatherSnapshot
+import com.example.augmentedrealityglasses.weather.state.getDailyIconForConditions
 import com.example.augmentedrealityglasses.weather.state.toModel
 import com.example.augmentedrealityglasses.weather.state.toModelList
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -748,13 +748,5 @@ class WeatherViewModel(
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
         return calendar.time
-    }
-
-    /**
-     * Returns the appropriate icon ID to represent the day's weather based on a list of conditions.
-     */
-    private fun getDailyIconForConditions(conditions: List<WeatherCondition>): Int {
-        //TODO
-        return R.drawable.clear
     }
 }
