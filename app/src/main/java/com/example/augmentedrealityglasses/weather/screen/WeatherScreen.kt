@@ -104,17 +104,21 @@ fun WeatherScreen(
 
     LaunchedEffect(Unit) {
         if (viewModel.location.name == "") {
-            if (viewModel.getGeolocationPermissions(context).values.none { it }) {
-                //request permissions
-                requestPermissionsLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION
+            val isCachedDataValid = viewModel.tryLoadDataFromCache()
+
+            if (!isCachedDataValid) {
+                if (viewModel.getGeolocationPermissions(context).values.none { it }) {
+                    //request permissions
+                    requestPermissionsLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        )
                     )
-                )
-            } else {
-                viewModel.isLoading = true
-                viewModel.getGeolocationWeather(fusedLocationClient, context)
+                } else {
+                    viewModel.isLoading = true
+                    viewModel.getGeolocationWeather(fusedLocationClient, context)
+                }
             }
         }
     }
