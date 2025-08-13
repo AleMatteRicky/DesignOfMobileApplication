@@ -168,7 +168,8 @@ fun WeatherScreen(
                         fusedLocationClient,
                         context
                     )
-                }
+                },
+                geolocationEnabled = viewModel.geolocationEnabled
             )
 
             var conditions = viewModel.getAllConditions()
@@ -328,7 +329,8 @@ fun CurrentWeatherBar(
 @Composable
 fun LocationManagerBar(
     onClickSearchBar: () -> Unit,
-    onClickGeolocationIcon: () -> Unit
+    onClickGeolocationIcon: () -> Unit,
+    geolocationEnabled: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -374,13 +376,15 @@ fun LocationManagerBar(
 
             IconButton(
                 onClick = onClickGeolocationIcon,
+                enabled = !geolocationEnabled,
                 modifier = Modifier
                     .size(48.dp)
                     .background(Color.Transparent)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.geolocation),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = if (geolocationEnabled) Color.Gray else Color.Black
                 )
             }
         }
