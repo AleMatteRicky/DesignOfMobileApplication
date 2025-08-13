@@ -43,13 +43,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.augmentedrealityglasses.ErrorWrapper
 import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -119,13 +119,13 @@ fun WeatherScreen(
         }
     }
 
-    //To make the error message disappear after time
-    LaunchedEffect(viewModel.errorVisible) {
-        if (viewModel.errorVisible) {
-            delay(Constants.ERROR_DISPLAY_TIME)
-            viewModel.hideErrorMessage()
-        }
-    }
+//    //To make the error message disappear after time
+//    LaunchedEffect(viewModel.errorVisible) {
+//        if (viewModel.errorVisible) {
+//            delay(Constants.ERROR_DISPLAY_TIME)
+//            viewModel.hideErrorMessage()
+//        }
+//    }
 
     //Handle auto scroll on left of "Daily forecasts panel" when changing the day
     val dailyListState = rememberLazyListState()
@@ -135,48 +135,53 @@ fun WeatherScreen(
 
     //TODO: swipe down to refresh data
     // ----  UI  ----
-    Column {
-        LocationAndBLEStatusBar(
-            viewModel.location.getFullName(),
-            viewModel.isExtDeviceConnected
-        )
-
-        val currentCondition = viewModel.getCurrentWeather()
-        if (currentCondition != null) {
-            CurrentWeatherBar(
-                currentCondition.temp,
-                currentCondition.tempMax,
-                currentCondition.tempMin,
-                currentCondition.feelsLike,
-                currentCondition.main,
-                currentCondition.iconId
+    ErrorWrapper(
+        message = viewModel.errorMessage,
+        onDismiss = { viewModel.hideErrorMessage() }
+    ) {
+        Column {
+            LocationAndBLEStatusBar(
+                viewModel.location.getFullName(),
+                viewModel.isExtDeviceConnected
             )
-        }
 
-        LocationManagerBar(
-            onClickSearchBar = { onTextFieldClick() },
-            onClickGeolocationIcon = {
-                viewModel.getGeolocationWeather(
-                    fusedLocationClient,
-                    context
+            val currentCondition = viewModel.getCurrentWeather()
+            if (currentCondition != null) {
+                CurrentWeatherBar(
+                    currentCondition.temp,
+                    currentCondition.tempMax,
+                    currentCondition.tempMin,
+                    currentCondition.feelsLike,
+                    currentCondition.main,
+                    currentCondition.iconId
                 )
             }
-        )
 
-        var conditions = viewModel.getAllConditions()
-        if (conditions.isNotEmpty()) {
-            conditions =
-                conditions.sortedBy { it.dateTime }
-                    .filter { condition -> condition.dateTime >= viewModel.selectedDay }
-                    .take(Constants.DAILY_CONDITIONS_TO_SHOW)
-
-            DailyForecastsPanel(conditions, dailyListState)
-
-            MultipleDaysForecastsPanel(
-                forecasts = viewModel.getDaysConditions(),
-                onItemClick = { viewModel.changeSelectedDay(it) },
-                isSelectedDay = { viewModel.selectedDay == it }
+            LocationManagerBar(
+                onClickSearchBar = { onTextFieldClick() },
+                onClickGeolocationIcon = {
+                    viewModel.getGeolocationWeather(
+                        fusedLocationClient,
+                        context
+                    )
+                }
             )
+
+            var conditions = viewModel.getAllConditions()
+            if (conditions.isNotEmpty()) {
+                conditions =
+                    conditions.sortedBy { it.dateTime }
+                        .filter { condition -> condition.dateTime >= viewModel.selectedDay }
+                        .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+
+                DailyForecastsPanel(conditions, dailyListState)
+
+                MultipleDaysForecastsPanel(
+                    forecasts = viewModel.getDaysConditions(),
+                    onItemClick = { viewModel.changeSelectedDay(it) },
+                    isSelectedDay = { viewModel.selectedDay == it }
+                )
+            }
         }
     }
 }

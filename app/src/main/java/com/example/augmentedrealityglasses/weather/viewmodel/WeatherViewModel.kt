@@ -51,7 +51,7 @@ import kotlin.coroutines.resume
 
 class WeatherViewModel(
     private val repository: WeatherRepositoryImpl,
-    private val bleManager: RemoteDeviceManager,
+    private val proxy: RemoteDeviceManager,
     private val cache: Cache,
     private val cachePolicy: CachePolicy
 ) : ViewModel() {
@@ -70,7 +70,7 @@ class WeatherViewModel(
                     (this[APPLICATION_KEY] as App).container.weatherCachePolicy
                 WeatherViewModel(
                     repository = weatherAPIRepository,
-                    bleManager = bleManager,
+                    proxy = bleManager,
                     cache = cache,
                     cachePolicy = cachePolicy
                 )
@@ -82,7 +82,7 @@ class WeatherViewModel(
     init {
         viewModelScope.launch {
             try {
-                bleManager.receiveUpdates()
+                proxy.receiveUpdates()
                     .collect { connectionState ->
                         isExtDeviceConnected =
                             connectionState.connectionState is ConnectionState.Connected
@@ -136,8 +136,8 @@ class WeatherViewModel(
         private set
 
     //Error message
-    var errorVisible by mutableStateOf(false)
-        private set
+//    var errorVisible by mutableStateOf(false)
+//        private set
     var errorMessage by mutableStateOf("")
         private set
 
@@ -202,7 +202,7 @@ class WeatherViewModel(
     private fun sendBluetoothMessage(msg: String) {
         if (isExtDeviceConnected) {
             viewModelScope.launch {
-                bleManager.send(msg)
+                proxy.send(msg)
             }
         } else {
             Log.d(TAG, "External device not connected")
@@ -339,13 +339,12 @@ class WeatherViewModel(
         showNoResults = false
     }
 
-    private fun showErrorMessage(errorMsg: String) {
-        errorMessage = errorMsg
-        errorVisible = true
+    private fun showErrorMessage(message: String) {
+        errorMessage = message
     }
 
     fun hideErrorMessage() {
-        errorVisible = false
+        errorMessage = ""
     }
 
     private suspend fun fetchCurrentWeatherInfo(
