@@ -23,6 +23,11 @@ interface RemoteDeviceManager{
     fun isDeviceSet() : Boolean
 
     /**
+     * True iff the device is connected
+     */
+    fun isConnected(): Boolean
+
+    /**
      * After a connection has been established, starts receiving updates from the remote device
      * @return a shared flow to consume the updates
      */

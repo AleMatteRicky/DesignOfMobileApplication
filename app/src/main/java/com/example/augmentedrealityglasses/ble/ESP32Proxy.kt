@@ -10,6 +10,7 @@ import com.example.augmentedrealityglasses.ble.devicedata.SERVICE_UUID
 import com.example.augmentedrealityglasses.ble.manager.BluetoothManager
 import com.example.augmentedrealityglasses.ble.manager.BluetoothManagerImpl
 import com.example.augmentedrealityglasses.ble.manager.BluetoothState
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -67,6 +68,19 @@ class ESP32Proxy(
 
     override fun isDeviceSet(): Boolean {
         return isDeviceSet
+    }
+
+    override fun isConnected(): Boolean {
+        if (!isDeviceSet()) {
+            return false
+        } else {
+            val stub = bluetoothManager.getStub(ESP32MAC)
+            if (stub == null) {
+                return false
+            } else {
+                return stub.connectionState.value is ConnectionState.Connected
+            }
+        }
     }
 
     /*

@@ -1,6 +1,8 @@
 package com.example.augmentedrealityglasses
 
 import android.content.Context
+import android.os.Build
+import android.telephony.TelephonyManager
 import com.example.augmentedrealityglasses.ble.ESP32Proxy
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.cache.Cache
@@ -18,6 +20,7 @@ interface AppContainer {
     val weatherAPIRepository: WeatherRepositoryImpl
     val weatherCache: Cache
     val weatherCachePolicy: CachePolicy
+    val isDeviceSmsCapable: Boolean
 }
 
 /**
@@ -28,6 +31,15 @@ class DefaultAppContainer(
 ) : AppContainer {
     override val proxy: RemoteDeviceManager =
         ESP32Proxy(context)
+
+    private val telephonyManager =
+        context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+    override val isDeviceSmsCapable: Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            telephonyManager.isDeviceSmsCapable
+        } else {
+            telephonyManager.isSmsCapable
+        }
     override val weatherAPIRepository: WeatherRepositoryImpl =
         WeatherRepositoryImpl()
     override val weatherCache: Cache = DataStoreMapCache(context, "weather_cache.json")
