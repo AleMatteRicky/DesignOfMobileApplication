@@ -6,16 +6,16 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 
 abstract class NotificationReceiver : BroadcastReceiver() {
     private val TAG: String = "NotificationReceiver"
 
     final override fun onReceive(context: Context, intent: Intent?) {
         if (!isDNDActive(context)) {
-            val bleManager: RemoteDeviceManager =
-                (context.applicationContext as App).container.bleManager
-            pushNotification(context, intent, bleManager)
+            val proxy: RemoteDeviceManager =
+                (context.applicationContext as App).container.proxy
+            pushNotification(context, intent, proxy)
         } else {
             Log.d(TAG, "Notification discarded: DND mode is active")
         }

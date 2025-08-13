@@ -12,6 +12,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -45,10 +49,10 @@ fun ConnectScreen(
             ) {
                 Button(
                     onClick = {
-                        onNavigateToFeature(ScreenName.WEATHER_SCREEN.name)
+                        onNavigateToFeature(ScreenName.WEATHER_HOME_SCREEN.name)
                     }
                 ) {
-                    Text(text = ScreenName.WEATHER_SCREEN.name)
+                    Text(text = ScreenName.WEATHER_HOME_SCREEN.name)
                 }
                 Button(
                     onClick = {
@@ -66,6 +70,15 @@ fun ConnectScreen(
                     }
                 ) {
                     Text(text = "Close connection")
+                }
+                var counter by remember { mutableIntStateOf(0) }
+                Button(
+                    onClick = {
+                        counter += 1
+                        viewModel.sendData(counter.toString())
+                    }
+                ) {
+                    Text(text = "Send $counter to the esp32")
                 }
             }
         }

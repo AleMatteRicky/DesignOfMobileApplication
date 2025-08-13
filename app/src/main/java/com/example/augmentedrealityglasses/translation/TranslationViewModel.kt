@@ -14,18 +14,31 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.google.mlkit.common.model.DownloadConditions
+import com.google.mlkit.common.model.RemoteModel
+import com.google.mlkit.common.model.RemoteModelManager
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.TranslateRemoteModel
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class TranslationViewModel(
-    private val systemLanguage: String, application: Application
+    private val systemLanguage: String,
+    private val application: Application,
+    private val bleManager: RemoteDeviceManager
 ) : AndroidViewModel(application) {
     var uiState by mutableStateOf(TranslationUiState())
         private set
@@ -39,6 +52,47 @@ class TranslationViewModel(
 
     var translatorJob: Job? = null
 
+    val modelManager: RemoteModelManager = RemoteModelManager.getInstance()
+
+    var isSourceModelNotAvailable = false
+
+    var isTargetModelNotAvailable = false
+
+    private val TAG: String = "TranslationViewModel"
+
+    var isConnected by mutableStateOf(false)
+        private set
+
+    init {
+
+        //FIXME: fix this in the proper branch
+        viewModelScope.launch {
+            try {
+                bleManager.receiveUpdates()
+                    .collect { connectionState ->
+                        isConnected =
+                            connectionState.connectionState is ConnectionState.Connected
+                    }
+            } catch (_: Exception) {
+
+            }
+        }
+
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = this[APPLICATION_KEY] as App
+                val bleManager = application.container.proxy
+                TranslationViewModel (
+                    systemLanguage = TranslateLanguage.ITALIAN,
+                    application = application,
+                    bleManager = bleManager
+                )
+            }
+        }
+    }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startRecording() {
@@ -50,6 +104,8 @@ class TranslationViewModel(
         }
     }
 
+    //todo add exception handling for all the synchronous methods
+
     fun stopRecording() { //todo the recorder stops automatically after few seconds during which it does not receive audio input, change it
         recorder?.stopListening()
         recorder?.destroy()
@@ -57,70 +113,114 @@ class TranslationViewModel(
         uiState = uiState.copy(isRecording = false)
     }
 
-    fun selectTargetLanguage(targetLanguage: String) {
-        uiState = uiState.copy(targetLanguage = targetLanguage)
+    fun selectTargetLanguage(targetLanguage: String?) {
+        uiState = uiState.copy(targetLanguage = targetLanguage, isModelNotAvailable = false) //isModelNotAvailable is set to false in order to force recomposition if the new target language need to be installed
     }
 
     fun translate() {
 
-        if(uiState.isRecording){
-            stopRecording()
-        }
-
         translatorJob?.cancel()
 
-        translatorJob = viewModelScope.launch{
-            if (uiState.targetLanguage != null) {
-                identifySourceLanguage() //todo check if could ever happen that the initialization do not wait for the identification
+        if(uiState.targetLanguage != null) {
+            translatorJob = viewModelScope.launch {
+                if (uiState.targetLanguage != null) {
+                    if(identifySourceLanguage()) {
+                        checkModelDownloaded()
+                        if (!uiState.isModelNotAvailable) {
+                            initializeTranslator()
+                            translator?.translate(uiState.recognizedText)
+                                ?.addOnSuccessListener { translatedText ->
+                                    Log.d("Translation succeeded", translatedText)
+                                    uiState = uiState.copy(translatedText = translatedText)
+                                    //send translated text to esp32
+                                    Log.d(TAG,translatedText)
+                                    //todo update with version with ble and without ble
+//                                    viewModelScope.launch {
+//                                        bleManager.send(uiState.translatedText)
+//                                    }
+                                }
+                                ?.addOnFailureListener { exception ->
+                                    Log.e("Translation failed", exception.toString())
+                                }
+                        }
+                    }
+                }
             }
         }
     }
 
-    fun initializeTranslator() {
+    private fun initializeTranslator() {
         val options = TranslatorOptions.Builder()
             .setSourceLanguage(uiState.sourceLanguage!!)
             .setTargetLanguage(uiState.targetLanguage!!)
             .build()
 
         translator = Translation.getClient(options)
-
-        var conditions = DownloadConditions.Builder()
-            .build()
-        translator?.downloadModelIfNeeded(conditions)
-            ?.addOnSuccessListener {
-                Log.d("Correct", "Download Succeeded")
-            }
-            ?.addOnFailureListener { exception ->
-                Log.d("Error", "Translate, Download Failed")
-            }
     }
 
-    private fun identifySourceLanguage() {
-        val languageIdentification = LanguageIdentification.getClient()
-        languageIdentification.identifyLanguage(uiState.recognizedText)
-            .addOnSuccessListener { tag ->
-                if (tag == "und") {
-                    Log.e("Undefined Language", "Exception")
-                } else {
-                    uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
-                    //todo tag could be not supported by mlkit translate
-                }
+    private suspend fun checkModelDownloaded() {
+        val targetLanguageRemoteModel: RemoteModel =
+            TranslateRemoteModel.Builder(uiState.targetLanguage!!).build()
+        val sourceLanguageRemoteModel: RemoteModel =
+            TranslateRemoteModel.Builder(uiState.sourceLanguage!!).build()
+        isSourceModelNotAvailable =
+            !modelManager.isModelDownloaded(sourceLanguageRemoteModel).await()
+        isTargetModelNotAvailable =
+            !modelManager.isModelDownloaded(targetLanguageRemoteModel).await()
 
-                initializeTranslator()
-                translator?.translate(uiState.recognizedText)
-                    ?.addOnSuccessListener { translatedText ->
-                        Log.d("Translation succeeded", translatedText)
-                        uiState = uiState.copy(translatedText = translatedText)
-                    }
-                    ?.addOnFailureListener { exception ->
-                        Log.e("Translation failed", exception.toString())
-                    }
+        uiState =
+            uiState.copy(isModelNotAvailable = isSourceModelNotAvailable || isTargetModelNotAvailable)
+    }
+
+    fun downloadLanguageModel() {
+        viewModelScope.launch {
+            uiState = uiState.copy(isDownloadingLanguageModel = true)
+            if (isSourceModelNotAvailable) {
+                downloadSourceLanguageModel()
             }
+            if (isTargetModelNotAvailable) {
+                downloadTargetLanguageModel()
+            }
+            uiState =
+                uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
+            uiState = uiState.copy(isDownloadingLanguageModel = false)
+        }
+
+    }
+
+    private suspend fun downloadSourceLanguageModel() {
+        modelManager.download(
+            TranslateRemoteModel.Builder(uiState.sourceLanguage!!).build(),
+            DownloadConditions.Builder().build()
+        ).await()
+        isSourceModelNotAvailable = false
+    }
+
+    private suspend fun downloadTargetLanguageModel() {
+        modelManager.download(
+            TranslateRemoteModel.Builder(uiState.targetLanguage!!).build(),
+            DownloadConditions.Builder().build()
+        ).await()
+        isTargetModelNotAvailable = false
+    }
+
+    private suspend fun identifySourceLanguage() : Boolean { //True if the identification is successful, False otherwise
+        val languageIdentification = LanguageIdentification.getClient()
+        val tag = languageIdentification.identifyLanguage(uiState.recognizedText).await()
+        if (tag != "und") {
+            uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
+            //todo tag could be not supported by mlkit translate
+            //todo
+            return true
+        } else {
+            Log.e("Undefined Language", "Exception")
+            return false
+        }
     }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun initializeSpeechRecognizer() {
-        recorder = createSpeechRecognizer(getApplication())
+        recorder = createSpeechRecognizer(application)
 
         recorder?.setRecognitionListener(createRecognitionListener())
 
@@ -134,6 +234,14 @@ class TranslationViewModel(
             )
             putExtra(
                 RecognizerIntent.EXTRA_PARTIAL_RESULTS, true
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
+                60000L
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,
+                60000L
             )
         }
 
@@ -152,10 +260,11 @@ class TranslationViewModel(
                 Log.d("SpeechRecognition", "Rms changed. Parameters: $params")
             }
 
-            override fun onBufferReceived(p0: ByteArray?) {
+            override fun onBufferReceived(value: ByteArray?) {
             }
 
             override fun onEndOfSpeech() {
+                stopRecording()
             }
 
             override fun onError(error: Int) {
@@ -178,8 +287,11 @@ class TranslationViewModel(
                 val data: ArrayList<String>? =
                     results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 uiState = uiState.copy(
-                    recognizedText = data.toString().removePrefix("[").removeSuffix("]")
+                    recognizedText = data.toString().removePrefix("[").removeSuffix("]"),
                 )
+                if (uiState.targetLanguage != null) {
+                    translate()
+                }
                 Log.d("SpeechRecognizer", "Speech recognition results received: $data")
             }
 
@@ -189,10 +301,23 @@ class TranslationViewModel(
                 uiState = uiState.copy(
                     recognizedText = data.toString().removePrefix("[").removeSuffix("]")
                 )
-                Log.d("SpeechRecognizer", "Speech recognition partial results received: $data")
+                Log.d(TAG, "Speech recognition partial results received: $data")
+
+                if(uiState.recognizedText != "") {
+                    if (uiState.targetLanguage != null) {
+                        translate()
+                    }
+                    else{
+                        Log.d("send", uiState.recognizedText)
+                        viewModelScope.launch {
+                            //todo update with version with ble and without ble
+                            //bleManager.send(uiState.recognizedText)
+                        }
+                    }
+                }
             }
 
-            override fun onEvent(p0: Int, p1: Bundle?) {
+            override fun onEvent(x: Int, y: Bundle?) {
             }
         }
     }

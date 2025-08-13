@@ -1,15 +1,24 @@
 package com.example.augmentedrealityglasses.notifications
 
-import android.util.Log
 import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+import android.util.Log
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class PhoneCallReceiver : NotificationReceiver() {
+class PhoneCallReceiver(
+    val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+) : NotificationReceiver() {
     private val TAG: String = "PhoneCallReceiver"
 
-    override fun pushNotification(context: Context, intent: Intent?, bleManager: RemoteDeviceManager) {
+    override fun pushNotification(
+        context: Context,
+        intent: Intent?,
+        proxy: RemoteDeviceManager
+    ) {
         Log.d(TAG, "Calling on receive")
 
         val incomingCall = "incoming_call"
@@ -21,8 +30,10 @@ class PhoneCallReceiver : NotificationReceiver() {
                 val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
                 if (TelephonyManager.EXTRA_STATE_RINGING == state) {
                     Log.d(TAG, "Incoming call")
-                    if (bleManager.isConnected()) {
-                        bleManager.send(incomingCall)
+                    if (proxy.isConnected()) {
+                        scope.launch {
+                            proxy.send(incomingCall)
+                        }
                     } else {
                         Log.d(
                             TAG,

@@ -5,12 +5,21 @@ import android.content.Intent
 import android.provider.Telephony
 import android.provider.Telephony.Sms.Intents.getMessagesFromIntent
 import android.util.Log
-import com.example.augmentedrealityglasses.ble.device.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-class SmsReceiver : NotificationReceiver() {
+class SmsReceiver(
+    val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+) : NotificationReceiver() {
     private val TAG: String = "SmsReceiver"
 
-    override fun pushNotification(context: Context, intent: Intent?, bleManager : RemoteDeviceManager) {
+    override fun pushNotification(
+        context: Context,
+        intent: Intent?,
+        proxy: RemoteDeviceManager
+    ) {
         intent?.let {
             if (isSmsReceived(intent)) {
                 val messages = getMessagesFromIntent(intent)
@@ -18,7 +27,9 @@ class SmsReceiver : NotificationReceiver() {
                     val body = sms.messageBody
                     val sender = sms.originatingAddress
                     Log.d(TAG, "Sending message $body from $sender")
-                    bleManager.send("sender: $sender body: $body")
+                    scope.launch {
+                        proxy.send("sender: $sender body: $body")
+                    }
                 }
             }
         }
