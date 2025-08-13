@@ -36,8 +36,8 @@ import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
 import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
-import com.example.augmentedrealityglasses.ble.viewmodels.TranslationViewModel
 import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
+import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.ui.TranslationScreen
 import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
@@ -211,36 +211,36 @@ class MainActivity : ComponentActivity() {
                     composable(ScreenName.SETTINGS.name) {
                         Text("Settings page")
                     }
-                    }
                 }
             }
         }
+    }
 
-        @Composable
-        private fun CheckRecordAudioPermission() {
-            if (!audioPermissionGranted()) {
-                requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.RECORD_AUDIO),
-                    10
-                ) //todo replace 10 with a constant
-                //graceful degrade the translation feature
-                //override onRequestPermissionsResult with code related to this permission
-            }
-        }
-
-        private fun audioPermissionGranted(): Boolean {
-            return ContextCompat.checkSelfPermission(
+    @Composable
+    private fun CheckRecordAudioPermission() {
+        if (!audioPermissionGranted()) {
+            requestPermissions(
                 this,
-                Manifest.permission.RECORD_AUDIO
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-
-        private fun isMicrophoneAvailable(): Boolean {
-            return applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
-        }
-
-        private fun translationFeatureAvailable(): Boolean {
-            return audioPermissionGranted() && isMicrophoneAvailable()
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                10
+            ) //todo replace 10 with a constant
+            //graceful degrade the translation feature
+            //override onRequestPermissionsResult with code related to this permission
         }
     }
+
+    private fun audioPermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun isMicrophoneAvailable(): Boolean {
+        return applicationContext.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
+    }
+
+    private fun translationFeatureAvailable(): Boolean {
+        return audioPermissionGranted() && isMicrophoneAvailable()
+    }
+}
