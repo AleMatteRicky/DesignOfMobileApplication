@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
                         //Slide moves the component but it does not change its dimension so in order
                         //to have the other elements that follow the vertical slide we need shrink and expand
 
-
+                        //todo try to check if it is possible to move the other components down less than the navbar size in order to distantiate more record button from language selection
                         visible = navigationBarVisible.value,
                         enter = slideInVertically { 0 } + expandVertically(
                             expandFrom = Alignment.Top
