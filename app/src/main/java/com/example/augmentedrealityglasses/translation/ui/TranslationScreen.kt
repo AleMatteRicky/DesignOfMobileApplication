@@ -53,16 +53,16 @@ fun TranslationScreen(
             .background(Color(0xFFFAFAFA))
     ) {
         val recordButtonSize = 65.dp
-        var newMaxHeight = recordButtonSize + 10.dp
+        var newMaxHeight = recordButtonSize * 1.2f + 10.dp
+
         RecordButton(
             enabled,
             viewModel,
             Modifier
                 .offset(
-                    x = (maxWidth - recordButtonSize) / 2,
+                    x = (maxWidth - recordButtonSize * 1.1f) / 2,
                     y = maxHeight - newMaxHeight
-                )
-                .size(recordButtonSize),
+                ), recordButtonSize,
             navigationBarVisible = navigationBarVisible
         )
 
@@ -94,7 +94,7 @@ fun TranslationScreen(
 
         val mainTextBoxHeight = maxHeight - newMaxHeight - 15.dp
 
-        //newMaxHeight = newMaxHeight + mainTextBoxHeight + 15.dp
+        newMaxHeight = newMaxHeight + mainTextBoxHeight + 15.dp
         MainTextBox(
             viewModel,
             Modifier

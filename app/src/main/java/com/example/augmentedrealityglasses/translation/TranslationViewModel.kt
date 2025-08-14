@@ -58,6 +58,11 @@ class TranslationViewModel(
 
     var isTargetModelNotAvailable = false
 
+    //used for testing rms values
+    //todo remove
+//    var minRms : Float = Float.MAX_VALUE
+//    var maxRms : Float =  Float.MIN_VALUE
+
     private val TAG: String = "TranslationViewModel"
 
     var isConnected by mutableStateOf(false)
@@ -80,12 +85,14 @@ class TranslationViewModel(
 
     }
 
+    //TODO fix when mic is open but no audio is recorded and move stopListeningToOnResults
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = this[APPLICATION_KEY] as App
                 val bleManager = application.container.proxy
-                TranslationViewModel (
+                TranslationViewModel(
                     systemLanguage = TranslateLanguage.ITALIAN,
                     application = application,
                     bleManager = bleManager
@@ -114,17 +121,20 @@ class TranslationViewModel(
     }
 
     fun selectTargetLanguage(targetLanguage: String?) {
-        uiState = uiState.copy(targetLanguage = targetLanguage, isModelNotAvailable = false) //isModelNotAvailable is set to false in order to force recomposition if the new target language need to be installed
+        uiState = uiState.copy(
+            targetLanguage = targetLanguage,
+            isModelNotAvailable = false
+        ) //isModelNotAvailable is set to false in order to force recomposition if the new target language need to be installed
     }
 
     fun translate() {
 
         translatorJob?.cancel()
 
-        if(uiState.targetLanguage != null) {
+        if (uiState.targetLanguage != null) {
             translatorJob = viewModelScope.launch {
                 if (uiState.targetLanguage != null) {
-                    if(identifySourceLanguage()) {
+                    if (identifySourceLanguage()) {
                         checkModelDownloaded()
                         if (!uiState.isModelNotAvailable) {
                             initializeTranslator()
@@ -133,7 +143,7 @@ class TranslationViewModel(
                                     Log.d("Translation succeeded", translatedText)
                                     uiState = uiState.copy(translatedText = translatedText)
                                     //send translated text to esp32
-                                    Log.d(TAG,translatedText)
+                                    Log.d(TAG, translatedText)
                                     //todo update with version with ble and without ble
 //                                    viewModelScope.launch {
 //                                        bleManager.send(uiState.translatedText)
@@ -204,7 +214,7 @@ class TranslationViewModel(
         isTargetModelNotAvailable = false
     }
 
-    private suspend fun identifySourceLanguage() : Boolean { //True if the identification is successful, False otherwise
+    private suspend fun identifySourceLanguage(): Boolean { //True if the identification is successful, False otherwise
         val languageIdentification = LanguageIdentification.getClient()
         val tag = languageIdentification.identifyLanguage(uiState.recognizedText).await()
         if (tag != "und") {
@@ -256,15 +266,23 @@ class TranslationViewModel(
             override fun onBeginningOfSpeech() {
             }
 
-            override fun onRmsChanged(params: Float) {
-                Log.d("SpeechRecognition", "Rms changed. Parameters: $params")
+            override fun onRmsChanged(rmsDbValue: Float) {
+                Log.d("SpeechRecognition", "Rms changed. Parameters: $rmsDbValue")
+
+                uiState =
+                    uiState.copy(currentNormalizedRms = normalizeRms(rmsDbValue)) //normalized value are used to limit the animation behaviour
+//                if (rmsDbValue < minRms) minRms = rmsDbValue
+//                if (rmsDbValue > maxRms) maxRms = rmsDbValue
+//
+//                Log.d("SpeechLogger", "RMSdB: $rmsDbValue | Min: $minRms | Max: $maxRms")
+
             }
 
             override fun onBufferReceived(value: ByteArray?) {
             }
 
             override fun onEndOfSpeech() {
-                stopRecording()
+                stopRecording() //todo check if it is better to put it in onResults
             }
 
             override fun onError(error: Int) {
@@ -303,11 +321,10 @@ class TranslationViewModel(
                 )
                 Log.d(TAG, "Speech recognition partial results received: $data")
 
-                if(uiState.recognizedText != "") {
+                if (uiState.recognizedText != "") {
                     if (uiState.targetLanguage != null) {
                         translate()
-                    }
-                    else{
+                    } else {
                         Log.d("send", uiState.recognizedText)
                         viewModelScope.launch {
                             //todo update with version with ble and without ble
@@ -320,5 +337,13 @@ class TranslationViewModel(
             override fun onEvent(x: Int, y: Bundle?) {
             }
         }
+    }
+
+    private fun normalizeRms(rmsValueDb: Float): Float {
+        val rmsClipped = rmsValueDb.coerceIn(
+            -2f,
+            10f
+        ) //not used in practice, empirically a speechRecognizer seems to record rms value between -2db and 10db
+        return (rmsClipped + 2f) / 12f //max value 10db, min value -2db, linear normalization
     }
 }
