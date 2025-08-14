@@ -8,6 +8,7 @@ data class TranslationUiState(
     val recognizedText: String = "",
     val translatedText: String = "",
     val isDownloadingLanguageModel: Boolean = false,
-    val isModelNotAvailable: Boolean = false
+    val isModelNotAvailable: Boolean = false,
+    val currentNormalizedRms: Float = 0f
 )
 
