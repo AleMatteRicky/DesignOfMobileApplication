@@ -30,6 +30,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -143,49 +144,67 @@ fun WeatherScreen(
         message = viewModel.errorMessage,
         onDismiss = { viewModel.hideErrorMessage() }
     ) {
-        Column {
-            LocationAndBLEStatusBar(
-                viewModel.location.getFullName(),
-                viewModel.isExtDeviceConnected
-            )
-
-            val currentCondition = viewModel.getCurrentWeather()
-            if (currentCondition != null) {
-                CurrentWeatherBar(
-                    currentCondition.temp,
-                    currentCondition.tempMax,
-                    currentCondition.tempMin,
-                    currentCondition.feelsLike,
-                    currentCondition.main,
-                    currentCondition.iconId
+        Scaffold(
+            topBar = {
+                //TODO: fix background color when scrolling the page
+                LocationAndBLEStatusBar(
+                    viewModel.location.getFullName(),
+                    viewModel.isExtDeviceConnected
                 )
+
             }
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
 
-            LocationManagerBar(
-                onClickSearchBar = { onTextFieldClick() },
-                onClickGeolocationIcon = {
-                    viewModel.getGeolocationWeather(
-                        fusedLocationClient,
-                        context
+                val currentCondition = viewModel.getCurrentWeather()
+                if (currentCondition != null) {
+                    item {
+                        CurrentWeatherBar(
+                            currentCondition.temp,
+                            currentCondition.tempMax,
+                            currentCondition.tempMin,
+                            currentCondition.feelsLike,
+                            currentCondition.main,
+                            currentCondition.iconId
+                        )
+                    }
+                }
+
+                item {
+                    LocationManagerBar(
+                        onClickSearchBar = { onTextFieldClick() },
+                        onClickGeolocationIcon = {
+                            viewModel.getGeolocationWeather(
+                                fusedLocationClient,
+                                context
+                            )
+                        },
+                        geolocationEnabled = viewModel.geolocationEnabled
                     )
-                },
-                geolocationEnabled = viewModel.geolocationEnabled
-            )
+                }
 
-            var conditions = viewModel.getAllConditions()
-            if (conditions.isNotEmpty()) {
-                conditions =
-                    conditions.sortedBy { it.dateTime }
-                        .filter { condition -> condition.dateTime >= viewModel.selectedDay }
-                        .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+                var conditions = viewModel.getAllConditions()
+                if (conditions.isNotEmpty()) {
+                    conditions =
+                        conditions.sortedBy { it.dateTime }
+                            .filter { condition -> condition.dateTime >= viewModel.selectedDay }
+                            .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+                    item {
+                        DailyForecastsPanel(conditions, dailyListState)
+                    }
 
-                DailyForecastsPanel(conditions, dailyListState)
-
-                MultipleDaysForecastsPanel(
-                    forecasts = viewModel.getDaysConditions(),
-                    onItemClick = { viewModel.changeSelectedDay(it) },
-                    isSelectedDay = { viewModel.selectedDay == it }
-                )
+                    item {
+                        MultipleDaysForecastsPanel(
+                            forecasts = viewModel.getDaysConditions(),
+                            onItemClick = { viewModel.changeSelectedDay(it) },
+                            isSelectedDay = { viewModel.selectedDay == it }
+                        )
+                    }
+                }
             }
         }
     }
@@ -325,7 +344,6 @@ fun CurrentWeatherBar(
     }
 }
 
-//TODO: complete
 @Composable
 fun LocationManagerBar(
     onClickSearchBar: () -> Unit,
@@ -498,6 +516,7 @@ fun MultipleDaysForecastsPanel(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .padding(top = 8.dp)
+            .padding(bottom = 8.dp)
             .fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -517,18 +536,17 @@ fun MultipleDaysForecastsPanel(
                 color = Color.LightGray
             )
 
-            LazyColumn {
-                items(forecasts) { forecast ->
-                    MultipleDaysForecastsItem(
-                        isSelected = isSelectedDay(forecast.date),
-                        isCurrentDay = forecast.isCurrent,
-                        date = forecast.date,
-                        iconId = forecast.iconId,
-                        tempMax = forecast.tempMax,
-                        tempMin = forecast.tempMin,
-                        onClick = { onItemClick(forecast.date) }
-                    )
-                }
+
+            forecasts.forEach { forecast ->
+                MultipleDaysForecastsItem(
+                    isSelected = isSelectedDay(forecast.date),
+                    isCurrentDay = forecast.isCurrent,
+                    date = forecast.date,
+                    iconId = forecast.iconId,
+                    tempMax = forecast.tempMax,
+                    tempMin = forecast.tempMin,
+                    onClick = { onItemClick(forecast.date) }
+                )
             }
         }
     }
