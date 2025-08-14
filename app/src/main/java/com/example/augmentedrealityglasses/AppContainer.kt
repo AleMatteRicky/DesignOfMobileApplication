@@ -1,9 +1,16 @@
 package com.example.augmentedrealityglasses
 
 import android.content.Context
+import android.os.Build
+import android.telephony.TelephonyManager
 import com.example.augmentedrealityglasses.ble.ESP32Proxy
-import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.cache.Cache
+import com.example.augmentedrealityglasses.cache.CachePolicy
+import com.example.augmentedrealityglasses.cache.DataStoreMapCache
+import com.example.augmentedrealityglasses.cache.MaxAgePolicy
+import com.example.augmentedrealityglasses.weather.constants.Constants
+import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
 
 /**
  * Dependency Injection container at the application level.
@@ -11,6 +18,9 @@ import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 interface AppContainer {
     val proxy: RemoteDeviceManager
     val weatherAPIRepository: WeatherRepositoryImpl
+    val weatherCache: Cache
+    val weatherCachePolicy: CachePolicy
+    val isDeviceSmsCapable: Boolean
 }
 
 /**
@@ -21,6 +31,18 @@ class DefaultAppContainer(
 ) : AppContainer {
     override val proxy: RemoteDeviceManager =
         ESP32Proxy(context)
+
+    private val telephonyManager =
+        context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+    override val isDeviceSmsCapable: Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            telephonyManager.isDeviceSmsCapable
+        } else {
+            telephonyManager.isSmsCapable
+        }
     override val weatherAPIRepository: WeatherRepositoryImpl =
         WeatherRepositoryImpl()
+    override val weatherCache: Cache = DataStoreMapCache(context, "weather_cache.json")
+    override val weatherCachePolicy: CachePolicy =
+        MaxAgePolicy(Constants.MAX_AGE_WEATHER_CACHE_POLICY_MILLS)
 }

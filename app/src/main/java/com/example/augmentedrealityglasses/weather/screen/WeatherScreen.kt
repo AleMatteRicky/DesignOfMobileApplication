@@ -3,15 +3,16 @@ package com.example.augmentedrealityglasses.weather.screen
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,15 +30,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,20 +44,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.augmentedrealityglasses.ErrorWrapper
 import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
 fun WeatherScreen(
-    viewModel: WeatherViewModel
+    viewModel: WeatherViewModel,
+    onTextFieldClick: () -> Unit
 ) {
     //Context
     val context = LocalContext.current
@@ -82,6 +81,7 @@ fun WeatherScreen(
         }
     }
 
+    /*
     var isFirstLaunch by rememberSaveable { mutableStateOf(true) }
 
     LaunchedEffect(isFirstLaunch) {
@@ -101,33 +101,35 @@ fun WeatherScreen(
             isFirstLaunch = false
         }
     }
+   */
 
-    var previousQuery by remember { mutableStateOf(viewModel.query) }
+    LaunchedEffect(Unit) {
+        if (viewModel.location.name == "") {
+            val isCachedDataValid = viewModel.tryLoadDataFromCache()
 
-    LaunchedEffect(viewModel.query) {
-        val isKeyChanged = previousQuery != viewModel.query
-        previousQuery = viewModel.query
-
-        if (isKeyChanged) {
-            viewModel.hideNoResult()
-        }
-
-        if (viewModel.query.isBlank()) {
-            viewModel.clearSearchedLocationList()
-            return@LaunchedEffect
-        }
-
-        delay(Constants.DEBOUNCE_DELAY)
-        viewModel.searchLocations(viewModel.query)
-    }
-
-    //To make the error message disappear after time
-    LaunchedEffect(viewModel.errorVisible) {
-        if (viewModel.errorVisible) {
-            delay(Constants.ERROR_DISPLAY_TIME)
-            viewModel.hideErrorMessage()
+            if (!isCachedDataValid) {
+                if (viewModel.getGeolocationPermissions(context).values.none { it }) {
+                    //request permissions
+                    requestPermissionsLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        )
+                    )
+                } else {
+                    viewModel.getGeolocationWeather(fusedLocationClient, context)
+                }
+            }
         }
     }
+
+//    //To make the error message disappear after time
+//    LaunchedEffect(viewModel.errorVisible) {
+//        if (viewModel.errorVisible) {
+//            delay(Constants.ERROR_DISPLAY_TIME)
+//            viewModel.hideErrorMessage()
+//        }
+//    }
 
     //Handle auto scroll on left of "Daily forecasts panel" when changing the day
     val dailyListState = rememberLazyListState()
@@ -135,50 +137,74 @@ fun WeatherScreen(
         dailyListState.animateScrollToItem(0)
     }
 
+    //TODO: swipe down to refresh data
     // ----  UI  ----
-    Column {
-        LocationAndBLEStatusBar(
-            viewModel.location.getFullName(),
-            viewModel.isExtDeviceConnected
-        )
-
-        val currentCondition = viewModel.getCurrentWeather()
-        if (currentCondition != null) {
-            CurrentWeatherBar(
-                currentCondition.temp,
-                currentCondition.tempMax,
-                currentCondition.tempMin,
-                currentCondition.feelsLike,
-                currentCondition.main,
-                currentCondition.iconId
-            )
-        }
-
-        LocationManagerBar(
-            viewModel.query,
-            onQueryChange = { viewModel.updateQuery(it) },
-            onClickGeolocationIcon = {
-                viewModel.getGeolocationWeather(
-                    fusedLocationClient,
-                    context
+    ErrorWrapper(
+        message = viewModel.errorMessage,
+        onDismiss = { viewModel.hideErrorMessage() }
+    ) {
+        Scaffold(
+            topBar = {
+                //TODO: fix background color when scrolling the page
+                LocationAndBLEStatusBar(
+                    viewModel.location.getFullName(),
+                    viewModel.isExtDeviceConnected
                 )
+
             }
-        )
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
 
-        var conditions = viewModel.getAllConditions()
-        if (conditions.isNotEmpty()) {
-            conditions =
-                conditions.sortedBy { it.dateTime }
-                    .filter { condition -> condition.dateTime >= viewModel.selectedDay }
-                    .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+                val currentCondition = viewModel.getCurrentWeather()
+                if (currentCondition != null) {
+                    item {
+                        CurrentWeatherBar(
+                            currentCondition.temp,
+                            currentCondition.tempMax,
+                            currentCondition.tempMin,
+                            currentCondition.feelsLike,
+                            currentCondition.main,
+                            currentCondition.iconId
+                        )
+                    }
+                }
 
-            DailyForecastsPanel(conditions, dailyListState)
+                item {
+                    LocationManagerBar(
+                        onClickSearchBar = { onTextFieldClick() },
+                        onClickGeolocationIcon = {
+                            viewModel.getGeolocationWeather(
+                                fusedLocationClient,
+                                context
+                            )
+                        },
+                        geolocationEnabled = viewModel.geolocationEnabled
+                    )
+                }
 
-            MultipleDaysForecastsPanel(
-                forecasts = viewModel.getDaysConditions(),
-                onItemClick = { viewModel.changeSelectedDay(it) },
-                isSelectedDay = { viewModel.selectedDay == it }
-            )
+                var conditions = viewModel.getAllConditions()
+                if (conditions.isNotEmpty()) {
+                    conditions =
+                        conditions.sortedBy { it.dateTime }
+                            .filter { condition -> condition.dateTime >= viewModel.selectedDay }
+                            .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+                    item {
+                        DailyForecastsPanel(conditions, dailyListState)
+                    }
+
+                    item {
+                        MultipleDaysForecastsPanel(
+                            forecasts = viewModel.getDaysConditions(),
+                            onItemClick = { viewModel.changeSelectedDay(it) },
+                            isSelectedDay = { viewModel.selectedDay == it }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -317,12 +343,11 @@ fun CurrentWeatherBar(
     }
 }
 
-//TODO: complete
 @Composable
 fun LocationManagerBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onClickGeolocationIcon: () -> Unit
+    onClickSearchBar: () -> Unit,
+    onClickGeolocationIcon: () -> Unit,
+    geolocationEnabled: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -335,40 +360,50 @@ fun LocationManagerBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            //FIXME: limit Text field width
-            OutlinedTextField(
-                value = query,
-                onValueChange = {
-                    onQueryChange(it)
-                },
-                placeholder = { Text("Search other locations") },
-                singleLine = true,
-                leadingIcon = {
+            // Fake TextField (just UI, no input)
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color.LightGray),
+                modifier = Modifier
+                    .height(56.dp)
+                    .weight(1f)
+                    .clickable { onClickSearchBar() },
+                color = Color.White
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.search),
                         contentDescription = null,
+                        tint = Color.Gray
                     )
-                },
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .height(56.dp)
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-            )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Search other locations",
+                        color = Color.Gray
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.width(8.dp))
 
             IconButton(
                 onClick = onClickGeolocationIcon,
+                enabled = !geolocationEnabled,
                 modifier = Modifier
                     .size(48.dp)
                     .background(Color.Transparent)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.geolocation),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = if (geolocationEnabled) Color.Gray else Color.Black
                 )
             }
-
         }
     }
 }
@@ -480,6 +515,7 @@ fun MultipleDaysForecastsPanel(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .padding(top = 8.dp)
+            .padding(bottom = 8.dp)
             .fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -499,18 +535,17 @@ fun MultipleDaysForecastsPanel(
                 color = Color.LightGray
             )
 
-            LazyColumn {
-                items(forecasts) { forecast ->
-                    MultipleDaysForecastsItem(
-                        isSelected = isSelectedDay(forecast.date),
-                        isCurrentDay = forecast.isCurrent,
-                        date = forecast.date,
-                        iconId = forecast.iconId,
-                        tempMax = forecast.tempMax,
-                        tempMin = forecast.tempMin,
-                        onClick = { onItemClick(forecast.date) }
-                    )
-                }
+
+            forecasts.forEach { forecast ->
+                MultipleDaysForecastsItem(
+                    isSelected = isSelectedDay(forecast.date),
+                    isCurrentDay = forecast.isCurrent,
+                    date = forecast.date,
+                    iconId = forecast.iconId,
+                    tempMax = forecast.tempMax,
+                    tempMin = forecast.tempMin,
+                    onClick = { onItemClick(forecast.date) }
+                )
             }
         }
     }

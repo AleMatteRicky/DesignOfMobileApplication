@@ -40,7 +40,7 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
         ),
         BottomNavItem(
             "Weather",
-            ScreenName.WEATHER_SCREEN.name,
+            ScreenName.WEATHER_HOME_SCREEN.name,
             painterResource(id = R.drawable.weather_bottom_bar)
         ),
         BottomNavItem(

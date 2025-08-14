@@ -20,6 +20,11 @@ object Constants {
     const val TEMPERATURE_UNIT = "°C"
     const val PRESSURE_UNIT = "hPa"
 
+    //const val MIN_SPINNER_MS = 700L //For refreshing animation
+
+    const val MAX_AGE_WEATHER_CACHE_POLICY_MILLS = 30 * 60 * 1000L //30 minutes
+    const val WEATHER_CACHE_KEY = "weather_infos"
+
     const val ERROR_GENERIC_CURRENT_WEATHER = "Generic error while fetching current weather information. Try again"
     const val ERROR_NETWORK_CURRENT_WEATHER = "Network error while fetching current weather information. Try again"
 
