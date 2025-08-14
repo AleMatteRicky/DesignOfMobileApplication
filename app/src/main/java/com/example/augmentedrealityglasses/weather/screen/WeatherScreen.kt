@@ -139,6 +139,18 @@ fun WeatherScreen(
         dailyListState.animateScrollToItem(0)
     }
 
+    val currentCondition by remember {
+        derivedStateOf { viewModel.getCurrentWeather() }
+    }
+
+    val dailyForecasts by remember {
+        derivedStateOf { viewModel.getDailyForecastsOfSelectedDay().orEmpty() }
+    }
+
+    val daysConditions by remember {
+        derivedStateOf { viewModel.getDaysConditions() }
+    }
+
     //TODO: swipe down to refresh data
     // ----  UI  ----
     ErrorWrapper(
@@ -182,16 +194,15 @@ fun WeatherScreen(
                     state = listState
                 ) {
 
-                    val currentCondition = viewModel.getCurrentWeather()
-                    if (currentCondition != null) {
+                    currentCondition?.let { condition ->
                         item {
                             CurrentWeatherBar(
-                                currentCondition.temp,
-                                currentCondition.tempMax,
-                                currentCondition.tempMin,
-                                currentCondition.feelsLike,
-                                currentCondition.main,
-                                currentCondition.iconId
+                                condition.temp,
+                                condition.tempMax,
+                                condition.tempMin,
+                                condition.feelsLike,
+                                condition.main,
+                                condition.iconId
                             )
                         }
                     }
@@ -209,15 +220,14 @@ fun WeatherScreen(
                         )
                     }
 
-                    val conditions = viewModel.getDailyForecastsOfSelectedDay()
-                    if (conditions != null) {
+                    if (dailyForecasts.isNotEmpty()) {
                         item {
-                            DailyForecastsPanel(conditions, dailyListState)
+                            DailyForecastsPanel(dailyForecasts, dailyListState)
                         }
 
                         item {
                             MultipleDaysForecastsPanel(
-                                forecasts = viewModel.getDaysConditions(),
+                                forecasts = daysConditions,
                                 onItemClick = {
                                     viewModel.changeSelectedDay(it)
                                 },
