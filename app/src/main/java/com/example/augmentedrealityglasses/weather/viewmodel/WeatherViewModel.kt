@@ -142,7 +142,7 @@ class WeatherViewModel(
         private set
 
     //Loading screen
-    var isLoading by mutableStateOf(false)
+    //var isLoading by mutableStateOf(false)
 
     //Input for searching the location
     var query by mutableStateOf("")
@@ -430,10 +430,8 @@ class WeatherViewModel(
 
                     if (lastLocation != null && (System.currentTimeMillis() - lastLocation.time) <= Constants.MAX_AGE_LAST_LOCATION) {
                         //there is a last location saved and it is not too old
-                        isLoading = false
                         continuation.resume(GeolocationResult.Success(lastLocation))
                     } else {
-                        isLoading = true
                         val priority: Int = when {
                             permissions.getOrDefault(
                                 ACCESS_FINE_LOCATION,
@@ -453,7 +451,6 @@ class WeatherViewModel(
                         //fetch the current location
                         fusedLocationClient.getCurrentLocation(priority, null)
                             .addOnSuccessListener { currentLocation: Location? ->
-                                isLoading = false
 
                                 if (currentLocation != null) {
                                     continuation.resume(
@@ -466,7 +463,6 @@ class WeatherViewModel(
                                 }
                             }
                             .addOnFailureListener { exception ->
-                                isLoading = false
 
                                 if (continuation.isActive) {
                                     continuation.resume(GeolocationResult.Error(exception))
@@ -476,7 +472,6 @@ class WeatherViewModel(
 
                 }
                 .addOnFailureListener { exception ->
-                    isLoading = false
 
                     if (continuation.isActive) {
                         continuation.resume(GeolocationResult.Error(exception))

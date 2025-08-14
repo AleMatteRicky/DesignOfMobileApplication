@@ -117,7 +117,6 @@ fun WeatherScreen(
                         )
                     )
                 } else {
-                    viewModel.isLoading = true
                     viewModel.getGeolocationWeather(fusedLocationClient, context)
                 }
             }
