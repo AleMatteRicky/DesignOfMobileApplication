@@ -35,6 +35,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.augmentedrealityglasses.ErrorWrapper
 import com.example.augmentedrealityglasses.R
-import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
@@ -104,6 +105,7 @@ fun WeatherScreen(
    */
 
     LaunchedEffect(Unit) {
+        viewModel.hideErrorMessage()
         if (viewModel.location.name == "") {
             val isCachedDataValid = viewModel.tryLoadDataFromCache()
 
@@ -137,6 +139,18 @@ fun WeatherScreen(
         dailyListState.animateScrollToItem(0)
     }
 
+    val currentCondition by remember {
+        derivedStateOf { viewModel.getCurrentWeather() }
+    }
+
+    val dailyForecasts by remember {
+        derivedStateOf { viewModel.getDailyForecastsOfSelectedDay().orEmpty() }
+    }
+
+    val daysConditions by remember {
+        derivedStateOf { viewModel.getDaysConditions() }
+    }
+
     //TODO: swipe down to refresh data
     // ----  UI  ----
     ErrorWrapper(
@@ -153,55 +167,73 @@ fun WeatherScreen(
 
             }
         ) { innerPadding ->
-            LazyColumn(
+
+            //List state attached to the LazyColumn (that contains all the screen's content)
+            val listState = rememberLazyListState()
+
+            //Allow scrolling only when the screen is fully scrolled to the top
+            val scrollDownEnabled by remember {
+                derivedStateOf {
+                    listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
+                }
+            }
+
+            SwipeDownRefresh(
+                isRefreshing = viewModel.isRefreshing,
+                scrollDownEnabled = scrollDownEnabled,
+                onRefresh = {
+                    viewModel.refreshWeatherInfos(fusedLocationClient, context)
+                },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    state = listState
+                ) {
 
-                val currentCondition = viewModel.getCurrentWeather()
-                if (currentCondition != null) {
-                    item {
-                        CurrentWeatherBar(
-                            currentCondition.temp,
-                            currentCondition.tempMax,
-                            currentCondition.tempMin,
-                            currentCondition.feelsLike,
-                            currentCondition.main,
-                            currentCondition.iconId
-                        )
-                    }
-                }
-
-                item {
-                    LocationManagerBar(
-                        onClickSearchBar = { onTextFieldClick() },
-                        onClickGeolocationIcon = {
-                            viewModel.getGeolocationWeather(
-                                fusedLocationClient,
-                                context
+                    currentCondition?.let { condition ->
+                        item {
+                            CurrentWeatherBar(
+                                condition.temp,
+                                condition.tempMax,
+                                condition.tempMin,
+                                condition.feelsLike,
+                                condition.main,
+                                condition.iconId
                             )
-                        },
-                        geolocationEnabled = viewModel.geolocationEnabled
-                    )
-                }
-
-                var conditions = viewModel.getAllConditions()
-                if (conditions.isNotEmpty()) {
-                    conditions =
-                        conditions.sortedBy { it.dateTime }
-                            .filter { condition -> condition.dateTime >= viewModel.selectedDay }
-                            .take(Constants.DAILY_CONDITIONS_TO_SHOW)
-                    item {
-                        DailyForecastsPanel(conditions, dailyListState)
+                        }
                     }
 
                     item {
-                        MultipleDaysForecastsPanel(
-                            forecasts = viewModel.getDaysConditions(),
-                            onItemClick = { viewModel.changeSelectedDay(it) },
-                            isSelectedDay = { viewModel.selectedDay == it }
+                        LocationManagerBar(
+                            onClickSearchBar = { onTextFieldClick() },
+                            onClickGeolocationIcon = {
+                                viewModel.getGeolocationWeather(
+                                    fusedLocationClient,
+                                    context
+                                )
+                            },
+                            geolocationEnabled = viewModel.geolocationEnabled
                         )
+                    }
+
+                    if (dailyForecasts.isNotEmpty()) {
+                        item {
+                            DailyForecastsPanel(dailyForecasts, dailyListState)
+                        }
+
+                        item {
+                            MultipleDaysForecastsPanel(
+                                forecasts = daysConditions,
+                                onItemClick = {
+                                    viewModel.changeSelectedDay(it)
+                                },
+                                isSelectedDay = { viewModel.selectedDay == it }
+                            )
+                        }
                     }
                 }
             }

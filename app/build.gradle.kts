@@ -108,4 +108,5 @@ dependencies {
     implementation("com.google.mlkit:language-id:17.0.0")
     implementation("androidx.datastore:datastore:1.1.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation ("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }

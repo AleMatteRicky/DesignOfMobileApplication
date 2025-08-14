@@ -146,9 +146,15 @@ class WeatherViewModel(
 
     //Input for searching the location
     var query by mutableStateOf("")
+        private set
+
+    //Handle the swipe down gesture
+    var isRefreshing by mutableStateOf(false)
+        private set
 
     // LOGIC FUNCTIONS
 
+    //Cache functions
     private fun saveWeatherSnapshotIntoCache() {
         val snapshot = createWeatherSnapshot(
             location = location,
@@ -227,7 +233,7 @@ class WeatherViewModel(
         )
     }
 
-    private fun updateWeatherStateAndGeolocationFlag(
+    private fun setStateAndCreateSnapshot(
         newCurrentCondition: APIWeatherCondition,
         newForecasts: APIWeatherForecasts,
         newGeolocationFlag: Boolean? = null,
@@ -252,6 +258,7 @@ class WeatherViewModel(
             geolocationEnabled = newGeolocationFlag
         }
 
+        //Save data into the cache (only for geolocation data)
         if (geolocationEnabled) {
             saveWeatherSnapshotIntoCache()
         }
@@ -302,20 +309,6 @@ class WeatherViewModel(
         sendBluetoothMessage(newConditions.first { cond -> cond.isCurrent }.toString())
     }
 
-    fun changeSelectedDay(newDate: Date) {
-        selectedDay = startOfDay(newDate)
-    }
-
-    private fun getMinDateOfAvailableConditions(): Date {
-        val date = getAllConditions().map { condition -> condition.dateTime }.toList().minOrNull()
-
-        if (date != null) {
-            return date
-        }
-        Log.d(TAG, "no conditions in the list")
-        throw IllegalStateException()
-    }
-
     private fun updateLocationState(
         name: String,
         lat: String,
@@ -333,6 +326,42 @@ class WeatherViewModel(
 
         //send updates to the ESP //FIXME
         sendBluetoothMessage(location.toString())
+    }
+
+    fun changeSelectedDay(newDate: Date) {
+        selectedDay = startOfDay(newDate)
+    }
+
+    /**
+     * Returns the earliest (minimum) date among all available conditions' date.
+     *
+     * @throws IllegalStateException if no conditions are available.
+     */
+    private fun getMinDateOfAvailableConditions(): Date {
+        val date = getAllConditions().map { condition -> condition.dateTime }.toList().minOrNull()
+
+        if (date != null) {
+            return date
+        }
+        Log.d(TAG, "no conditions in the list")
+        throw IllegalStateException()
+    }
+
+    /**
+     * It allows to compare Date objects just by day, month and year (setting all the other parameters to 0)
+     */
+    private fun startOfDay(date: Date): Date {
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.time
+    }
+
+    private fun getAllConditions(): List<WeatherCondition> {
+        return weatherState.conditions
     }
 
     fun hideNoResult() {
@@ -492,7 +521,7 @@ class WeatherViewModel(
                     when (val newForecasts = fetchForecastsInfo(result.lat, result.lon)) {
                         is APIResult.Success -> {
 
-                            updateWeatherStateAndGeolocationFlag(
+                            setStateAndCreateSnapshot(
                                 newCurrentCondition = newCurrentWeatherCondition.value,
                                 newForecasts = newForecasts.value,
                                 newGeolocationFlag = false,
@@ -526,6 +555,7 @@ class WeatherViewModel(
         context: Context
     ) {
         viewModelScope.launch(Dispatchers.IO) {
+            isRefreshing = true
             if (geolocationEnabled) {
 
                 //fetch geolocation
@@ -550,7 +580,7 @@ class WeatherViewModel(
                                     is APIResult.Success -> {
 
                                         // state not available with this API call
-                                        updateWeatherStateAndGeolocationFlag(
+                                        setStateAndCreateSnapshot(
                                             newCurrentCondition = newCurrentWeatherCondition.value,
                                             newForecasts = newForecasts.value,
                                             newLocation = WeatherLocation(
@@ -595,7 +625,7 @@ class WeatherViewModel(
                         when (val newForecasts = fetchForecastsInfo(location.lat, location.lon)) {
                             is APIResult.Success -> {
 
-                                updateWeatherStateAndGeolocationFlag(
+                                setStateAndCreateSnapshot(
                                     newCurrentWeatherCondition.value,
                                     newForecasts.value
                                 )
@@ -612,6 +642,7 @@ class WeatherViewModel(
                     }
                 }
             }
+            isRefreshing = false
         }
     }
 
@@ -641,7 +672,7 @@ class WeatherViewModel(
                                 is APIResult.Success -> {
 
                                     // state not available with this API call
-                                    updateWeatherStateAndGeolocationFlag(
+                                    setStateAndCreateSnapshot(
                                         newCurrentCondition = newCurrentWeatherCondition.value,
                                         newForecasts = newForecasts.value,
                                         newGeolocationFlag = true,
@@ -684,7 +715,6 @@ class WeatherViewModel(
     }
 
     fun getWeatherOfSelectedLocation(result: WeatherLocation) {
-        query = ""
         getWeatherByResult(result)
     }
 
@@ -711,10 +741,9 @@ class WeatherViewModel(
         return weatherInfo
     }
 
-    fun getAllConditions(): List<WeatherCondition> {
-        return weatherState.conditions
-    }
-
+    /**
+     * This method is used to fill the "Next days forecasts" panel
+     */
     fun getDaysConditions(): List<DayCondition> {
         return weatherState.conditions.groupBy { condition -> startOfDay(condition.dateTime) }
             .map { (date, conditions) ->
@@ -732,15 +761,17 @@ class WeatherViewModel(
     }
 
     /**
-     * It allows to compare Date objects just by day, month and year (setting all the other parameters to 0)
+     * This method is used to fill the "Daily forecasts" panel
      */
-    private fun startOfDay(date: Date): Date {
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.time
+    fun getDailyForecastsOfSelectedDay(): List<WeatherCondition>? {
+        val conditions = getAllConditions()
+
+        if (conditions.isNotEmpty()) {
+            return conditions.sortedBy { it.dateTime }
+                .filter { condition -> condition.dateTime >= selectedDay }
+                .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+        } else {
+            return null
+        }
     }
 }
