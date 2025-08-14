@@ -147,6 +147,10 @@ class WeatherViewModel(
     //Input for searching the location
     var query by mutableStateOf("")
 
+    //Handle the swipe down gesture
+    var isRefreshing by mutableStateOf(false)
+        private set
+
     // LOGIC FUNCTIONS
 
     private fun saveWeatherSnapshotIntoCache() {
@@ -526,6 +530,7 @@ class WeatherViewModel(
         context: Context
     ) {
         viewModelScope.launch(Dispatchers.IO) {
+            isRefreshing = true
             if (geolocationEnabled) {
 
                 //fetch geolocation
@@ -612,6 +617,7 @@ class WeatherViewModel(
                     }
                 }
             }
+            isRefreshing = false
         }
     }
 
@@ -729,6 +735,18 @@ class WeatherViewModel(
                 )
             }
             .sortedBy { it.date }
+    }
+
+    fun getDailyForecastsOfSelectedDay(): List<WeatherCondition>? {
+        val conditions = getAllConditions()
+
+        if (conditions.isNotEmpty()) {
+            return conditions.sortedBy { it.dateTime }
+                .filter { condition -> condition.dateTime >= selectedDay }
+                .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+        } else {
+            return null
+        }
     }
 
     /**
