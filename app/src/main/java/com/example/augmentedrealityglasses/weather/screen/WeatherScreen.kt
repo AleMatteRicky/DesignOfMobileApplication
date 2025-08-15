@@ -502,6 +502,8 @@ fun DailyForecastItem(
     conditionName: String,
     temperature: Int
 ) {
+    val timeFmt = rememberTimeFormatter("HH:mm")
+
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -509,7 +511,7 @@ fun DailyForecastItem(
             .padding(horizontal = 7.dp)
     ) {
         Text(
-            text = if (isCurrent) "Now" else formatDate(dateTime),
+            text = if (isCurrent) "Now" else timeFmt.format(dateTime),
             style = MaterialTheme.typography.bodySmall.copy(
                 fontWeight = FontWeight.Bold
             )
@@ -530,9 +532,11 @@ fun DailyForecastItem(
     }
 }
 
-fun formatDate(date: Date): String {
-    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
-}
+@Composable
+fun rememberTimeFormatter(pattern: String) =
+    remember(pattern) {
+        SimpleDateFormat(pattern, Locale.getDefault())
+    }
 
 @Composable
 fun MultipleDaysForecastsPanel(
@@ -603,6 +607,8 @@ fun MultipleDaysForecastsItem(
         Modifier.clickable(onClick = onClick) //clickable
     }
 
+    val dayNameFmt = rememberDayNameFormatter("EEEE") //It provides the complete name of the day
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -612,7 +618,7 @@ fun MultipleDaysForecastsItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = if (isCurrentDay) "Today" else getDayName(date),
+            text = if (isCurrentDay) "Today" else dayNameFmt.format(date),
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = contentColor
             ),
@@ -661,8 +667,8 @@ fun MultipleDaysForecastsItem(
     }
 }
 
-fun getDayName(date: Date): String {
-    //TODO: language setting
-    val format = SimpleDateFormat("EEEE", Locale.ENGLISH) //It provides the complete name of the day
-    return format.format(date)
-}
+@Composable
+fun rememberDayNameFormatter(pattern: String) =
+    remember(pattern) {
+        SimpleDateFormat(pattern, Locale.ENGLISH) //TODO: handle language from settings
+    }
