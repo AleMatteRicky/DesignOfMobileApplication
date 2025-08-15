@@ -182,18 +182,15 @@ class WeatherViewModel(
             )
         } ?: return false
 
-        withContext(Dispatchers.IO) {
+        val loc = withContext(Dispatchers.IO) { snap.location.toModel() }
+        val conds = withContext(Dispatchers.IO) { snap.conditions.toModelList() }
 
-            location = snap.location.toModel()
-            weatherState = weatherState.copy(
-                conditions = snap.conditions.toModelList()
-            )
-
+        withContext(Dispatchers.Main) {
+            location = loc
+            weatherState = weatherState.copy(conditions = conds)
             changeSelectedDay(getMinDateOfAvailableConditions())
-
             geolocationEnabled = true
         }
-
         return true
     }
 
