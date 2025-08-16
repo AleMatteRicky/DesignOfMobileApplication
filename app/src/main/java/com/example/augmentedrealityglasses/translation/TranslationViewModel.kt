@@ -127,6 +127,10 @@ class TranslationViewModel(
         ) //isModelNotAvailable is set to false in order to force recomposition if the new target language need to be installed
     }
 
+    fun resetResultStatus(){
+        uiState = uiState.copy(isResultReady = false)
+    }
+
     fun translate() {
 
         translatorJob?.cancel()
@@ -281,8 +285,8 @@ class TranslationViewModel(
             override fun onBufferReceived(value: ByteArray?) {
             }
 
+            //this function is executed before onResult so stopping here the listening would lead to never executing onResult
             override fun onEndOfSpeech() {
-                stopRecording() //todo check if it is better to put it in onResults
             }
 
             override fun onError(error: Int) {
@@ -310,6 +314,10 @@ class TranslationViewModel(
                 if (uiState.targetLanguage != null) {
                     translate()
                 }
+                if(uiState.recognizedText.isNotEmpty()){
+                    uiState = uiState.copy(isResultReady = true)
+                }
+                stopRecording()
                 Log.d("SpeechRecognizer", "Speech recognition results received: $data")
             }
 
