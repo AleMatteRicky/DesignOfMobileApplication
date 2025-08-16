@@ -56,10 +56,10 @@ fun ConnectScreen(
                 }
                 Button(
                     onClick = {
-                        onNavigateToFeature(ScreenName.TRANSLATION_SCREEN.name)
+                        onNavigateToFeature(ScreenName.TRANSLATION_HOME_SCREEN.name)
                     }
                 ) {
-                    Text(text = ScreenName.TRANSLATION_SCREEN.name)
+                    Text(text = ScreenName.TRANSLATION_HOME_SCREEN.name)
                 }
 
                 Text(text = "Received: ${viewModel.uiState.msg}", fontWeight = FontWeight.Bold)
