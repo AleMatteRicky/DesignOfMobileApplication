@@ -127,8 +127,12 @@ class TranslationViewModel(
         ) //isModelNotAvailable is set to false in order to force recomposition if the new target language need to be installed
     }
 
-    fun resetResultStatus(){
+    fun resetResultStatus() {
         uiState = uiState.copy(isResultReady = false)
+    }
+
+    fun clearText() {
+        uiState = uiState.copy(recognizedText = "", translatedText = "")
     }
 
     fun translate() {
@@ -137,27 +141,27 @@ class TranslationViewModel(
 
         if (uiState.targetLanguage != null) {
             translatorJob = viewModelScope.launch {
-                if (uiState.targetLanguage != null) {
-                    if (identifySourceLanguage()) {
-                        checkModelDownloaded()
-                        if (!uiState.isModelNotAvailable) {
-                            initializeTranslator()
-                            translator?.translate(uiState.recognizedText)
-                                ?.addOnSuccessListener { translatedText ->
-                                    Log.d("Translation succeeded", translatedText)
-                                    uiState = uiState.copy(translatedText = translatedText)
-                                    //send translated text to esp32
-                                    Log.d(TAG, translatedText)
-                                    //todo update with version with ble and without ble
+                if (uiState.targetLanguage != null && uiState.sourceLanguage != null) {
+
+                    checkModelDownloaded()
+                    if (!uiState.isModelNotAvailable) {
+                        initializeTranslator()
+                        translator?.translate(uiState.recognizedText)
+                            ?.addOnSuccessListener { translatedText ->
+                                Log.d("Translation succeeded", translatedText)
+                                uiState = uiState.copy(translatedText = translatedText)
+                                //send translated text to esp32
+                                Log.d(TAG, translatedText)
+                                //todo update with version with ble and without ble
 //                                    viewModelScope.launch {
 //                                        bleManager.send(uiState.translatedText)
 //                                    }
-                                }
-                                ?.addOnFailureListener { exception ->
-                                    Log.e("Translation failed", exception.toString())
-                                }
-                        }
+                            }
+                            ?.addOnFailureListener { exception ->
+                                Log.e("Translation failed", exception.toString())
+                            }
                     }
+
                 }
             }
         }
@@ -199,7 +203,6 @@ class TranslationViewModel(
                 uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
             uiState = uiState.copy(isDownloadingLanguageModel = false)
         }
-
     }
 
     private suspend fun downloadSourceLanguageModel() {
@@ -227,6 +230,9 @@ class TranslationViewModel(
             //todo
             return true
         } else {
+            if (uiState.sourceLanguage != null) {
+                uiState = uiState.copy(sourceLanguage = null)
+            }
             Log.e("Undefined Language", "Exception")
             return false
         }
@@ -311,10 +317,13 @@ class TranslationViewModel(
                 uiState = uiState.copy(
                     recognizedText = data.toString().removePrefix("[").removeSuffix("]"),
                 )
-                if (uiState.targetLanguage != null) {
-                    translate()
+                viewModelScope.launch {
+                    identifySourceLanguage()
+                    if (uiState.targetLanguage != null) {
+                        translate()
+                    }
                 }
-                if(uiState.recognizedText.isNotEmpty()){
+                if (uiState.recognizedText.isNotEmpty()) {
                     uiState = uiState.copy(isResultReady = true)
                 }
                 stopRecording()
@@ -330,15 +339,19 @@ class TranslationViewModel(
                 Log.d(TAG, "Speech recognition partial results received: $data")
 
                 if (uiState.recognizedText != "") {
-                    if (uiState.targetLanguage != null) {
-                        translate()
-                    } else {
-                        Log.d("send", uiState.recognizedText)
-                        viewModelScope.launch {
-                            //todo update with version with ble and without ble
-                            //bleManager.send(uiState.recognizedText)
+                    viewModelScope.launch {
+                        identifySourceLanguage()
+                        if (uiState.targetLanguage != null) {
+                            translate()
+                        } else {
+                            Log.d("send", uiState.recognizedText)
+                            viewModelScope.launch {
+                                //todo update with version with ble and without ble
+                                //bleManager.send(uiState.recognizedText)
+                            }
                         }
                     }
+
                 }
             }
 
