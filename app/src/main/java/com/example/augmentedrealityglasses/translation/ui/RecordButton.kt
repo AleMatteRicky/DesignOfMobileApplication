@@ -30,7 +30,7 @@ fun RecordButton(
     viewModel: TranslationViewModel,
     modifier: Modifier,
     size: Dp,
-    navigationBarVisible: MutableState<Boolean>
+    navigationBarVisible: MutableState<Boolean>?
 ) {
 
     var recordingSymbol by remember { mutableStateOf(Icon.MICROPHONE) }
@@ -60,11 +60,15 @@ fun RecordButton(
 
             if (viewModel.uiState.isRecording) {
                 recordingSymbol = Icon.STOP
-                navigationBarVisible.value = false
+                if (navigationBarVisible != null) {
+                    navigationBarVisible.value = false
+                }
                 waveSoundRippleEffectVisible = true
             } else {
                 recordingSymbol = Icon.MICROPHONE
-                navigationBarVisible.value = true
+                if (navigationBarVisible != null) {
+                    navigationBarVisible.value = true
+                }
                 waveSoundRippleEffectVisible = false
             }
 
