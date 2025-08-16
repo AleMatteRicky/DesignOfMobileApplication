@@ -32,11 +32,19 @@ fun MainTextBox(viewModel: TranslationViewModel, modifier: Modifier) {
             .background(Color.White)
             .padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 16.dp)
     ) {
-        Text(
-            text = "Record text",
-            color = Color(0xFF717070),
-            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 24.sp)
-        )
+        if(viewModel.uiState.recognizedText.isEmpty()) {
+            Text(
+                text = "Record text",
+                color = Color(0xFF717070),
+                style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 24.sp)
+            )
+        }
+        else{
+            Text(
+                text = viewModel.uiState.recognizedText,
+                fontSize = 24.sp
+            )
+        }
     }
 
 }
