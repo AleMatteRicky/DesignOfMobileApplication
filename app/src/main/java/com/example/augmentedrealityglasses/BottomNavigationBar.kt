@@ -35,7 +35,7 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
         ),
         BottomNavItem(
             "Translation",
-            ScreenName.TRANSLATION_SCREEN.name,
+            ScreenName.TRANSLATION_HOME_SCREEN.name,
             painterResource(id = R.drawable.translate_bottom_bar)
         ),
         BottomNavItem(
