@@ -2,7 +2,6 @@ package com.example.augmentedrealityglasses.translation.ui
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -36,8 +35,6 @@ import androidx.compose.ui.window.Dialog
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 
-//TODO fix if the user goes back with gesture during recording, the following screen does not have the navbar visible
-
 @SuppressLint("MissingPermission")
 @Composable
 fun TranslationHomeScreen(
@@ -46,7 +43,8 @@ fun TranslationHomeScreen(
     enabled: Boolean,
     navigationBarVisible: MutableState<Boolean>,
     navigationBarHeight: Dp,
-    onNavigateToResult: () -> Unit
+    onNavigateToResult: () -> Unit,
+    onBack: () -> Unit
 ) {
 
     val uiState = viewModel.uiState
@@ -128,6 +126,11 @@ fun TranslationHomeScreen(
             onNavigateToResult()
             viewModel.resetResultStatus()//should reset also after recording in the other screen
         }
+    }
+
+    BackHandler(uiState.isRecording){
+        viewModel.stopRecording()
+        onBack()
     }
 
     /*

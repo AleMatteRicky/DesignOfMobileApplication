@@ -219,6 +219,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToResult = {
                                     navController.navigate(ScreenName.TRANSLATION_RESULT_SCREEN.name)
                                 },
+                                onBack = {
+                                    navController.popBackStack()
+                                },
                                 viewModel = viewModel,
                                 enabled = translationFeatureAvailable(),
                                 navigationBarVisible = navigationBarVisible,
