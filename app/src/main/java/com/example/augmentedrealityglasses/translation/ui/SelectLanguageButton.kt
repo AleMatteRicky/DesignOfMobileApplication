@@ -89,10 +89,10 @@ fun SelectLanguageButton(enabled: Boolean, viewModel: TranslationViewModel, modi
     }
 }
 
-private fun getFullLengthName(tag: String): String {
+fun getFullLengthName(tag: String): String {
     val locale = Locale.forLanguageTag(tag)
 
-    return locale.displayName
+    return locale.displayName.replaceFirstChar { it.uppercase() }
 }
 
 
