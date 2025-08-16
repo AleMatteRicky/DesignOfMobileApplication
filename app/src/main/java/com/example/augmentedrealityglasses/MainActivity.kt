@@ -25,11 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat
@@ -38,6 +36,7 @@ import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.example.augmentedrealityglasses.ble.permissions.BluetoothSampleBox
@@ -47,13 +46,15 @@ import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
-import com.example.augmentedrealityglasses.translation.ui.TranslationScreen
+import com.example.augmentedrealityglasses.translation.ui.TranslationHomeScreen
+import com.example.augmentedrealityglasses.translation.ui.TranslationResultScreen
 import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 
 class MainActivity : ComponentActivity() {
     private val TAG = "myActivity"
+
     @SuppressLint("UnrememberedGetBackStackEntry")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,7 +71,6 @@ class MainActivity : ComponentActivity() {
             Scaffold(
                 bottomBar = {
                     AnimatedVisibility(
-
                         //todo check if with other px slideVertically works without glitch
                         //Slide moves the component but it does not change its dimension so in order
                         //to have the other elements that follow the vertical slide we need shrink and expand
@@ -84,12 +84,17 @@ class MainActivity : ComponentActivity() {
                         ),
                         exit = slideOutVertically { fullHeight -> fullHeight } + shrinkVertically() + fadeOut()
                     ) {
-                        BottomNavigationBar(
-                            navController,
-                            Modifier
-                                .fillMaxWidth()
-                                .height(navigationBarHeight)
-                        )
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = navBackStackEntry?.destination?.route
+
+                        if (currentRoute !in listOf(ScreenName.TRANSLATION_RESULT_SCREEN.name)) { //Screens in which navBar should be never shown
+                            BottomNavigationBar(
+                                navController,
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(navigationBarHeight)
+                            )
+                        }
                     }
                 }
             ) { innerPadding ->
@@ -105,7 +110,7 @@ class MainActivity : ComponentActivity() {
                                 HomeScreen(
                                     onNavigateToTranslation = {
                                         navController.navigate(
-                                            route = ScreenName.TRANSLATION_SCREEN.name
+                                            route = ScreenName.TRANSLATION_HOME_SCREEN.name
                                         )
                                     },
                                     onNavigateToWeather = { navController.navigate(ScreenName.WEATHER_HOME_SCREEN.name) },
@@ -175,20 +180,68 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     */
-                    composable(ScreenName.TRANSLATION_SCREEN.name) {
-                        CheckRecordAudioPermission() //todo check if it works when permission are refused 1 time
-                        TranslationScreen(
-                            onNavigateToHome = {
-                                navController.navigate(
-                                    route = ScreenName.HOME.name
-                                )
-                            },
-                            viewModel = viewModel(factory = TranslationViewModel.Factory),
-                            enabled = translationFeatureAvailable(),
-                            navigationBarVisible = navigationBarVisible,
-                            navigationBarHeight = navigationBarHeight
+//                    composable(ScreenName.TRANSLATION_HOME_SCREEN.name) {
+//                        CheckRecordAudioPermission() //todo check if it works when permission are refused 1 time
+//                        TranslationScreen(
+//                            onNavigateToHome = {
+//                                navController.navigate(
+//                                    route = ScreenName.HOME.name
+//                                )
+//                            },
+//                            viewModel = viewModel(factory = TranslationViewModel.Factory),
+//                            enabled = translationFeatureAvailable(),
+//                            navigationBarVisible = navigationBarVisible,
+//                            navigationBarHeight = navigationBarHeight
+//
+//                        ) //todo update with system language from settings
+//                    }
 
-                        ) //todo update with system language from settings
+                    navigation(
+                        startDestination = ScreenName.TRANSLATION_HOME_SCREEN.name,
+                        route = "TRANSLATION_GRAPH"
+                    ) {
+                        composable(ScreenName.TRANSLATION_HOME_SCREEN.name) { backStackEntry ->
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry("TRANSLATION_GRAPH")
+                            }
+                            val viewModel = viewModel<TranslationViewModel>(
+                                viewModelStoreOwner = parentEntry,
+                                factory = TranslationViewModel.Factory
+                            )
+
+                            CheckRecordAudioPermission() //todo check if it works when permission are refused 1 time
+                            TranslationHomeScreen(
+                                onNavigateToHome = {
+                                    navController.navigate(
+                                        route = ScreenName.HOME.name
+                                    )
+                                },
+                                onNavigateToResult = {
+                                    navController.navigate(ScreenName.TRANSLATION_RESULT_SCREEN.name)
+                                },
+                                viewModel = viewModel,
+                                enabled = translationFeatureAvailable(),
+                                navigationBarVisible = navigationBarVisible,
+                                navigationBarHeight = navigationBarHeight
+
+                            ) //todo update with system language from settings
+                        }
+
+                        composable(ScreenName.TRANSLATION_RESULT_SCREEN.name) { backStackEntry ->
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry("TRANSLATION_GRAPH")
+                            }
+                            val viewModel = viewModel<TranslationViewModel>(
+                                viewModelStoreOwner = parentEntry,
+                                factory = TranslationViewModel.Factory
+                            )
+
+                            TranslationResultScreen(
+                                viewModel = viewModel,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
                     }
 
                     navigation(
