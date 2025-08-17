@@ -35,7 +35,7 @@ import androidx.compose.ui.window.Dialog
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 
-@SuppressLint("MissingPermission")
+@SuppressLint("MissingPermission", "UnusedBoxWithConstraintsScope") //todo remove second suppress
 @Composable
 fun TranslationHomeScreen(
     onNavigateToHome: () -> Unit,
@@ -143,28 +143,3 @@ private fun DisplayModelDownloading() {
     }
 }
 
-@Composable
-private fun DisplayModelMissing(onClickDownload: () -> Unit) {
-    var showDialog by remember { mutableStateOf(true) }
-    if (showDialog) {
-        Dialog(onDismissRequest = { showDialog = false }) {
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                tonalElevation = 8.dp
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .width(IntrinsicSize.Min),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("This model is not available on the device, download it in order to complete the translation")
-                    Spacer(modifier = Modifier.height(8.dp)) //could be removed
-                    Button(onClickDownload) {
-                        Text("Download")
-                    }
-                }
-            }
-        }
-    }
-}
