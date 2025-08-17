@@ -21,6 +21,18 @@ enum class Icon {
         }
     },
 
+    DOWNLOAD{
+        override fun getID(): Int {
+            return R.drawable.download
+        }
+    },
+
+    DOWNLOAD_COMPLETED{
+        override fun getID(): Int {
+            return R.drawable.download_completed
+        }
+    },
+
     BACK_ARROW{
         override fun getID(): Int {
             return R.drawable.arrow_back
