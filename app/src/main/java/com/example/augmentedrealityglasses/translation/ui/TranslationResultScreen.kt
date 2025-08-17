@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.translation.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -27,7 +27,7 @@ import androidx.compose.ui.zIndex
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 @Composable
-fun TranslationResultScreen(viewModel: TranslationViewModel, onBackClick: () -> Boolean) {
+fun TranslationResultScreen(viewModel: TranslationViewModel, onBack: () -> Boolean) {
 
     val configuration = LocalConfiguration.current
     val maxHeight = configuration.screenHeightDp.dp
@@ -44,7 +44,7 @@ fun TranslationResultScreen(viewModel: TranslationViewModel, onBackClick: () -> 
                 .zIndex(1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { onBackClick() }) {
+            IconButton(onClick = { onBack() }) {
                 Icon(
                     painter = painterResource(com.example.augmentedrealityglasses.Icon.BACK_ARROW.getID()),
                     contentDescription = "Go back to translation home screen",
@@ -59,12 +59,12 @@ fun TranslationResultScreen(viewModel: TranslationViewModel, onBackClick: () -> 
                 .verticalScroll(
                     rememberScrollState()
                 )
-                .padding(top = 28.dp, start = 24.dp, end = 24.dp)
+                .padding(top = 48.dp, start = 24.dp, end = 24.dp)
         ) {
             ResultTextBox(
                 modifier = Modifier,
                 contentText = uiState.recognizedText,
-                language = ""
+                language = if(uiState.sourceLanguage != null)getFullLengthName(uiState.sourceLanguage) else ""
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -109,5 +109,13 @@ fun TranslationResultScreen(viewModel: TranslationViewModel, onBackClick: () -> 
 
     if (uiState.isResultReady) {
         viewModel.resetResultStatus() //isResultReady is only used to switch screen  when the recording starts in translation home
+    }
+
+    BackHandler {
+        if (uiState.isRecording) {
+            viewModel.stopRecording()
+        }
+        onBack()
+
     }
 }
