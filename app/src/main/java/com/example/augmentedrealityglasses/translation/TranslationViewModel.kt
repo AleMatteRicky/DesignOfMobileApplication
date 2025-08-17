@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
+import com.example.augmentedrealityglasses.translation.ui.getFullLengthName
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModel
 import com.google.mlkit.common.model.RemoteModelManager
@@ -63,6 +64,8 @@ class TranslationViewModel(
 //    var minRms : Float = Float.MAX_VALUE
 //    var maxRms : Float =  Float.MIN_VALUE
 
+    //todo check behaviour when source model is not downloaded
+
     private val TAG: String = "TranslationViewModel"
 
     var isConnected by mutableStateOf(false)
@@ -82,6 +85,7 @@ class TranslationViewModel(
 
             }
         }
+        initializeDownloadedLanguages()
 
     }
 
@@ -142,7 +146,6 @@ class TranslationViewModel(
         if (uiState.targetLanguage != null) {
             translatorJob = viewModelScope.launch {
                 if (uiState.targetLanguage != null && uiState.sourceLanguage != null) {
-
                     checkModelDownloaded()
                     if (!uiState.isModelNotAvailable) {
                         initializeTranslator()
@@ -188,6 +191,22 @@ class TranslationViewModel(
 
         uiState =
             uiState.copy(isModelNotAvailable = isSourceModelNotAvailable || isTargetModelNotAvailable)
+    }
+
+    private fun initializeDownloadedLanguages() {
+        viewModelScope.launch {
+
+            val (downloaded, notDownloaded) = TranslateLanguage.getAllLanguages()
+                .sortedBy { tag -> getFullLengthName(tag) }.partition { tag ->
+                modelManager.isModelDownloaded(
+                    TranslateRemoteModel.Builder(tag).build()
+                ).await()
+            }
+
+            uiState = uiState.copy(
+                downloadedLanguageTags = downloaded, notDownloadedLanguageTags = notDownloaded
+            )
+        }
     }
 
     fun downloadLanguageModel() {
