@@ -1,6 +1,5 @@
 package com.example.augmentedrealityglasses.translation.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,10 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
-import com.google.mlkit.common.model.RemoteModel
-import com.google.mlkit.nl.translate.TranslateLanguage
-import com.google.mlkit.nl.translate.TranslateRemoteModel
-import org.w3c.dom.Text
 
 
 @Composable
@@ -73,7 +68,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
             }
 
             items(viewModel.uiState.downloadedLanguageTags) { tag ->
-                LanguageRow(Modifier, viewModel, tag, true)
+                LanguageRow(Modifier, viewModel, tag, onBack, true)
             }
 
             item {
@@ -85,12 +80,12 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                 )
             }
 
-            item{
-                LanguageRow(Modifier, viewModel, null, false)
+            item {
+                LanguageRow(Modifier, viewModel, null, onBack, false)
             }
 
             items(viewModel.uiState.notDownloadedLanguageTags) { tag ->
-                LanguageRow(Modifier, viewModel, tag, false)
+                LanguageRow(Modifier, viewModel, tag, onBack, false)
             }
 
         }

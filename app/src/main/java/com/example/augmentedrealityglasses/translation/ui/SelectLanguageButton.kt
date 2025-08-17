@@ -36,7 +36,6 @@ fun SelectLanguageButton(
 
     Button(
         onClick = {
-            expanded = true
             onClick()
         },
         enabled = enabled,
