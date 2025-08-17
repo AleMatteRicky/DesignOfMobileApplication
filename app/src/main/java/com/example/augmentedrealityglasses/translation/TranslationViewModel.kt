@@ -33,6 +33,7 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -198,10 +199,10 @@ class TranslationViewModel(
 
             val (downloaded, notDownloaded) = TranslateLanguage.getAllLanguages()
                 .sortedBy { tag -> getFullLengthName(tag) }.partition { tag ->
-                modelManager.isModelDownloaded(
-                    TranslateRemoteModel.Builder(tag).build()
-                ).await()
-            }
+                    modelManager.isModelDownloaded(
+                        TranslateRemoteModel.Builder(tag).build()
+                    ).await()
+                }
 
             uiState = uiState.copy(
                 downloadedLanguageTags = downloaded, notDownloadedLanguageTags = notDownloaded
@@ -221,6 +222,27 @@ class TranslationViewModel(
             uiState =
                 uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
             uiState = uiState.copy(isDownloadingLanguageModel = false)
+        }
+    }
+
+    fun downloadLanguageModel(languageTag: String) {
+        viewModelScope.launch {
+            val currentlyDownloadedLanguageTags = uiState.currentlyDownloadingLanguageTags
+            currentlyDownloadedLanguageTags.update { currentlyDownloadedLanguageTags.value + languageTag }
+            try {
+                modelManager.download(
+                    TranslateRemoteModel.Builder(languageTag).build(),
+                    DownloadConditions.Builder().build()
+                ).await()
+                uiState = uiState.copy(
+                    downloadedLanguageTags = uiState.downloadedLanguageTags + languageTag,
+                    notDownloadedLanguageTags = uiState.notDownloadedLanguageTags - languageTag
+                )
+            } catch (e: Exception) {
+                Log.e("Download Failed", "Failure") //todo add message in app
+            } finally {
+                currentlyDownloadedLanguageTags.update { currentlyDownloadedLanguageTags.value - languageTag }
+            }
         }
     }
 
