@@ -33,10 +33,10 @@ fun MainTextBox(viewModel: TranslationViewModel, modifier: Modifier) {
             .fillMaxWidth()
             .shadow(
                 elevation = 4.dp,
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp),
                 clip = false
             )
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp))
             .background(Color.White)
             .padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 16.dp)
     ) {
