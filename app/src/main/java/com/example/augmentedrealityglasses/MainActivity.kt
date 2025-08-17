@@ -47,6 +47,7 @@ import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.ui.TranslationHomeScreen
+import com.example.augmentedrealityglasses.translation.ui.TranslationLanguageSelectionScreen
 import com.example.augmentedrealityglasses.translation.ui.TranslationResultScreen
 import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
@@ -87,7 +88,7 @@ class MainActivity : ComponentActivity() {
                         val navBackStackEntry by navController.currentBackStackEntryAsState()
                         val currentRoute = navBackStackEntry?.destination?.route
 
-                        if (currentRoute !in listOf(ScreenName.TRANSLATION_RESULT_SCREEN.name)) { //Screens in which navBar should be never shown
+                        if (currentRoute !in listOf(ScreenName.TRANSLATION_RESULT_SCREEN.name, ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)) { //Screens in which navBar should be never shown
                             BottomNavigationBar(
                                 navController,
                                 Modifier
@@ -219,6 +220,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToResult = {
                                     navController.navigate(ScreenName.TRANSLATION_RESULT_SCREEN.name)
                                 },
+                                onNavigateToLanguageSelection = {
+                                    navController.navigate(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)
+                                },
                                 onBack = {
                                     navController.popBackStack()
                                 },
@@ -241,7 +245,27 @@ class MainActivity : ComponentActivity() {
 
                             TranslationResultScreen(
                                 viewModel = viewModel,
-                                onBackClick = { navController.popBackStack() }
+                                onBack = {
+                                    viewModel.clearText()
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        composable(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name) { backStackEntry ->
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry("TRANSLATION_GRAPH")
+                            }
+                            val viewModel = viewModel<TranslationViewModel>(
+                                viewModelStoreOwner = parentEntry,
+                                factory = TranslationViewModel.Factory
+                            )
+
+                            TranslationLanguageSelectionScreen(
+                                viewModel = viewModel,
+                                onBack = {
+                                    navController.popBackStack()
+                                }
                             )
                         }
 

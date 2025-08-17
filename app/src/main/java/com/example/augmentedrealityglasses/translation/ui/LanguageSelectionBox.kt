@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,7 +24,12 @@ import com.example.augmentedrealityglasses.Icon
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 @Composable
-fun LanguageSelectionBox(enabled: Boolean, viewModel: TranslationViewModel, modifier: Modifier) {
+fun LanguageSelectionBox(
+    enabled: Boolean,
+    viewModel: TranslationViewModel,
+    modifier: Modifier,
+    onClick: () -> Unit
+) {
     Box(
         modifier = modifier
     ) {
@@ -73,7 +77,7 @@ fun LanguageSelectionBox(enabled: Boolean, viewModel: TranslationViewModel, modi
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .width(123.dp)
-                .fillMaxHeight()
+                .fillMaxHeight(), onClick = onClick
         )
     }
 }

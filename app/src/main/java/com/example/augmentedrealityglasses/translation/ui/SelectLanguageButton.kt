@@ -25,12 +25,20 @@ import com.google.mlkit.nl.translate.TranslateLanguage
 import java.util.Locale
 
 @Composable
-fun SelectLanguageButton(enabled: Boolean, viewModel: TranslationViewModel, modifier: Modifier) {
+fun SelectLanguageButton(
+    enabled: Boolean,
+    viewModel: TranslationViewModel,
+    modifier: Modifier,
+    onClick: () -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     val uiState = viewModel.uiState
 
     Button(
-        onClick = { expanded = true },
+        onClick = {
+            expanded = true
+            onClick()
+        },
         enabled = enabled,
         modifier = modifier
             .shadow(

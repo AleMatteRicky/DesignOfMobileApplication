@@ -44,6 +44,7 @@ fun TranslationHomeScreen(
     navigationBarVisible: MutableState<Boolean>,
     navigationBarHeight: Dp,
     onNavigateToResult: () -> Unit,
+    onNavigateToLanguageSelection: () -> Unit,
     onBack: () -> Unit
 ) {
 
@@ -69,17 +70,6 @@ fun TranslationHomeScreen(
             navigationBarVisible = navigationBarVisible
         )
 
-
-
-        Text(
-            text = uiState.recognizedText,
-            modifier = Modifier.align(Alignment.TopStart)
-        )
-        Text(
-            text = uiState.translatedText,
-            modifier = Modifier.align(Alignment.BottomStart)
-        )
-
         val languageSelectionBoxWidth = 0.8 * maxWidth //fills 80% of the parent width
         val languageSelectionBoxHeight =
             0.07 * (maxHeight + navigationBarHeight) //fills 7% of the parent width
@@ -92,7 +82,7 @@ fun TranslationHomeScreen(
                     y = maxHeight - newMaxHeight
                 )
                 .height(languageSelectionBoxHeight)
-                .width(languageSelectionBoxWidth)
+                .width(languageSelectionBoxWidth), onClick = onNavigateToLanguageSelection
         )
 
         val mainTextBoxHeight = maxHeight - newMaxHeight - 15.dp
@@ -103,13 +93,6 @@ fun TranslationHomeScreen(
             Modifier
                 .height(mainTextBoxHeight)
         )
-
-//        Button(
-//            onClick = { viewModel.translate() },
-//            modifier = Modifier.offset(x = 0.dp, y = 105.dp), enabled = enabled
-//        ) {
-//            Text("Translate")
-//        }
 
         if (uiState.isDownloadingLanguageModel) {
             DisplayModelDownloading()
