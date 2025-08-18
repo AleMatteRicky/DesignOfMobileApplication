@@ -26,10 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun DisplayModelMissing(onClickDownload: () -> Unit) {
+fun DisplayModelMissing(onClickDownload: () -> Unit, resetVisibility: () -> Unit) {
     var showDialog by remember { mutableStateOf(true) }
     if (showDialog) {
-        Dialog(onDismissRequest = { showDialog = false }) {
+        Dialog(onDismissRequest = {
+            resetVisibility()
+            showDialog = false
+        }) {
             Surface(
                 shape = RoundedCornerShape(15.dp),
                 tonalElevation = 10.dp,

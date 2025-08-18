@@ -56,10 +56,12 @@ fun LanguageRow(
     }
 
     if (modelMissingAlertVisible && languageTag != null) {
-        DisplayModelMissing {
-            viewModel.downloadLanguageModel(languageTag)
-            modelMissingAlertVisible = false
-        }
+        DisplayModelMissing(
+            onClickDownload = {
+                viewModel.downloadLanguageModel(languageTag)
+                modelMissingAlertVisible = false
+            }, resetVisibility = { modelMissingAlertVisible = false }
+        )
     }
 
     Row(
