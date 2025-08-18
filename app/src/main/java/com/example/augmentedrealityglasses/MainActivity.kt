@@ -46,6 +46,7 @@ import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
+import com.example.augmentedrealityglasses.translation.permission.PermissionsForTranslation
 import com.example.augmentedrealityglasses.translation.ui.TranslationHomeScreen
 import com.example.augmentedrealityglasses.translation.ui.TranslationLanguageSelectionScreen
 import com.example.augmentedrealityglasses.translation.ui.TranslationResultScreen
@@ -214,28 +215,29 @@ class MainActivity : ComponentActivity() {
                                 factory = TranslationViewModel.Factory
                             )
 
-                            CheckRecordAudioPermission() //todo check if it works when permission are refused 1 time
-                            TranslationHomeScreen(
-                                onNavigateToHome = {
-                                    navController.navigate(
-                                        route = ScreenName.HOME.name
-                                    )
-                                },
-                                onNavigateToResult = {
-                                    navController.navigate(ScreenName.TRANSLATION_RESULT_SCREEN.name)
-                                },
-                                onNavigateToLanguageSelection = {
-                                    navController.navigate(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)
-                                },
-                                onBack = {
-                                    navController.popBackStack()
-                                },
-                                viewModel = viewModel,
-                                enabled = translationFeatureAvailable(),
-                                navigationBarVisible = navigationBarVisible,
-                                navigationBarHeight = navigationBarHeight
+                            PermissionsForTranslation(isMicrophoneAvailable = isMicrophoneAvailable()) {
+                                TranslationHomeScreen(
+                                    onNavigateToHome = {
+                                        navController.navigate(
+                                            route = ScreenName.HOME.name
+                                        )
+                                    },
+                                    onNavigateToResult = {
+                                        navController.navigate(ScreenName.TRANSLATION_RESULT_SCREEN.name)
+                                    },
+                                    onNavigateToLanguageSelection = {
+                                        navController.navigate(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)
+                                    },
+                                    onBack = {
+                                        navController.popBackStack()
+                                    },
+                                    viewModel = viewModel,
+                                    enabled = translationFeatureAvailable(),
+                                    navigationBarVisible = navigationBarVisible,
+                                    navigationBarHeight = navigationBarHeight
 
-                            ) //todo update with system language from settings
+                                ) //todo update with system language from settings
+                            }
                         }
 
                         composable(ScreenName.TRANSLATION_RESULT_SCREEN.name) { backStackEntry ->

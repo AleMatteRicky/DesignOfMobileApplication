@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
+//todo check if with animation is solved, selecting a target downloaded language and then switching immediately to recording lead to show for an instant DisplayModelMissing
 
 @Composable
 fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: () -> Boolean) {
