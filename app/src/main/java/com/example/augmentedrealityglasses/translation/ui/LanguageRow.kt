@@ -2,6 +2,7 @@ package com.example.augmentedrealityglasses.translation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -63,12 +64,15 @@ fun LanguageRow(
 
     Row(
         modifier
+            .padding(horizontal = 10.dp)
             .background(
                 color = if (isSelected) Color.Black else Color(0xFFFAFAFA),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(25.dp)
             )
             .fillMaxWidth()
-            .clickable {
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }) {
                 if (!isLanguageDownloading) {
                     isSelected = true
                     if (isDownloaded) {
@@ -90,9 +94,9 @@ fun LanguageRow(
 
         Spacer(modifier = Modifier.weight(1f)) //Spacer takes all the space available
 
-        if (languageTag != null) {
 
-            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
+            if (languageTag != null) {
                 if (!isLanguageDownloading) {
                     val icon =
                         if (isDownloaded) Icon.DOWNLOAD_COMPLETED.getID() else Icon.DOWNLOAD.getID()

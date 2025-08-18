@@ -3,6 +3,7 @@ package com.example.augmentedrealityglasses.translation.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -54,7 +55,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                     text = "Select target language",
                     fontWeight = FontWeight.Bold,
                     fontSize = 30.sp,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
                 )
             }
 
@@ -63,8 +64,12 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                     text = "Downloaded Languages",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 20.sp,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
                 )
+            }
+
+            item {
+                LanguageRow(Modifier, viewModel, null, onBack, true)
             }
 
             items(viewModel.uiState.downloadedLanguageTags) { tag ->
@@ -76,12 +81,8 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                     text = "All Languages",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 20.sp,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
                 )
-            }
-
-            item {
-                LanguageRow(Modifier, viewModel, null, onBack, false)
             }
 
             items(viewModel.uiState.notDownloadedLanguageTags) { tag ->
