@@ -148,23 +148,25 @@ class TranslationViewModel(
             translatorJob = viewModelScope.launch {
                 if (uiState.targetLanguage != null && uiState.sourceLanguage != null) {
                     checkModelDownloaded()
-                    if (!uiState.isModelNotAvailable) {
-                        initializeTranslator()
-                        translator?.translate(uiState.recognizedText)
-                            ?.addOnSuccessListener { translatedText ->
-                                Log.d("Translation succeeded", translatedText)
-                                uiState = uiState.copy(translatedText = translatedText)
-                                //send translated text to esp32
-                                Log.d(TAG, translatedText)
-                                //todo update with version with ble and without ble
+                    if (uiState.isModelNotAvailable) {
+                        downloadSourceAndTargetLanguageModel()
+                    }
+                    initializeTranslator()
+                    translator?.translate(uiState.recognizedText)
+                        ?.addOnSuccessListener { translatedText ->
+                            Log.d("Translation succeeded", translatedText)
+                            uiState = uiState.copy(translatedText = translatedText)
+                            //send translated text to esp32
+                            Log.d(TAG, translatedText)
+                            //todo update with version with ble and without ble
 //                                    viewModelScope.launch {
 //                                        bleManager.send(uiState.translatedText)
 //                                    }
-                            }
-                            ?.addOnFailureListener { exception ->
-                                Log.e("Translation failed", exception.toString())
-                            }
-                    }
+                        }
+                        ?.addOnFailureListener { exception ->
+                            Log.e("Translation failed", exception.toString())
+                        }
+
 
                 }
             }
@@ -210,19 +212,26 @@ class TranslationViewModel(
         }
     }
 
-    fun downloadLanguageModel() {
-        viewModelScope.launch {
-            uiState = uiState.copy(isDownloadingLanguageModel = true)
-            if (isSourceModelNotAvailable) {
+    fun downloadSourceAndTargetLanguageModel() {
+
+
+        if (isSourceModelNotAvailable) {
+            viewModelScope.launch {
+                uiState = uiState.copy(isDownloadingSourceLanguageModel = true)
                 downloadSourceLanguageModel()
+                uiState = uiState.copy(isDownloadingSourceLanguageModel = false)
             }
-            if (isTargetModelNotAvailable) {
-                downloadTargetLanguageModel()
-            }
-            uiState =
-                uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
-            uiState = uiState.copy(isDownloadingLanguageModel = false)
         }
+        if (isTargetModelNotAvailable) { //in practice should never happen, a target language can only be selected if it is available
+            viewModelScope.launch {
+                uiState = uiState.copy(isDownloadingTargetLanguageModel = true)
+                downloadTargetLanguageModel()
+                uiState = uiState.copy(isDownloadingTargetLanguageModel = false)
+            }
+        }
+        uiState =
+            uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
+
     }
 
     fun downloadLanguageModel(languageTag: String) {

@@ -94,12 +94,12 @@ fun TranslationHomeScreen(
                 .height(mainTextBoxHeight)
         )
 
-        if (uiState.isDownloadingLanguageModel) {
-            DisplayModelDownloading()
-        } else {
-            if (uiState.isModelNotAvailable) {
-                DisplayModelMissing { viewModel.downloadLanguageModel() }
-            }
+        if (uiState.isDownloadingSourceLanguageModel && uiState.isDownloadingTargetLanguageModel) {
+            DisplayModelDownloading("Downloading the detected source language model and the target language model")
+        } else if (uiState.isDownloadingSourceLanguageModel) {
+            DisplayModelDownloading("Downloading the detected source language model")
+        } else if (uiState.isDownloadingTargetLanguageModel) {
+            DisplayModelDownloading("Downloading the target language model")
         }
 
     }
@@ -111,7 +111,7 @@ fun TranslationHomeScreen(
         }
     }
 
-    BackHandler(uiState.isRecording){
+    BackHandler(uiState.isRecording) {
         viewModel.stopRecording()
         onBack()
     }
@@ -123,7 +123,7 @@ fun TranslationHomeScreen(
 }
 
 @Composable
-private fun DisplayModelDownloading() {
+private fun DisplayModelDownloading(text: String) {
     Dialog(onDismissRequest = { /* leaving this function empty avoids that the user close the dialog only by clicking outside it */ }) {
         Surface(
             shape = RoundedCornerShape(8.dp),
@@ -135,9 +135,9 @@ private fun DisplayModelDownloading() {
                     .width(IntrinsicSize.Min),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Downloading the model")
-                Spacer(modifier = Modifier.height(8.dp)) //could be removed
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Text(text, color = Color.Black)
+                Spacer(modifier = Modifier.height(8.dp))
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color.Black, trackColor = Color.White)
             }
         }
     }
