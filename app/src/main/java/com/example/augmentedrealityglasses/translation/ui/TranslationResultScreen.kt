@@ -68,6 +68,7 @@ fun TranslationResultScreen(
             ResultTextBox(
                 modifier = Modifier,
                 contentText = uiState.recognizedText,
+                color = Color.Black,
                 language = if (uiState.sourceLanguage != null) getFullLengthName(uiState.sourceLanguage) else "",
                 onNavigateToLanguageSelection = {} //source language can not be modified
             )
@@ -90,14 +91,15 @@ fun TranslationResultScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            if (uiState.targetLanguage != null) {
-                ResultTextBox(
-                    modifier = Modifier,
-                    contentText = uiState.translatedText,
-                    language = getFullLengthName(uiState.targetLanguage),
-                    onNavigateToLanguageSelection = onNavigateToLanguageSelection
-                )
-            }
+
+            ResultTextBox(
+                modifier = Modifier,
+                contentText = uiState.translatedText,
+                color = Color(0xFF0B61A4),
+                language = if (uiState.targetLanguage != null) getFullLengthName(uiState.targetLanguage) else "Select Target Language",
+                onNavigateToLanguageSelection = onNavigateToLanguageSelection
+            )
+
         }
 
         RecordButton(

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,12 +17,14 @@ fun ResultTextBox(
     modifier: Modifier,
     language: String,
     contentText: String,
+    color: Color,
     onNavigateToLanguageSelection: () -> Unit
 ) { //todo add selection language screen if target
     Column(modifier = modifier.fillMaxWidth()) {
 
         Text(
             text = language,
+            color = color,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(bottom = 8.dp).clickable{ onNavigateToLanguageSelection() }
@@ -29,6 +32,7 @@ fun ResultTextBox(
 
         Text(
             text = contentText,
+            color = color,
             softWrap = true,
             fontSize = 30.sp,
             lineHeight = 38.sp,
