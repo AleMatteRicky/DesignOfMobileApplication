@@ -27,7 +27,11 @@ import androidx.compose.ui.zIndex
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 @Composable
-fun TranslationResultScreen(viewModel: TranslationViewModel, onBack: () -> Boolean) {
+fun TranslationResultScreen(
+    viewModel: TranslationViewModel,
+    onBack: () -> Boolean,
+    onNavigateToLanguageSelection: () -> Unit
+) {
 
     val configuration = LocalConfiguration.current
     val maxHeight = configuration.screenHeightDp.dp
@@ -64,7 +68,8 @@ fun TranslationResultScreen(viewModel: TranslationViewModel, onBack: () -> Boole
             ResultTextBox(
                 modifier = Modifier,
                 contentText = uiState.recognizedText,
-                language = if(uiState.sourceLanguage != null)getFullLengthName(uiState.sourceLanguage) else ""
+                language = if (uiState.sourceLanguage != null) getFullLengthName(uiState.sourceLanguage) else "",
+                onNavigateToLanguageSelection = {} //source language can not be modified
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -89,7 +94,8 @@ fun TranslationResultScreen(viewModel: TranslationViewModel, onBack: () -> Boole
                 ResultTextBox(
                     modifier = Modifier,
                     contentText = uiState.translatedText,
-                    language = getFullLengthName(uiState.targetLanguage)
+                    language = getFullLengthName(uiState.targetLanguage),
+                    onNavigateToLanguageSelection = onNavigateToLanguageSelection
                 )
             }
         }

@@ -88,7 +88,11 @@ class MainActivity : ComponentActivity() {
                         val navBackStackEntry by navController.currentBackStackEntryAsState()
                         val currentRoute = navBackStackEntry?.destination?.route
 
-                        if (currentRoute !in listOf(ScreenName.TRANSLATION_RESULT_SCREEN.name, ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)) { //Screens in which navBar should be never shown
+                        if (currentRoute !in listOf(
+                                ScreenName.TRANSLATION_RESULT_SCREEN.name,
+                                ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name
+                            )
+                        ) { //Screens in which navBar should be never shown
                             BottomNavigationBar(
                                 navController,
                                 Modifier
@@ -248,6 +252,8 @@ class MainActivity : ComponentActivity() {
                                 onBack = {
                                     viewModel.clearText()
                                     navController.popBackStack()
+                                }, onNavigateToLanguageSelection = {
+                                    navController.navigate(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)
                                 }
                             )
                         }

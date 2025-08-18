@@ -128,8 +128,10 @@ class TranslationViewModel(
     fun selectTargetLanguage(targetLanguage: String?) {
         uiState = uiState.copy(
             targetLanguage = targetLanguage,
-            isModelNotAvailable = false
-        ) //isModelNotAvailable is set to false in order to force recomposition if the new target language need to be installed
+        )
+        if(uiState.recognizedText.isNotEmpty()){
+            translate() //todo check if it could be useful to use a coroutine
+        }
     }
 
     fun resetResultStatus() {
