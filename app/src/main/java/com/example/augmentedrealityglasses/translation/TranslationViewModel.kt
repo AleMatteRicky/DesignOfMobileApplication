@@ -60,13 +60,6 @@ class TranslationViewModel(
 
     var isTargetModelNotAvailable = false
 
-    //used for testing rms values
-    //todo remove
-//    var minRms : Float = Float.MAX_VALUE
-//    var maxRms : Float =  Float.MIN_VALUE
-
-    //todo check behaviour when source model is not downloaded
-
     private val TAG: String = "TranslationViewModel"
 
     var isConnected by mutableStateOf(false)
@@ -90,7 +83,7 @@ class TranslationViewModel(
 
     }
 
-    //TODO fix when mic is open but no audio is recorded and move stopListeningToOnResults
+    //TODO fix when mic is open but no audio is recorded
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
@@ -129,7 +122,7 @@ class TranslationViewModel(
         uiState = uiState.copy(
             targetLanguage = targetLanguage,
         )
-        if(uiState.recognizedText.isNotEmpty()){
+        if (uiState.recognizedText.isNotEmpty()) {
             translate() //todo check if it could be useful to use a coroutine
         }
     }
@@ -333,10 +326,6 @@ class TranslationViewModel(
 
                 uiState =
                     uiState.copy(currentNormalizedRms = normalizeRms(rmsDbValue)) //normalized value are used to limit the animation behaviour
-//                if (rmsDbValue < minRms) minRms = rmsDbValue
-//                if (rmsDbValue > maxRms) maxRms = rmsDbValue
-//
-//                Log.d("SpeechLogger", "RMSdB: $rmsDbValue | Min: $minRms | Max: $maxRms")
 
             }
 
@@ -360,6 +349,7 @@ class TranslationViewModel(
                     SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
                     else -> "Unknown speech recognition error"
                 }
+                stopRecording()
                 Log.e("SpeechRecognition", "Error: $errorMessage (Code: $error)")
             }
 
