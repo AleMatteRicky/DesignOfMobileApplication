@@ -5,8 +5,6 @@ object Constants {
 
     const val DEBOUNCE_DELAY = 500L
 
-    const val ERROR_DISPLAY_TIME = 5000L
-
     const val DAILY_CONDITIONS_TO_SHOW = 10
 
     private const val MAX_AGE_LAST_LOCATION_MINUTES = 5
@@ -19,8 +17,6 @@ object Constants {
     const val API_UNIT_OF_MEASUREMENT = "metric"
     const val TEMPERATURE_UNIT = "°C"
     const val PRESSURE_UNIT = "hPa"
-
-    //const val MIN_SPINNER_MS = 700L //For refreshing animation
 
     const val MAX_AGE_WEATHER_CACHE_POLICY_MILLS = 30 * 60 * 1000L //30 minutes
     const val WEATHER_CACHE_KEY = "weather_infos"
