@@ -114,16 +114,8 @@ class MainActivity : ComponentActivity() {
                             app.container.isDeviceSmsCapable,
                             content = {
                                 HomeScreen(
-                                    onNavigateToTranslation = {
-                                        navController.navigate(
-                                            route = ScreenName.TRANSLATION_HOME_SCREEN.name
-                                        )
-                                    },
-                                    onNavigateToWeather = { navController.navigate(ScreenName.WEATHER_HOME_SCREEN.name) },
-                                    onNavigateToBLE = { navController.navigate(ScreenName.FIND_DEVICE.name) },
-                                    onNavigateToConnect = {
-                                        navController.navigate(ScreenName.CONNECT_SCREEN.name)
-                                    }
+                                    viewModel = viewModel(factory = HomeViewModel.Factory),
+                                    onNavigateFindDevice = { navController.navigate(ScreenName.FIND_DEVICE.name) }
                                 )
                             }
                         )
@@ -279,11 +271,13 @@ class MainActivity : ComponentActivity() {
 
                     }
 
+                    //TODO: prefetch data
                     navigation(
                         startDestination = ScreenName.WEATHER_HOME_SCREEN.name,
                         route = "WEATHER_GRAPH"
                     ) {
                         composable(ScreenName.WEATHER_HOME_SCREEN.name) {
+                            navigationBarVisible.value = true
                             val parentEntry =
                                 remember { navController.getBackStackEntry("WEATHER_GRAPH") }
                             val viewModel = viewModel<WeatherViewModel>(
@@ -300,6 +294,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(ScreenName.WEATHER_SEARCH_LOCATIONS.name) {
+                            navigationBarVisible.value = false
                             val parentEntry =
                                 remember { navController.getBackStackEntry("WEATHER_GRAPH") }
                             val viewModel = viewModel<WeatherViewModel>(
