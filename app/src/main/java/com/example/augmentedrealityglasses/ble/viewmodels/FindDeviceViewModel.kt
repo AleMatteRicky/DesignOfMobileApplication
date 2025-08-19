@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.ble.viewmodels
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanFilter
@@ -13,6 +14,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.ble.ESP32Proxy
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.scanner.ScanError
 import com.example.augmentedrealityglasses.ble.scanner.ScanSuccess
@@ -22,6 +24,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
@@ -43,11 +46,19 @@ class FindDeviceViewModel(
     val scannedDevices: StateFlow<List<BluetoothDevice>> = _scannedDevices.asStateFlow()
     private var getScannedDevicesJob: Job? = null
 
-    fun connect(device: BluetoothDevice) {
+    @SuppressLint("MissingPermission")
+    fun connect(device: BluetoothDevice): Boolean {
+        if (device.name != ESP32Proxy.ESP32MAC) {
+            return false
+        }
+
         bleManager.setDeviceToManage(device)
         bleManager.connect()
+        return true
     }
 
+    //FIXME
+    @SuppressLint("MissingPermission")
     fun scan(
         timeout: Duration = 10.seconds,
         filters: List<ScanFilter>?,
@@ -64,6 +75,9 @@ class FindDeviceViewModel(
                 .filterIsInstance<ScanSuccess>()
                 .map {
                     it.scanResult.device
+                }
+                .filter {
+                    it.name != null
                 }
                 .collect { device ->
                     _scannedDevices.update {

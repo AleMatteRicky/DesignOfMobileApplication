@@ -28,6 +28,7 @@ class ESP32Proxy(
 
     companion object {
         private val TAG = ESP32Proxy::class.simpleName
+        val ESP32MAC: String = "20:43:A8:6A:ED:2A"
     }
 
     private val bluetoothManager: BluetoothManager = BluetoothManagerImpl(context, scope)
@@ -38,8 +39,6 @@ class ESP32Proxy(
         MutableStateFlow(RemoteDeviceData.None)
     val peripheralConnectionState: StateFlow<RemoteDeviceData> =
         _peripheralConnectionState.asStateFlow()
-
-    private val ESP32MAC: String = "20:43:A8:6A:ED:2A"
 
     private var _device: BluetoothDevice? = null
 
