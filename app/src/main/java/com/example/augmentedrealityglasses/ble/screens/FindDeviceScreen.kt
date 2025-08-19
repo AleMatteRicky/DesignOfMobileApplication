@@ -95,12 +95,17 @@ fun FindDeviceScreen(
                 }
             }
 
-            items(devicesOfferingTheService) { item ->
+            items(devicesOfferingTheService.filter {
+                it.name != null
+            }) { item ->
                 BluetoothDeviceItem(
                     bluetoothDevice = item,
                     onConnect = {
-                        viewModel.connect(it)
-                        navigateOnFeatures()
+                        if (viewModel.connect(it)) {
+                            navigateOnFeatures()
+                        } else {
+                            //TODO
+                        }
                     },
                 )
             }
@@ -120,7 +125,7 @@ internal fun BluetoothDeviceItem(
             .padding(vertical = 8.dp)
             .fillMaxWidth()
             .clickable { onConnect(bluetoothDevice) },
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Center,
     ) {
         Text(
             bluetoothDevice.name ?: "N/A",
@@ -130,13 +135,15 @@ internal fun BluetoothDeviceItem(
                 TextStyle(fontWeight = FontWeight.Normal)
             },
         )
-        Text(bluetoothDevice.address)
-        val state = when (bluetoothDevice.bondState) {
+        //Text(bluetoothDevice.address)
+
+        /*val state = when (bluetoothDevice.bondState) {
             BluetoothDevice.BOND_BONDED -> "Paired"
             BluetoothDevice.BOND_BONDING -> "Pairing"
             else -> "None"
         }
         Text(text = state)
+         */
 
     }
 }
