@@ -91,7 +91,8 @@ class MainActivity : ComponentActivity() {
 
                         if (currentRoute !in listOf(
                                 ScreenName.TRANSLATION_RESULT_SCREEN.name,
-                                ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name
+                                ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
+                                ScreenName.WEATHER_SEARCH_LOCATIONS.name
                             )
                         ) { //Screens in which navBar should be never shown
                             BottomNavigationBar(
@@ -277,7 +278,6 @@ class MainActivity : ComponentActivity() {
                         route = "WEATHER_GRAPH"
                     ) {
                         composable(ScreenName.WEATHER_HOME_SCREEN.name) {
-                            navigationBarVisible.value = true
                             val parentEntry =
                                 remember { navController.getBackStackEntry("WEATHER_GRAPH") }
                             val viewModel = viewModel<WeatherViewModel>(
@@ -294,7 +294,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(ScreenName.WEATHER_SEARCH_LOCATIONS.name) {
-                            navigationBarVisible.value = false
                             val parentEntry =
                                 remember { navController.getBackStackEntry("WEATHER_GRAPH") }
                             val viewModel = viewModel<WeatherViewModel>(
