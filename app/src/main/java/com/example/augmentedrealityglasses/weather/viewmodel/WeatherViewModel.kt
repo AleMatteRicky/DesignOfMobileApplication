@@ -29,19 +29,20 @@ import com.example.augmentedrealityglasses.weather.network.APIResult
 import com.example.augmentedrealityglasses.weather.network.APIWeatherCondition
 import com.example.augmentedrealityglasses.weather.network.APIWeatherForecasts
 import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
-import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.GeolocationResult
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
 import com.example.augmentedrealityglasses.weather.state.WeatherSnapshot
 import com.example.augmentedrealityglasses.weather.state.WeatherUiState
 import com.example.augmentedrealityglasses.weather.state.createWeatherSnapshot
-import com.example.augmentedrealityglasses.weather.state.getDailyIconForConditions
 import com.example.augmentedrealityglasses.weather.state.toModel
 import com.example.augmentedrealityglasses.weather.state.toModelList
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -97,39 +98,49 @@ class WeatherViewModel(
     private val TAG = "weather_viewModel"
 
     //Main UI state
-    private var weatherState by mutableStateOf(
+    private val _weatherState = MutableStateFlow(
         WeatherUiState(
-            listOf()
+            conditions = listOf(),
+            selectedDay = Date(),
+            geolocationEnabled = false,
+            location = WeatherLocation(
+                "",
+                "",
+                "",
+                "",
+                ""
+            )
         )
     )
+    val weatherState: StateFlow<WeatherUiState> = _weatherState
 
     // Tracks the Bluetooth connection status with the external device
     var isExtDeviceConnected by mutableStateOf(false)
         private set
 
-    //Selected day (in "Next days forecasts" panel)
-    var selectedDay by mutableStateOf(Date())
-        private set
-
-    //Selected location to display the weather conditions for
-    var location by mutableStateOf(
-        WeatherLocation(
-            "",
-            "",
-            "",
-            "",
-            ""
-        )
-    )
-        private set
+//    //Selected day (in "Next days forecasts" panel)
+//    var selectedDay by mutableStateOf(Date())
+//        private set
+//
+//    //Selected location to display the weather conditions for
+//    var location by mutableStateOf(
+//        WeatherLocation(
+//            "",
+//            "",
+//            "",
+//            "",
+//            ""
+//        )
+//    )
+//        private set
 
     //List of all the locations found by the API (by specifying a query)
     private var _searchedLocations = mutableStateListOf<WeatherLocation>()
     val searchedLocations: List<WeatherLocation> get() = _searchedLocations
 
-    //Geolocation state
-    var geolocationEnabled by mutableStateOf(false)
-        private set
+//    //Geolocation state
+//    var geolocationEnabled by mutableStateOf(false)
+//        private set
 
     //For managing the visibility of the Text "no results found"
     var showNoResults by mutableStateOf(false)
@@ -154,11 +165,38 @@ class WeatherViewModel(
 
     // LOGIC FUNCTIONS
 
+    /**
+     * It allows to update weatherState. Put null parameters for non changing fields
+     */
+    private fun applyState(
+        newLocation: WeatherLocation? = null,
+        newConditions: List<WeatherCondition>? = null,
+        newGeolocationFlag: Boolean? = null,
+        newSelectedDay: Date? = null
+    ) {
+        _weatherState.update { old ->
+            val loc = (newLocation ?: old.location).let {
+                it.copy(state = it.state ?: "")
+            }
+
+            val conds = newConditions ?: old.conditions
+            val selectedDay = newSelectedDay ?: old.selectedDay
+            val geo = newGeolocationFlag ?: old.geolocationEnabled
+
+            old.copy(
+                conditions = conds,
+                location = loc,
+                geolocationEnabled = geo,
+                selectedDay = selectedDay
+            )
+        }
+    }
+
     //Cache functions
     private fun saveWeatherSnapshotIntoCache() {
         val snapshot = createWeatherSnapshot(
-            location = location,
-            conditions = weatherState.conditions
+            location = weatherState.value.location,
+            conditions = weatherState.value.conditions
         )
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -184,13 +222,14 @@ class WeatherViewModel(
 
         val loc = withContext(Dispatchers.IO) { snap.location.toModel() }
         val conds = withContext(Dispatchers.IO) { snap.conditions.toModelList() }
+        val selectedDay = startOfDay(getMinDateOfAvailableConditions(conds))
 
-        withContext(Dispatchers.Main) {
-            location = loc
-            weatherState = weatherState.copy(conditions = conds)
-            changeSelectedDay(getMinDateOfAvailableConditions())
-            geolocationEnabled = true
-        }
+        applyState(
+            newConditions = conds,
+            newLocation = loc,
+            newGeolocationFlag = true,
+            newSelectedDay = selectedDay
+        )
         return true
     }
 
@@ -236,35 +275,7 @@ class WeatherViewModel(
         newGeolocationFlag: Boolean? = null,
         newLocation: WeatherLocation? = null
     ) {
-        updateConditionsAndDateToShow(
-            newCurrentCondition,
-            newForecasts
-        )
 
-        if (newLocation != null) {
-            updateLocationState(
-                name = newLocation.name,
-                lat = newLocation.lat,
-                lon = newLocation.lon,
-                country = newLocation.country,
-                state = newLocation.state ?: ""
-            )
-        }
-
-        if (newGeolocationFlag != null) {
-            geolocationEnabled = newGeolocationFlag
-        }
-
-        //Save data into the cache (only for geolocation data)
-        if (geolocationEnabled) {
-            saveWeatherSnapshotIntoCache()
-        }
-    }
-
-    private fun updateConditionsAndDateToShow(
-        newCurrentCondition: APIWeatherCondition,
-        newForecasts: APIWeatherForecasts
-    ) {
         val newConditions: List<WeatherCondition> = listOf(
             WeatherCondition(
                 newCurrentCondition.weather.main,
@@ -296,37 +307,20 @@ class WeatherViewModel(
                     )
                 }
 
-        weatherState = weatherState.copy(
-            conditions = newConditions
+        applyState(
+            newConditions = newConditions,
+            newLocation = newLocation,
+            newGeolocationFlag = newGeolocationFlag,
+            newSelectedDay = startOfDay(getMinDateOfAvailableConditions(newConditions))
         )
 
-        changeSelectedDay(getMinDateOfAvailableConditions())
+        //Save data into the cache (only for geolocation data)
+        if (weatherState.value.geolocationEnabled) {
+            saveWeatherSnapshotIntoCache()
+        }
 
-        //send updates to ESP (just the current condition)
+        //send updates to ESP (just the current condition) //TODO
         sendBluetoothMessage(newConditions.first { cond -> cond.isCurrent }.toString())
-    }
-
-    private fun updateLocationState(
-        name: String,
-        lat: String,
-        lon: String,
-        country: String,
-        state: String
-    ) {
-        location = location.copy(
-            name = name,
-            lat = lat,
-            lon = lon,
-            country = country,
-            state = state
-        )
-
-        //send updates to the ESP //FIXME
-        sendBluetoothMessage(location.toString())
-    }
-
-    fun changeSelectedDay(newDate: Date) {
-        selectedDay = startOfDay(newDate)
     }
 
     /**
@@ -334,8 +328,8 @@ class WeatherViewModel(
      *
      * @throws IllegalStateException if no conditions are available.
      */
-    private fun getMinDateOfAvailableConditions(): Date {
-        val date = getAllConditions().map { condition -> condition.dateTime }.toList().minOrNull()
+    private fun getMinDateOfAvailableConditions(conditions: List<WeatherCondition>): Date {
+        val date = conditions.map { condition -> condition.dateTime }.toList().minOrNull()
 
         if (date != null) {
             return date
@@ -347,7 +341,7 @@ class WeatherViewModel(
     /**
      * It allows to compare Date objects just by day, month and year (setting all the other parameters to 0)
      */
-    private fun startOfDay(date: Date): Date {
+    fun startOfDay(date: Date): Date {
         val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -358,7 +352,7 @@ class WeatherViewModel(
     }
 
     private fun getAllConditions(): List<WeatherCondition> {
-        return weatherState.conditions
+        return weatherState.value.conditions
     }
 
     fun hideNoResult() {
@@ -553,7 +547,7 @@ class WeatherViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             isRefreshing = true
-            if (geolocationEnabled) {
+            if (weatherState.value.geolocationEnabled) {
 
                 //fetch geolocation
                 //FIXME: run this in Dispatchers.IO?
@@ -617,9 +611,15 @@ class WeatherViewModel(
                 }
             } else {
                 when (val newCurrentWeatherCondition =
-                    fetchCurrentWeatherInfo(location.lat, location.lon)) {
+                    fetchCurrentWeatherInfo(
+                        weatherState.value.location.lat,
+                        weatherState.value.location.lon
+                    )) {
                     is APIResult.Success -> {
-                        when (val newForecasts = fetchForecastsInfo(location.lat, location.lon)) {
+                        when (val newForecasts = fetchForecastsInfo(
+                            weatherState.value.location.lat,
+                            weatherState.value.location.lon
+                        )) {
                             is APIResult.Success -> {
 
                                 setStateAndCreateSnapshot(
@@ -732,43 +732,9 @@ class WeatherViewModel(
         }
     }
 
-    fun getCurrentWeather(): WeatherCondition? {
-        val weatherInfo = weatherState.conditions.find { condition -> condition.isCurrent }
-
-        return weatherInfo
-    }
-
-    /**
-     * This method is used to fill the "Next days forecasts" panel
-     */
-    fun getDaysConditions(): List<DayCondition> {
-        return weatherState.conditions.groupBy { condition -> startOfDay(condition.dateTime) }
-            .map { (date, conditions) ->
-                DayCondition(
-                    date = date,
-                    isCurrent = conditions.any { condition ->
-                        condition.isCurrent
-                    },
-                    iconId = getDailyIconForConditions(conditions),
-                    tempMin = conditions.minOf { it.tempMin },
-                    tempMax = conditions.maxOf { it.tempMax }
-                )
-            }
-            .sortedBy { it.date }
-    }
-
-    /**
-     * This method is used to fill the "Daily forecasts" panel
-     */
-    fun getDailyForecastsOfSelectedDay(): List<WeatherCondition>? {
-        val conditions = getAllConditions()
-
-        if (conditions.isNotEmpty()) {
-            return conditions.sortedBy { it.dateTime }
-                .filter { condition -> condition.dateTime >= selectedDay }
-                .take(Constants.DAILY_CONDITIONS_TO_SHOW)
-        } else {
-            return null
-        }
+    fun changeSelectedDay(newDate: Date) {
+        applyState(
+            newSelectedDay = startOfDay(newDate)
+        )
     }
 }

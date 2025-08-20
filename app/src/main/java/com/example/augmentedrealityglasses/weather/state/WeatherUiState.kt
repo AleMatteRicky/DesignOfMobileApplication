@@ -5,7 +5,10 @@ import com.example.augmentedrealityglasses.weather.constants.Constants
 import java.util.Date
 
 data class WeatherUiState(
-    val conditions: List<WeatherCondition>
+    val conditions: List<WeatherCondition>,
+    val selectedDay: Date,
+    val location: WeatherLocation,
+    val geolocationEnabled: Boolean
 )
 
 data class WeatherCondition(

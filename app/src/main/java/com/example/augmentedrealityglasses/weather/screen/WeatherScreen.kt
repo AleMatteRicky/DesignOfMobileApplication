@@ -46,10 +46,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.augmentedrealityglasses.ErrorWrapper
 import com.example.augmentedrealityglasses.R
+import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
+import com.example.augmentedrealityglasses.weather.state.getDailyIconForConditions
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import com.google.android.gms.location.LocationServices
 import java.text.SimpleDateFormat
@@ -61,6 +64,9 @@ fun WeatherScreen(
     viewModel: WeatherViewModel,
     onTextFieldClick: () -> Unit
 ) {
+    //Main UI state
+    val uiState by viewModel.weatherState.collectAsStateWithLifecycle()
+
     //Context
     val context = LocalContext.current
 
@@ -106,7 +112,7 @@ fun WeatherScreen(
 
     LaunchedEffect(Unit) {
         viewModel.hideErrorMessage()
-        if (viewModel.location.name == "") {
+        if (uiState.location.name == "") {
             val isCachedDataValid = viewModel.tryLoadDataFromCache()
 
             if (!isCachedDataValid) {
@@ -133,22 +139,42 @@ fun WeatherScreen(
 //        }
 //    }
 
+    val currentCondition by remember(uiState.conditions) {
+        derivedStateOf { uiState.conditions.firstOrNull { it.isCurrent } }
+    }
+
+    val dailyForecasts by remember(uiState.selectedDay, uiState.conditions) {
+        derivedStateOf {
+            uiState.conditions.sortedBy { it.dateTime }
+                .filter { condition -> condition.dateTime >= uiState.selectedDay }
+                .take(Constants.DAILY_CONDITIONS_TO_SHOW)
+        }
+    }
+
+    val daysConditions by remember(uiState.conditions) {
+        derivedStateOf {
+            uiState.conditions.groupBy { condition -> viewModel.startOfDay(condition.dateTime) }
+                .map { (date, conditions) ->
+                    DayCondition(
+                        date = date,
+                        isCurrent = conditions.any { condition ->
+                            condition.isCurrent
+                        },
+                        iconId = getDailyIconForConditions(conditions),
+                        tempMin = conditions.minOf { it.tempMin },
+                        tempMax = conditions.maxOf { it.tempMax }
+                    )
+                }
+                .sortedBy { it.date }
+        }
+    }
+
     //Handle auto scroll on left of "Daily forecasts panel" when changing the day
     val dailyListState = rememberLazyListState()
-    LaunchedEffect(viewModel.selectedDay) {
-        dailyListState.animateScrollToItem(0)
-    }
-
-    val currentCondition by remember {
-        derivedStateOf { viewModel.getCurrentWeather() }
-    }
-
-    val dailyForecasts by remember {
-        derivedStateOf { viewModel.getDailyForecastsOfSelectedDay().orEmpty() }
-    }
-
-    val daysConditions by remember {
-        derivedStateOf { viewModel.getDaysConditions() }
+    LaunchedEffect(uiState.selectedDay, dailyForecasts) {
+        if (dailyForecasts.isNotEmpty()) {
+            dailyListState.animateScrollToItem(0)
+        }
     }
 
     //TODO: swipe down to refresh data
@@ -161,7 +187,7 @@ fun WeatherScreen(
             topBar = {
                 //TODO: fix background color when scrolling the page
                 LocationAndBLEStatusBar(
-                    viewModel.location.getFullName(),
+                    uiState.location.getFullName(),
                     viewModel.isExtDeviceConnected
                 )
 
@@ -172,7 +198,7 @@ fun WeatherScreen(
             val listState = rememberLazyListState()
 
             //Allow scrolling only when the screen is fully scrolled to the top
-            val scrollDownEnabled by remember {
+            val scrollDownEnabled by remember(listState) {
                 derivedStateOf {
                     listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
                 }
@@ -216,7 +242,7 @@ fun WeatherScreen(
                                     context
                                 )
                             },
-                            geolocationEnabled = viewModel.geolocationEnabled
+                            geolocationEnabled = uiState.geolocationEnabled
                         )
                     }
 
@@ -231,7 +257,7 @@ fun WeatherScreen(
                                 onItemClick = {
                                     viewModel.changeSelectedDay(it)
                                 },
-                                isSelectedDay = { viewModel.selectedDay == it }
+                                isSelectedDay = { uiState.selectedDay == it }
                             )
                         }
                     }
