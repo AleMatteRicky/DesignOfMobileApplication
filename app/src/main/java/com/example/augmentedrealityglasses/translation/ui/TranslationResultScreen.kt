@@ -113,6 +113,14 @@ fun TranslationResultScreen(
             navigationBarVisible = null
         )
 
+        if (uiState.isDownloadingSourceLanguageModel && uiState.isDownloadingTargetLanguageModel) {
+            DisplayModelDownloading("Downloading the detected source language model and the target language model")
+        } else if (uiState.isDownloadingSourceLanguageModel) {
+            DisplayModelDownloading("Downloading the detected source language model")
+        } else if (uiState.isDownloadingTargetLanguageModel) {
+            DisplayModelDownloading("Downloading the target language model")
+        }
+
     }
 
     if (uiState.isResultReady) {

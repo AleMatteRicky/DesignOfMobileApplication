@@ -122,24 +122,3 @@ fun TranslationHomeScreen(
 
 }
 
-@Composable
-private fun DisplayModelDownloading(text: String) {
-    Dialog(onDismissRequest = { /* leaving this function empty avoids that the user close the dialog only by clicking outside it */ }) {
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            tonalElevation = 8.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .width(IntrinsicSize.Min),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(text, color = Color.Black)
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = Color.Black, trackColor = Color.White)
-            }
-        }
-    }
-}
-
