@@ -56,7 +56,7 @@ class HomeViewModel(
     }
 
     // Tracks the Bluetooth connection status with the external device
-    var isExtDeviceConnected by mutableStateOf(true)
+    var isExtDeviceConnected by mutableStateOf(false)
         private set
 
 
