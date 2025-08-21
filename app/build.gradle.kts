@@ -92,6 +92,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.play.services.location)
     implementation(libs.kotlinx.coroutines.core)
+    implementation("com.airbnb.android:lottie-compose:4.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
