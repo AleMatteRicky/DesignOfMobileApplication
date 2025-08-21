@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,11 +45,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.augmentedrealityglasses.ErrorWrapper
 import com.example.augmentedrealityglasses.R
+import com.example.augmentedrealityglasses.translation.ui.LoadingAnimation
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.state.DayCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
@@ -268,8 +271,10 @@ fun WeatherScreen(
             }
         }
     } else {
-        //TODO
-        Text("loading")
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+            LoadingAnimation(modifier = Modifier.size(100.dp))
+        }
+
     }
 }
 
