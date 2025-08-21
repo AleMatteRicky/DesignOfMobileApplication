@@ -48,7 +48,7 @@ class FindDeviceViewModel(
 
     @SuppressLint("MissingPermission")
     fun connect(device: BluetoothDevice): Boolean {
-        if (device.name != ESP32Proxy.ESP32MAC) {
+        if (device.address != ESP32Proxy.ESP32MAC) {
             return false
         }
 
