@@ -179,91 +179,97 @@ fun WeatherScreen(
 
     //TODO: swipe down to refresh data
     // ----  UI  ----
-    ErrorWrapper(
-        message = viewModel.errorMessage,
-        onDismiss = { viewModel.hideErrorMessage() }
-    ) {
-        Scaffold(
-            topBar = {
-                //TODO: fix background color when scrolling the page
-                LocationAndBLEStatusBar(
-                    uiState.location.getFullName(),
-                    viewModel.isExtDeviceConnected
-                )
 
-            }
-        ) { innerPadding ->
+    if (!viewModel.isLoading) {
+        ErrorWrapper(
+            message = viewModel.errorMessage,
+            onDismiss = { viewModel.hideErrorMessage() }
+        ) {
+            Scaffold(
+                topBar = {
+                    //TODO: fix background color when scrolling the page
+                    LocationAndBLEStatusBar(
+                        uiState.location.getFullName(),
+                        viewModel.isExtDeviceConnected
+                    )
 
-            //List state attached to the LazyColumn (that contains all the screen's content)
-            val listState = rememberLazyListState()
-
-            //Allow scrolling only when the screen is fully scrolled to the top
-            val scrollDownEnabled by remember(listState) {
-                derivedStateOf {
-                    listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
                 }
-            }
+            ) { innerPadding ->
 
-            SwipeDownRefresh(
-                isRefreshing = viewModel.isRefreshing,
-                scrollDownEnabled = scrollDownEnabled,
-                onRefresh = {
-                    viewModel.refreshWeatherInfos(fusedLocationClient, context)
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                LazyColumn(
+                //List state attached to the LazyColumn (that contains all the screen's content)
+                val listState = rememberLazyListState()
+
+                //Allow scrolling only when the screen is fully scrolled to the top
+                val scrollDownEnabled by remember(listState) {
+                    derivedStateOf {
+                        listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
+                    }
+                }
+
+                SwipeDownRefresh(
+                    isRefreshing = viewModel.isRefreshing,
+                    scrollDownEnabled = scrollDownEnabled,
+                    onRefresh = {
+                        viewModel.refreshWeatherInfos(fusedLocationClient, context)
+                    },
                     modifier = Modifier
-                        .fillMaxSize(),
-                    state = listState
+                        .fillMaxSize()
+                        .padding(innerPadding)
                 ) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        state = listState
+                    ) {
 
-                    currentCondition?.let { condition ->
-                        item {
-                            CurrentWeatherBar(
-                                condition.temp,
-                                condition.tempMax,
-                                condition.tempMin,
-                                condition.feelsLike,
-                                condition.main,
-                                condition.iconId
-                            )
-                        }
-                    }
-
-                    item {
-                        LocationManagerBar(
-                            onClickSearchBar = { onTextFieldClick() },
-                            onClickGeolocationIcon = {
-                                viewModel.getGeolocationWeather(
-                                    fusedLocationClient,
-                                    context
+                        currentCondition?.let { condition ->
+                            item {
+                                CurrentWeatherBar(
+                                    condition.temp,
+                                    condition.tempMax,
+                                    condition.tempMin,
+                                    condition.feelsLike,
+                                    condition.main,
+                                    condition.iconId
                                 )
-                            },
-                            geolocationEnabled = uiState.geolocationEnabled
-                        )
-                    }
-
-                    if (dailyForecasts.isNotEmpty()) {
-                        item {
-                            DailyForecastsPanel(dailyForecasts, dailyListState)
+                            }
                         }
 
                         item {
-                            MultipleDaysForecastsPanel(
-                                forecasts = daysConditions,
-                                onItemClick = {
-                                    viewModel.changeSelectedDay(it)
+                            LocationManagerBar(
+                                onClickSearchBar = { onTextFieldClick() },
+                                onClickGeolocationIcon = {
+                                    viewModel.getGeolocationWeather(
+                                        fusedLocationClient,
+                                        context
+                                    )
                                 },
-                                isSelectedDay = { uiState.selectedDay == it }
+                                geolocationEnabled = uiState.geolocationEnabled
                             )
+                        }
+
+                        if (dailyForecasts.isNotEmpty()) {
+                            item {
+                                DailyForecastsPanel(dailyForecasts, dailyListState)
+                            }
+
+                            item {
+                                MultipleDaysForecastsPanel(
+                                    forecasts = daysConditions,
+                                    onItemClick = {
+                                        viewModel.changeSelectedDay(it)
+                                    },
+                                    isSelectedDay = { uiState.selectedDay == it }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+    } else {
+        //TODO
+        Text("loading")
     }
 }
 

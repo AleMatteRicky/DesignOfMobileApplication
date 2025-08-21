@@ -102,7 +102,7 @@ class WeatherViewModel(
         WeatherUiState(
             conditions = listOf(),
             selectedDay = Date(),
-            geolocationEnabled = false,
+            geolocationEnabled = true,
             location = WeatherLocation(
                 "",
                 "",
@@ -113,6 +113,9 @@ class WeatherViewModel(
         )
     )
     val weatherState: StateFlow<WeatherUiState> = _weatherState
+
+    //Flag for the loading animation
+    var isLoading by mutableStateOf(false)
 
     // Tracks the Bluetooth connection status with the external device
     var isExtDeviceConnected by mutableStateOf(false)
@@ -647,6 +650,7 @@ class WeatherViewModel(
         fusedLocationClient: FusedLocationProviderClient,
         context: Context
     ) {
+        isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
             //get geolocation infos
             //FIXME: run this in Dispatchers.IO?
@@ -708,6 +712,7 @@ class WeatherViewModel(
                     showErrorMessage(Constants.ERROR_GEOLOCATION_GENERIC)
                 }
             }
+            isLoading = false
         }
     }
 
