@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -116,20 +115,16 @@ fun WeatherScreen(
     LaunchedEffect(Unit) {
         viewModel.hideErrorMessage()
         if (uiState.location.name == "") {
-            val isCachedDataValid = viewModel.tryLoadDataFromCache()
-
-            if (!isCachedDataValid) {
-                if (viewModel.getGeolocationPermissions(context).values.none { it }) {
-                    //request permissions
-                    requestPermissionsLauncher.launch(
-                        arrayOf(
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        )
+            if (viewModel.getGeolocationPermissions(context).values.none { it }) {
+                //request permissions
+                requestPermissionsLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
                     )
-                } else {
-                    viewModel.getGeolocationWeather(fusedLocationClient, context)
-                }
+                )
+            } else {
+                viewModel.getGeolocationWeather(fusedLocationClient, context)
             }
         }
     }
@@ -271,7 +266,7 @@ fun WeatherScreen(
             }
         }
     } else {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             LoadingAnimation(modifier = Modifier.size(100.dp))
         }
 

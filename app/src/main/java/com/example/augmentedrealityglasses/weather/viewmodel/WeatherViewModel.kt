@@ -652,64 +652,68 @@ class WeatherViewModel(
     ) {
         isLoading = true
         viewModelScope.launch(Dispatchers.IO) {
-            //get geolocation infos
-            //FIXME: run this in Dispatchers.IO?
-            when (val geo = fetchGeolocation(fusedLocationClient, context)) {
 
-                is GeolocationResult.Success -> {
-                    //update weather conditions
-                    when (val newCurrentWeatherCondition =
-                        fetchCurrentWeatherInfo(
-                            geo.data.latitude.toString(),
-                            geo.data.longitude.toString()
-                        )) {
+            //Fetch cached data before asking new geolocation infos
+            val isCacheValid = tryLoadDataFromCache()
 
-                        is APIResult.Success -> {
+            if (!isCacheValid) {
+                when (val geo = fetchGeolocation(fusedLocationClient, context)) {
 
-                            when (val newForecasts = fetchForecastsInfo(
+                    is GeolocationResult.Success -> {
+                        //update weather conditions
+                        when (val newCurrentWeatherCondition =
+                            fetchCurrentWeatherInfo(
                                 geo.data.latitude.toString(),
                                 geo.data.longitude.toString()
                             )) {
-                                is APIResult.Success -> {
 
-                                    // state not available with this API call
-                                    setStateAndCreateSnapshot(
-                                        newCurrentCondition = newCurrentWeatherCondition.value,
-                                        newForecasts = newForecasts.value,
-                                        newGeolocationFlag = true,
-                                        newLocation = WeatherLocation(
-                                            newCurrentWeatherCondition.value.name,
-                                            newCurrentWeatherCondition.value.coord.lat,
-                                            newCurrentWeatherCondition.value.coord.lon,
-                                            newCurrentWeatherCondition.value.sys.country,
-                                            ""
+                            is APIResult.Success -> {
+
+                                when (val newForecasts = fetchForecastsInfo(
+                                    geo.data.latitude.toString(),
+                                    geo.data.longitude.toString()
+                                )) {
+                                    is APIResult.Success -> {
+
+                                        // state not available with this API call
+                                        setStateAndCreateSnapshot(
+                                            newCurrentCondition = newCurrentWeatherCondition.value,
+                                            newForecasts = newForecasts.value,
+                                            newGeolocationFlag = true,
+                                            newLocation = WeatherLocation(
+                                                newCurrentWeatherCondition.value.name,
+                                                newCurrentWeatherCondition.value.coord.lat,
+                                                newCurrentWeatherCondition.value.coord.lon,
+                                                newCurrentWeatherCondition.value.sys.country,
+                                                ""
+                                            )
                                         )
-                                    )
-                                }
+                                    }
 
-                                else -> {
-                                    //all the other cases already handled
+                                    else -> {
+                                        //all the other cases already handled
+                                    }
                                 }
                             }
-                        }
 
-                        else -> {
-                            //all the other cases already handled
+                            else -> {
+                                //all the other cases already handled
+                            }
                         }
                     }
-                }
 
-                is GeolocationResult.NotAvailable -> {
-                    showErrorMessage(Constants.ERROR_GEOLOCATION_NOT_AVAILABLE)
-                }
+                    is GeolocationResult.NotAvailable -> {
+                        showErrorMessage(Constants.ERROR_GEOLOCATION_NOT_AVAILABLE)
+                    }
 
-                is GeolocationResult.NoPermissionGranted -> {
-                    showErrorMessage(Constants.ERROR_GEOLOCATION_NO_PERMISSIONS)
-                }
+                    is GeolocationResult.NoPermissionGranted -> {
+                        showErrorMessage(Constants.ERROR_GEOLOCATION_NO_PERMISSIONS)
+                    }
 
-                is GeolocationResult.Error -> {
-                    Log.d(TAG, "Error: ${geo.exception.message.orEmpty()}")
-                    showErrorMessage(Constants.ERROR_GEOLOCATION_GENERIC)
+                    is GeolocationResult.Error -> {
+                        Log.d(TAG, "Error: ${geo.exception.message.orEmpty()}")
+                        showErrorMessage(Constants.ERROR_GEOLOCATION_GENERIC)
+                    }
                 }
             }
             isLoading = false
