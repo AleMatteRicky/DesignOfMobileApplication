@@ -121,42 +121,16 @@ class WeatherViewModel(
     var isExtDeviceConnected by mutableStateOf(false)
         private set
 
-//    //Selected day (in "Next days forecasts" panel)
-//    var selectedDay by mutableStateOf(Date())
-//        private set
-//
-//    //Selected location to display the weather conditions for
-//    var location by mutableStateOf(
-//        WeatherLocation(
-//            "",
-//            "",
-//            "",
-//            "",
-//            ""
-//        )
-//    )
-//        private set
-
     //List of all the locations found by the API (by specifying a query)
     private var _searchedLocations = mutableStateListOf<WeatherLocation>()
     val searchedLocations: List<WeatherLocation> get() = _searchedLocations
-
-//    //Geolocation state
-//    var geolocationEnabled by mutableStateOf(false)
-//        private set
 
     //For managing the visibility of the Text "no results found"
     var showNoResults by mutableStateOf(false)
         private set
 
-    //Error message
-//    var errorVisible by mutableStateOf(false)
-//        private set
     var errorMessage by mutableStateOf("")
         private set
-
-    //Loading screen
-    //var isLoading by mutableStateOf(false)
 
     //Input for searching the location
     var query by mutableStateOf("")
@@ -212,7 +186,7 @@ class WeatherViewModel(
         }
     }
 
-    suspend fun tryLoadDataFromCache(): Boolean {
+    private suspend fun tryLoadDataFromCache(): Boolean {
 
         val snap = withContext(Dispatchers.IO) {
             cache.getIfValid(
@@ -320,10 +294,10 @@ class WeatherViewModel(
         //Save data into the cache (only for geolocation data)
         if (weatherState.value.geolocationEnabled) {
             saveWeatherSnapshotIntoCache()
-        }
 
-        //send updates to ESP (just the current condition) //TODO
-        sendBluetoothMessage(newConditions.first { cond -> cond.isCurrent }.toString())
+            //send updates to ESP (just the current geolocation condition) //TODO
+            sendBluetoothMessage(newConditions.first { cond -> cond.isCurrent }.getBLEMessage())
+        }
     }
 
     /**
@@ -352,10 +326,6 @@ class WeatherViewModel(
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
         return calendar.time
-    }
-
-    private fun getAllConditions(): List<WeatherCondition> {
-        return weatherState.value.conditions
     }
 
     fun hideNoResult() {
@@ -553,7 +523,6 @@ class WeatherViewModel(
             if (weatherState.value.geolocationEnabled) {
 
                 //fetch geolocation
-                //FIXME: run this in Dispatchers.IO?
                 when (val geo = fetchGeolocation(fusedLocationClient, context)) {
 
                     is GeolocationResult.Success -> {

@@ -28,7 +28,7 @@ data class WeatherCondition(
         get() = getWeatherIconId(conditionId, apiIconName)
 
     //TODO (for ble)
-    override fun toString(): String {
+    fun getBLEMessage(): String {
         return this.dateTime.toString() + " - " + "T: " + this.temp + Constants.TEMPERATURE_UNIT + "; P: " + this.pressure + Constants.PRESSURE_UNIT
     }
 }
