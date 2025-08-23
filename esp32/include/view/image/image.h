@@ -19,6 +19,12 @@ public:
           std::string name = "")
         : View::View(frame, superiorView, "Image"), m_binImages(binImages) {}
 
+    Image(RectType frame,
+          View* superiorView,
+          std::vector<BinaryImageInfo> binImages,
+          std::function<void(ble::UpdateMessage const&, int&)> onEvent)
+        : View::View(frame, superiorView, "Image"), m_binImages(binImages), m_onEvent(onEvent) {}
+    
     void draw() override;
 
     int pngDraw(PNGDRAW* pDraw);
@@ -52,5 +58,7 @@ private:
     std::string m_name;
 
     std::function<void(void)> m_onClickCb;
+
+    std::function<void(ble::UpdateMessage const&, int&)> m_onEvent;
 };
 }  // namespace view

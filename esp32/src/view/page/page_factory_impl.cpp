@@ -6,6 +6,8 @@ std::unique_ptr<Page> PageFactoryImpl::createPage(PageType type) {
     switch (type) {
         case PageType::HOME:
             return Homepage::Factory::create();
+        case PageType::WEATHER:
+            return WeatherPage::Factory::create();
         default:
             return Homepage::Factory::create();
     }
