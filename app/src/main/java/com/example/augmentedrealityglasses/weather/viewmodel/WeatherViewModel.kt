@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.util.Calendar
 import java.util.Date
 import kotlin.coroutines.resume
@@ -218,7 +219,27 @@ class WeatherViewModel(
         _searchedLocations.clear()
     }
 
-    private fun sendBluetoothMessage(msg: String) {
+    //TODO: add wind?
+    private fun sendBluetoothMessage(
+        location: String,
+        temperature: Int,
+        iconId: Int,
+        pressure: Int,
+        context: Context
+    ) {
+
+        //In order to get the image's name instead of the android identifier of the resource
+        val iconName = context.resources.getResourceEntryName(iconId)
+
+        val msg = createBLEMessage(
+            location,
+            temperature,
+            iconName,
+            pressure
+        )
+
+        Log.d(TAG, "BLE message:\n$msg")
+
         if (isExtDeviceConnected) {
             viewModelScope.launch {
                 proxy.send(msg)
@@ -226,6 +247,23 @@ class WeatherViewModel(
         } else {
             Log.d(TAG, "External device not connected")
         }
+    }
+
+    private fun createBLEMessage(
+        location: String,
+        temperature: Int,
+        iconName: String,
+        pressure: Int
+    ): String {
+        val json = JSONObject()
+
+        json.put("command", "w")
+        json.put("location", location)
+        json.put("temperature", temperature)
+        json.put("iconName", iconName)
+        json.put("pressure", pressure)
+
+        return json.toString()
     }
 
     fun getGeolocationPermissions(context: Context): Map<String, Boolean> {
@@ -294,9 +332,6 @@ class WeatherViewModel(
         //Save data into the cache (only for geolocation data)
         if (weatherState.value.geolocationEnabled) {
             saveWeatherSnapshotIntoCache()
-
-            //send updates to ESP (just the current geolocation condition) //TODO
-            sendBluetoothMessage(newConditions.first { cond -> cond.isCurrent }.getBLEMessage())
         }
     }
 
@@ -554,6 +589,21 @@ class WeatherViewModel(
                                                 ""
                                             )
                                         )
+
+                                        val currentWeatherConditionState =
+                                            weatherState.value.conditions.find { it.isCurrent }
+
+                                        if (currentWeatherConditionState != null) {
+
+                                            //send updates to ESP (just the current geolocation condition) //TODO
+                                            sendBluetoothMessage(
+                                                location = weatherState.value.location.name,
+                                                temperature = currentWeatherConditionState.temp,
+                                                iconId = currentWeatherConditionState.iconId,
+                                                pressure = currentWeatherConditionState.pressure,
+                                                context = context
+                                            )
+                                        }
                                     }
 
                                     else -> {
@@ -657,6 +707,21 @@ class WeatherViewModel(
                                                 ""
                                             )
                                         )
+
+                                        val currentWeatherConditionState =
+                                            weatherState.value.conditions.find { it.isCurrent }
+
+                                        if (currentWeatherConditionState != null) {
+
+                                            //send updates to ESP (just the current geolocation condition) //TODO
+                                            sendBluetoothMessage(
+                                                location = weatherState.value.location.name,
+                                                temperature = currentWeatherConditionState.temp,
+                                                iconId = currentWeatherConditionState.iconId,
+                                                pressure = currentWeatherConditionState.pressure,
+                                                context = context
+                                            )
+                                        }
                                     }
 
                                     else -> {
@@ -683,6 +748,21 @@ class WeatherViewModel(
                         Log.d(TAG, "Error: ${geo.exception.message.orEmpty()}")
                         showErrorMessage(Constants.ERROR_GEOLOCATION_GENERIC)
                     }
+                }
+            } else {
+                val currentWeatherConditionState =
+                    weatherState.value.conditions.find { it.isCurrent }
+
+                if (currentWeatherConditionState != null) {
+
+                    //send updates to ESP (just the current geolocation condition) //TODO
+                    sendBluetoothMessage(
+                        location = weatherState.value.location.name,
+                        temperature = currentWeatherConditionState.temp,
+                        iconId = currentWeatherConditionState.iconId,
+                        pressure = currentWeatherConditionState.pressure,
+                        context = context
+                    )
                 }
             }
             isLoading = false

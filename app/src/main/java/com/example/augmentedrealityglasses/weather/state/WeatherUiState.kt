@@ -1,7 +1,6 @@
 package com.example.augmentedrealityglasses.weather.state
 
 import com.example.augmentedrealityglasses.R
-import com.example.augmentedrealityglasses.weather.constants.Constants
 import java.util.Date
 
 data class WeatherUiState(
@@ -26,11 +25,6 @@ data class WeatherCondition(
 ) {
     val iconId: Int
         get() = getWeatherIconId(conditionId, apiIconName)
-
-    //TODO (for ble)
-    fun getBLEMessage(): String {
-        return this.dateTime.toString() + " - " + "T: " + this.temp + Constants.TEMPERATURE_UNIT + "; P: " + this.pressure + Constants.PRESSURE_UNIT
-    }
 }
 
 /**
