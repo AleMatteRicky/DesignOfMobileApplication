@@ -43,7 +43,6 @@ import com.example.augmentedrealityglasses.ble.permissions.BluetoothSampleBox
 import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
 import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
-import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.permission.PermissionsForTranslation
@@ -108,22 +107,17 @@ class MainActivity : ComponentActivity() {
             ) { innerPadding ->
                 NavHost(
                     navController = navController,
-                    startDestination = ScreenName.HOME.name,
+                    startDestination = "HOME_GRAPH",
                     modifier = Modifier.padding(innerPadding)
                 ) {
-                    composable(ScreenName.HOME.name) {
-                        PermissionsForNotification(
-                            app.container.isDeviceSmsCapable,
-                            content = {
-                                HomeScreen(
-                                    viewModel = viewModel(factory = HomeViewModel.Factory),
-                                    onNavigateFindDevice = { navController.navigate(ScreenName.FIND_DEVICE.name) }
-                                )
-                            }
-                        )
-                    }
-                    composable(ScreenName.FIND_DEVICE.name) {
-                        BluetoothSampleBox {
+
+                    navigation(
+                        startDestination = ScreenName.HOME.name,
+                        route = "HOME_GRAPH"
+                    ) {
+                        //FIXME: create composable function for redundant code
+                        composable(ScreenName.HOME.name) { backStackEntry ->
+
                             val bluetoothManager: BluetoothManager =
                                 checkNotNull(applicationContext.getSystemService(BluetoothManager::class.java))
                             val adapter: BluetoothAdapter? = bluetoothManager.adapter
@@ -134,23 +128,70 @@ class MainActivity : ComponentActivity() {
                             }
 
                             val extras = MutableCreationExtras().apply {
-                                set(FindDeviceViewModel.ADAPTER_KEY, adapter)
+                                set(HomeViewModel.ADAPTER_KEY, adapter)
                                 set(APPLICATION_KEY, application)
                             }
 
-                            FindDeviceScreen(
-                                viewModel = viewModel(
-                                    factory = FindDeviceViewModel.Factory,
-                                    extras = extras
-                                ),
-                                navigateOnError = {
-                                    Log.d(TAG, "Error occurred during scanning")
-                                    navController.navigate(ScreenName.ERROR_SCREEN.name)
-                                },
-                                navigateOnFeatures = {
-                                    navController.navigate(ScreenName.HOME.name)
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry("HOME_GRAPH")
+                            }
+                            val viewModel = viewModel<HomeViewModel>(
+                                viewModelStoreOwner = parentEntry,
+                                factory = HomeViewModel.Factory,
+                                extras = extras
+                            )
+
+                            PermissionsForNotification(
+                                app.container.isDeviceSmsCapable,
+                                content = {
+                                    HomeScreen(
+                                        viewModel = viewModel,
+                                        onNavigateFindDevice = { navController.navigate(ScreenName.FIND_DEVICE.name) }
+                                    )
                                 }
                             )
+                        }
+                        composable(ScreenName.FIND_DEVICE.name) { backStackEntry ->
+
+                            BluetoothSampleBox {
+                                val bluetoothManager: BluetoothManager =
+                                    checkNotNull(
+                                        applicationContext.getSystemService(
+                                            BluetoothManager::class.java
+                                        )
+                                    )
+                                val adapter: BluetoothAdapter? = bluetoothManager.adapter
+
+                                // TODO: make the control at the beginning not making clickable the icon in case bluetooth is not supported, instead of checking it here
+                                require(adapter != null) {
+                                    "Bluetooth must be supported by this device"
+                                }
+
+                                val extras = MutableCreationExtras().apply {
+                                    set(HomeViewModel.ADAPTER_KEY, adapter)
+                                    set(APPLICATION_KEY, application)
+                                }
+
+                                val parentEntry = remember(backStackEntry) {
+                                    navController.getBackStackEntry("HOME_GRAPH")
+                                }
+                                val viewModel = viewModel<HomeViewModel>(
+                                    viewModelStoreOwner = parentEntry,
+                                    factory = HomeViewModel.Factory,
+                                    extras = extras
+                                )
+
+                                FindDeviceScreen(
+                                    viewModel = viewModel,
+                                    navigateOnError = {
+                                        Log.d(TAG, "Error occurred during scanning")
+                                        navController.navigate(ScreenName.ERROR_SCREEN.name)
+                                    },
+                                    navigateOnFeatures = {
+                                        navController.navigate(ScreenName.HOME.name)
+                                    }
+                                )
+                            }
                         }
                     }
                     composable(ScreenName.CONNECT_SCREEN.name) {

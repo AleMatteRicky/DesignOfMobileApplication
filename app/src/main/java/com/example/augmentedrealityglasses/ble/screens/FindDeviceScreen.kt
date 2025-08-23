@@ -37,12 +37,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.augmentedrealityglasses.HomeViewModel
 import com.example.augmentedrealityglasses.ble.characteristic.checkBluetoothConnectPermission
-import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
 
 @Composable
 fun FindDeviceScreen(
-    viewModel: FindDeviceViewModel, navigateOnError: () -> Unit, navigateOnFeatures: () -> Unit
+    viewModel: HomeViewModel, navigateOnError: () -> Unit, navigateOnFeatures: () -> Unit
 ) {
     checkBluetoothConnectPermission(LocalContext.current)
 
@@ -151,7 +151,7 @@ internal fun BluetoothDeviceItem(
 @SuppressLint("MissingPermission")
 @Composable
 private fun BluetoothScanEffect(
-    viewModel: FindDeviceViewModel,
+    viewModel: HomeViewModel,
     filters: List<ScanFilter>?,
     scanSettings: ScanSettings,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
