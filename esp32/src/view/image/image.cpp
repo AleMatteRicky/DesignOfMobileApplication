@@ -1,6 +1,5 @@
 #include "view/image/image.h"
 #include "utility/member_fun_bridge.h"
-#include "view/image/drawer_impl.h"
 #include "view/png_decoder.h"
 #include "view/tft.h"
 
