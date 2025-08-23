@@ -1,0 +1,129 @@
+#include "view/page/homepage/homepage.h"
+
+#include "ble/remote_dispatcher.h"
+#include "controller/controller.h"
+#include "input/input_manager.h"
+#include "view/bin_pngs/16/select_arrow.h"
+#include "view/bin_pngs/32/calendar.h"
+#include "view/bin_pngs/32/message.h"
+#include "view/bin_pngs/32/missed-call.h"
+#include "view/bin_pngs/32/no-wifi.h"
+#include "view/bin_pngs/32/share.h"
+#include "view/bin_pngs/32/smart-glasses.h"
+#include "view/bin_pngs/32/text.h"
+#include "view/bin_pngs/32/translate.h"
+#include "view/bin_pngs/32/weather-forecast.h"
+#include "view/bin_pngs/64/calendar.h"
+#include "view/bin_pngs/64/message.h"
+#include "view/bin_pngs/64/smart-glasses.h"
+#include "view/bin_pngs/64/translate.h"
+#include "view/bin_pngs/64/weather-forecast.h"
+#include "view/notifications/notification.h"
+
+namespace view {
+std::unique_ptr<Homepage> Homepage::Factory::create() {
+    std::unique_ptr<Homepage> homepage =
+        std::unique_ptr<Homepage>(new Homepage(nullptr));
+
+    Image* selectionArrow = new Image(
+        RectType{Coordinates{SCREEN_WIDTH / 2 - 8, 0}, Size{16, 16}},
+        homepage.get(),
+        std::vector<BinaryImageInfo>{
+            BinaryImageInfo{16, 16, sizeof(select_arrow), select_arrow},
+        });
+
+    ConnectionStateImage* connectionStateImg = new ConnectionStateImage(
+        RectType{Coordinates{0, SCREEN_HEIGHT - 32}, Size{32, 32}},
+        homepage.get(), BinaryImageInfo{32, 32, sizeof(share), share},
+        BinaryImageInfo{32, 32, sizeof(no_wifi), no_wifi});
+
+    auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
+
+    remoteDispatcher->addObserver(ble::ConnectionState::name,
+                                  connectionStateImg);
+
+    Notification* callNotification = new Notification(
+        RectType{Coordinates{20, SCREEN_HEIGHT - 32}, Size{32, 32}},
+        homepage.get(),
+        BinaryImageInfo{32, 32, sizeof(missed_call), missed_call},
+        ble::CallNotification::name);
+
+    Notification* messageNotification = new Notification(
+        RectType{Coordinates{40, SCREEN_WIDTH - 32}, Size{32, 32}},
+        homepage.get(), BinaryImageInfo{32, 32, sizeof(text), text},
+        ble::MessageNotification::name);
+
+    remoteDispatcher->addObserver(ble::CallNotification::name,
+                                  callNotification);
+
+    remoteDispatcher->addObserver(ble::MessageNotification::name,
+                                  messageNotification);
+
+    Roll* roll = new Roll(RectType{Coordinates{0, 32}, Size{SCREEN_WIDTH, 120}},
+                          homepage.get());
+
+    auto inputManager = InputManager::getInstance();
+    inputManager->addObserver(SwipeAntiClockwise::name, roll);
+    inputManager->addObserver(SwipeClockwise::name, roll);
+    inputManager->addObserver(Click::name, roll);
+
+    Image* translation = new Image(
+        RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
+        std::vector<BinaryImageInfo>{
+            BinaryImageInfo{32, 32, sizeof(translate_32), translate_32},
+            BinaryImageInfo{64, 64, sizeof(translate_64), translate_64}});
+
+    translation->setOnClick([]() {
+        auto controller = controller::CentralController::getInstance();
+        controller->changePage(PageType::TRANSLATION);
+    });
+
+    Image* weather =
+        new Image(RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
+                  std::vector<BinaryImageInfo>{
+                      BinaryImageInfo{32, 32, sizeof(weather_forecast_32),
+                                      weather_forecast_32},
+                      BinaryImageInfo{64, 64, sizeof(weather_forecast_64),
+                                      weather_forecast_64}});
+
+    weather->setOnClick([]() {
+        auto controller = controller::CentralController::getInstance();
+        controller->changePage(PageType::WEATHER);
+    });
+
+    Image* settings = new Image(
+        RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
+        std::vector<BinaryImageInfo>{
+            BinaryImageInfo{32, 32, sizeof(smart_glasses_32), smart_glasses_32},
+            BinaryImageInfo{64, 64, sizeof(smart_glasses_64), smart_glasses_64}}
+
+    );
+
+    settings->setOnClick([]() {
+        auto controller = controller::CentralController::getInstance();
+        controller->changePage(PageType::SETTINGS);
+    });
+
+    Image* messages =
+        new Image(RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
+                  std::vector<BinaryImageInfo>{
+                      BinaryImageInfo{32, 32, sizeof(message_32), message_32},
+                      BinaryImageInfo{64, 64, sizeof(message_64), message_64}});
+
+    messages->setOnClick([]() {
+        auto controller = controller::CentralController::getInstance();
+        controller->changePage(PageType::MESSAGES);
+    });
+
+    return homepage;
+}
+
+void Homepage::draw() {
+    unsigned int remaining_stack = uxTaskGetStackHighWaterMark(NULL);
+    Serial.printf("Remaining stack size: %u bytes\n", remaining_stack);
+    for (byte i = 0; i < getNumSubViews(); i++) {
+        getSubViewAtIndex(i).draw();
+    }
+}
+
+}  // namespace view
