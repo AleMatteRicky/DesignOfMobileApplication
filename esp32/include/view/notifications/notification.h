@@ -1,5 +1,6 @@
 #pragma once
 
+#include "view/delay_call.h"
 #include "view/image/bin_image_info.h"
 #include "view/image/image.h"
 #include "view/screen/screen.h"
@@ -16,12 +17,20 @@ public:
     Notification(RectType frame,
                  View* superiorView,
                  BinaryImageInfo imageWhenTheEventIsTriggered,
-                 std::string const& nameOfTheTriggeringEvent)
+                 std::string const& nameOfTheTriggeringEvent,
+                 int durationOfTheNotificationInMs = 3000)
         : View::View(frame, superiorView, "popup"),
           m_imageWhenTheEventIsTriggered(frame,
                                          nullptr,
                                          {imageWhenTheEventIsTriggered}),
-          m_nameOfTheTriggeringEvent(nameOfTheTriggeringEvent) {}
+          m_nameOfTheTriggeringEvent(nameOfTheTriggeringEvent),
+          m_durationOfTheNotificationInMs(durationOfTheNotificationInMs) {}
+
+    ~Notification() override {
+        // cancel to avoid the function 'close' be invoked after the object has
+        // been destroyed
+        m_timer.cancel();
+    }
 
     /**
      * Closes this notification
@@ -36,19 +45,29 @@ public:
     }
 
     void onEvent(ble::CallNotification const& event) override {
-        if (event.name == m_nameOfTheTriggeringEvent)
-            m_imageWhenTheEventIsTriggered.draw();
+        if (event.name == m_nameOfTheTriggeringEvent) {
+            doOnEvent();
+        }
     }
 
     void onEvent(ble::MessageNotification const& event) override {
-        if (event.name == m_nameOfTheTriggeringEvent)
-            m_imageWhenTheEventIsTriggered.draw();
+        if (event.name == m_nameOfTheTriggeringEvent) {
+            doOnEvent();
+        }
     }
 
     void draw() override { m_imageWhenTheEventIsTriggered.draw(); }
 
 private:
+    void doOnEvent() {
+        m_imageWhenTheEventIsTriggered.draw();
+        m_timer.delay(m_durationOfTheNotificationInMs, [&]() { close(); });
+    }
+
+private:
     Image m_imageWhenTheEventIsTriggered;
     std::string m_nameOfTheTriggeringEvent;
+    int m_durationOfTheNotificationInMs;
+    Timer m_timer;
 };
 }  // namespace view
