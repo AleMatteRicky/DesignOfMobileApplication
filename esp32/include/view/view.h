@@ -37,7 +37,7 @@ public:
      */
     void moveView(View& subView) {
         if (std::find_if(m_subViews.begin(), m_subViews.end(),
-                         [&](auto const& pSubView) {
+                         [&subView](auto const& pSubView) {
                              return &subView == pSubView.get();
                          }) != m_subViews.end()) {
             Serial.printf(
@@ -116,12 +116,12 @@ public:
             m_parentView->onEvent(ev);
     }
 
-    void onEvent(SwipeClockwise const& ev) {
+    void onEvent(SwipeClockwise const& ev) override {
         if (m_parentView)
             m_parentView->onEvent(ev);
     }
 
-    void onEvent(DoubleClick const& ev) {
+    void onEvent(DoubleClick const& ev) override {
         if (m_parentView)
             m_parentView->onEvent(ev);
     }

@@ -13,9 +13,9 @@ void CentralController::changePage(view::PageType page) {
 }
 
 void CentralController::removeFromSubjects() {
+    m_window->applyRecursively([](view::View& v) {
     auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
     auto inputManager = InputManager::getInstance();
-    m_window->applyRecursively([&](view::View& v) {
         remoteDispatcher->removeFromAllEvents(v);
         inputManager->removeFromAllEvents(v);
     });
