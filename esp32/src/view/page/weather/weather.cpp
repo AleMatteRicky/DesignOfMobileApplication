@@ -9,8 +9,12 @@
 #include "view/bin_pngs/32/text.h"
 #include "view/bin_pngs/64/message.h"
 #include "view/notifications/notification.h"
-#include "view/bin_pngs/32/clear.h"
-#include "view/bin_pngs/32/clear_n.h"
+#include "view/bin_pngs/32/weather_conditions/clear_night.h"
+#include "view/bin_pngs/32/weather_conditions/clear.h"
+#include "view/bin_pngs/32/weather_conditions/clouds_2.h"
+#include "view/bin_pngs/32/weather_conditions/rain_2.h"
+#include "view/bin_pngs/32/weather_conditions/snow_3.h"
+#include "view/bin_pngs/32/weather_conditions/thunderstorm_2.h"
 #include "view/text/text.h"
 #include <ArduinoJson.h>
 
@@ -78,7 +82,7 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
                 return;
             }
 
-            content = "Temp: " + std::string(doc["temperature"]) + "°C";
+            content = "Temp: " + std::string(doc["temperature"]) + "°";
         },
         ""
     );
@@ -106,22 +110,64 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
 
     //TODO: add wind info
 
-    //TODO: add icons
     Image* weatherImage = new Image(
         RectType{Coordinates{0, 0}, Size{0, 0}},
         weatherPage.get(),
         std::vector{
+            BinaryImageInfo{32, 32, sizeof(thunderstorm_2), thunderstorm_2},
+            BinaryImageInfo{32, 32, sizeof(rain_2), rain_2},
+            BinaryImageInfo{32, 32, sizeof(snow_3), snow_3},
             BinaryImageInfo{32, 32, sizeof(clear), clear},
-            BinaryImageInfo{32, 32, sizeof(clear_n), clear_n},
+            BinaryImageInfo{32, 32, sizeof(clear_night), clear_night},
+            BinaryImageInfo{32, 32, sizeof(clouds_2), clouds_2}
         },
         [](ble::UpdateMessage const& event, int& index){
             JsonDocument doc;
             deserializeJson(doc, event.msg);
 
-            if(doc["icon"] == "clear"){
-                index = 0;
-            }else if(doc["icon"] == "clear_n"){
+            std::string iconName = doc["iconName"];
+            
+            //FIXME: manage all icons?
+            if(iconName == "thunderstorm_1" 
+                || iconName == "thunderstorm_1_3_night"
+                || iconName == "thunderstorm_2"
+                || iconName == "thunderstorm_3"
+                || iconName == "thunderstorm_1_3_night"
+            ){
+                index = 0;     
+
+            }else if(iconName == "rain_1"
+                || iconName == "rain_1_night"
+                || iconName == "rain_2"
+                || iconName == "rain_3"
+                || iconName == "rain_4")
+            {
                 index = 1;
+
+            }else if(iconName == "snow_1"
+                || iconName == "snow_1_night"
+                || iconName == "snow_2"
+                || iconName == "snow_3")
+            {
+                index = 2;
+
+            }else if(iconName == "clear")
+            {
+                index = 3;
+
+            }else if(iconName == "clear_night")
+            {
+                index = 4;
+
+            }else if(iconName == "clouds_1"
+                || iconName == "clouds_1_night"
+                || iconName == "clouds_2"
+                || iconName == "clouds_3")
+            {
+                index = 5;
+            }else{
+                //iconName not valid. Default: clear icon
+                index = 3;
             }
         }
     );
