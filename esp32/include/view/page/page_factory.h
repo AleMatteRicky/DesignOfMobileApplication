@@ -2,6 +2,7 @@
 #include "view/page/connectionpage/connectionpage.h"
 #include "view/page/homepage/homepage.h"
 #include "view/page/weather/weather.h"
+#include "view/page/translation/translation.h"
 #include "view/page/page.h"
 #include "view/view.h"
 
