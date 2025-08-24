@@ -123,6 +123,7 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
 
     //TODO: add wind info
 
+    //TODO: add forecasts
     Image* weatherImage = new Image(
         RectType{Coordinates{0, 0}, Size{0, 0}},
         weatherPage.get(),
