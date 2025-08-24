@@ -72,9 +72,7 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
             JsonDocument doc;
             deserializeJson(doc, event.msg);
 
-            if (doc["command"] != commandName){
-                return;
-            }
+            if (doc["command"] != commandName) return;
 
             content = std::string(doc["location"]);
         },
@@ -84,6 +82,26 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
     remoteDispatcher->addObserver(ble::UpdateMessage::name, locationText);
 
 
+    Text* timeText = new Text(
+        RectType{Coordinates{0, 0}, Size{0, 0}},
+        weatherPage.get(),
+        [](ble::UpdateMessage const& event, std::string& content){
+            JsonDocument doc;
+            deserializeJson(doc, event.msg);
+
+            if (doc["command"] != commandName) return;
+
+            JsonVariant cond = doc["conditions"][0]; //FIXME: allow to switch conditions
+            if (cond.isNull()) return;
+
+            content = std::string(cond["time"]);
+        },
+        ""
+    );       
+
+    remoteDispatcher->addObserver(ble::UpdateMessage::name, timeText);
+
+
     Text* tmpText = new Text(
         RectType{Coordinates{0, 0}, Size{0, 0}},
         weatherPage.get(),
@@ -91,14 +109,15 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
             JsonDocument doc;
             deserializeJson(doc, event.msg);
 
-            if (doc["command"] != commandName){
-                return;
-            }
+            if (doc["command"] != commandName) return;
 
-            content = "Temp: " + std::string(doc["temperature"]) + "°";
+            JsonVariant cond = doc["conditions"][0]; //FIXME: allow to switch conditions
+            if (cond.isNull()) return;
+
+            content = "Temp: " + std::string(cond["temperature"]) + "°"; 
         },
         ""
-    );
+    );       
 
     remoteDispatcher->addObserver(ble::UpdateMessage::name, tmpText);
 
@@ -110,20 +129,21 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
             JsonDocument doc;
             deserializeJson(doc, event.msg);
 
-            if (doc["command"] != commandName){
-                return;
-            }
+            if (doc["command"] != commandName) return;
 
-            content = "Pressure: " + std::string(doc["pressure"]) + " hPa";
+            JsonVariant cond = doc["conditions"][0]; //FIXME: allow to switch conditions
+            if (cond.isNull()) return;
+
+            content = "Pressure: " + std::string(cond["pressure"]) + " hPa";
         },
         ""
     );
-
+    
     remoteDispatcher->addObserver(ble::UpdateMessage::name, pressureText);
 
+    
     //TODO: add wind info
 
-    //TODO: add forecasts
     Image* weatherImage = new Image(
         RectType{Coordinates{0, 0}, Size{0, 0}},
         weatherPage.get(),
@@ -152,7 +172,12 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
             JsonDocument doc;
             deserializeJson(doc, event.msg);
 
-            std::string iconName = doc["iconName"];
+            if (doc["command"] != commandName) return;
+
+            JsonVariant cond = doc["conditions"][0]; //FIXME: allow to switch conditions
+            if (cond.isNull()) return;
+
+            std::string iconName = cond["iconName"];
             
             if(iconName == "clear"){
                 index = 0;
