@@ -7,13 +7,13 @@ namespace ble {
 
 struct BondingState {
     inline static std::string const name = "bonding_state";
-    enum { BONDED, NOTBONDED, BONDING } const phase;
-    uint32_t const passkey;
+    enum { BONDED, NOTBONDED, BONDING } phase;
+    uint32_t passkey;
 };
 
 struct ConnectionState {
     inline static std::string const name = "connection_state";
-    enum { CONNECTED, DISCONNECTED } const phase;
+    enum { CONNECTED, DISCONNECTED } phase;
 };
 
 struct UpdateMessage {
