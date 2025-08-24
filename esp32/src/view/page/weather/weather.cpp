@@ -9,12 +9,25 @@
 #include "view/bin_pngs/32/text.h"
 #include "view/bin_pngs/64/message.h"
 #include "view/notifications/notification.h"
-#include "view/bin_pngs/32/weather_conditions/clear_night.h"
 #include "view/bin_pngs/32/weather_conditions/clear.h"
+#include "view/bin_pngs/32/weather_conditions/clear_night.h"
+#include "view/bin_pngs/32/weather_conditions/clouds_1.h"
+#include "view/bin_pngs/32/weather_conditions/clouds_1_night.h"
 #include "view/bin_pngs/32/weather_conditions/clouds_2.h"
+#include "view/bin_pngs/32/weather_conditions/clouds_3.h"
+#include "view/bin_pngs/32/weather_conditions/rain_1.h"
+#include "view/bin_pngs/32/weather_conditions/rain_1_night.h"
 #include "view/bin_pngs/32/weather_conditions/rain_2.h"
+#include "view/bin_pngs/32/weather_conditions/rain_3.h"
+#include "view/bin_pngs/32/weather_conditions/rain_4.h"
+#include "view/bin_pngs/32/weather_conditions/snow_1.h"
+#include "view/bin_pngs/32/weather_conditions/snow_1_night.h"
+#include "view/bin_pngs/32/weather_conditions/snow_2.h"
 #include "view/bin_pngs/32/weather_conditions/snow_3.h"
+#include "view/bin_pngs/32/weather_conditions/thunderstorm_1.h"
+#include "view/bin_pngs/32/weather_conditions/thunderstorm_1_3_night.h"
 #include "view/bin_pngs/32/weather_conditions/thunderstorm_2.h"
+#include "view/bin_pngs/32/weather_conditions/thunderstorm_3.h"
 #include "view/text/text.h"
 #include <ArduinoJson.h>
 
@@ -114,12 +127,25 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
         RectType{Coordinates{0, 0}, Size{0, 0}},
         weatherPage.get(),
         std::vector{
-            BinaryImageInfo{32, 32, sizeof(thunderstorm_2), thunderstorm_2},
-            BinaryImageInfo{32, 32, sizeof(rain_2), rain_2},
-            BinaryImageInfo{32, 32, sizeof(snow_3), snow_3},
             BinaryImageInfo{32, 32, sizeof(clear), clear},
             BinaryImageInfo{32, 32, sizeof(clear_night), clear_night},
-            BinaryImageInfo{32, 32, sizeof(clouds_2), clouds_2}
+            BinaryImageInfo{32, 32, sizeof(clouds_1), clouds_1},
+            BinaryImageInfo{32, 32, sizeof(clouds_1_night), clouds_1_night},
+            BinaryImageInfo{32, 32, sizeof(clouds_2), clouds_2},
+            BinaryImageInfo{32, 32, sizeof(clouds_3), clouds_3},
+            BinaryImageInfo{32, 32, sizeof(rain_1), rain_1},
+            BinaryImageInfo{32, 32, sizeof(rain_1_night), rain_1_night},
+            BinaryImageInfo{32, 32, sizeof(rain_2), rain_2},
+            BinaryImageInfo{32, 32, sizeof(rain_3), rain_3},
+            BinaryImageInfo{32, 32, sizeof(rain_4), rain_4},
+            BinaryImageInfo{32, 32, sizeof(snow_1), snow_1},
+            BinaryImageInfo{32, 32, sizeof(snow_1_night), snow_1_night},
+            BinaryImageInfo{32, 32, sizeof(snow_2), snow_2},
+            BinaryImageInfo{32, 32, sizeof(snow_3), snow_3},
+            BinaryImageInfo{32, 32, sizeof(thunderstorm_1), thunderstorm_1},
+            BinaryImageInfo{32, 32, sizeof(thunderstorm_1_3_night), thunderstorm_1_3_night},
+            BinaryImageInfo{32, 32, sizeof(thunderstorm_2), thunderstorm_2},
+            BinaryImageInfo{32, 32, sizeof(thunderstorm_3), thunderstorm_3},            
         },
         [](ble::UpdateMessage const& event, int& index){
             JsonDocument doc;
@@ -127,47 +153,47 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
 
             std::string iconName = doc["iconName"];
             
-            //FIXME: manage all icons?
-            if(iconName == "thunderstorm_1" 
-                || iconName == "thunderstorm_1_3_night"
-                || iconName == "thunderstorm_2"
-                || iconName == "thunderstorm_3"
-                || iconName == "thunderstorm_1_3_night"
-            ){
-                index = 0;     
-
-            }else if(iconName == "rain_1"
-                || iconName == "rain_1_night"
-                || iconName == "rain_2"
-                || iconName == "rain_3"
-                || iconName == "rain_4")
-            {
+            if(iconName == "clear"){
+                index = 0;
+            }else if(iconName == "clear_night"){
                 index = 1;
-
-            }else if(iconName == "snow_1"
-                || iconName == "snow_1_night"
-                || iconName == "snow_2"
-                || iconName == "snow_3")
-            {
+            }else if(iconName == "clouds_1"){
                 index = 2;
-
-            }else if(iconName == "clear")
-            {
+            }else if(iconName == "clouds_1_night"){
                 index = 3;
-
-            }else if(iconName == "clear_night")
-            {
+            }else if(iconName == "clouds_2"){
                 index = 4;
-
-            }else if(iconName == "clouds_1"
-                || iconName == "clouds_1_night"
-                || iconName == "clouds_2"
-                || iconName == "clouds_3")
-            {
+            }else if(iconName == "clouds_3"){
                 index = 5;
+            }else if(iconName == "rain_1"){
+                index = 6;
+            }else if(iconName == "rain_1_night"){
+                index = 7;
+            }else if(iconName == "rain_2"){
+                index = 8;
+            }else if(iconName == "rain_3"){
+                index = 9;
+            }else if(iconName == "rain_4"){
+                index = 10;
+            }else if(iconName == "snow_1"){
+                index = 11;
+            }else if(iconName == "snow_1_night"){
+                index = 12;
+            }else if(iconName == "snow_2"){
+                index = 13;
+            }else if(iconName == "snow_3"){
+                index = 14;
+            }else if(iconName == "thunderstorm_1"){
+                index = 15;
+            }else if(iconName == "thunderstorm_1_3_night"){
+                index = 16;
+            }else if(iconName == "thunderstorm_2"){
+                index = 17;
+            }else if(iconName == "thunderstorm_3"){
+                index = 18;
             }else{
                 //iconName not valid. Default: clear icon
-                index = 3;
+                index = 0;
             }
         }
     );
