@@ -3,11 +3,12 @@
 #include "ble/remote_dispatcher.h"
 #include "controller/controller.h"
 #include "input/input_manager.h"
-#include "view/bin_pngs/16/select_arrow.h"
+#include "utility/resource_monitor.h"
 #include "view/bin_pngs/32/calendar.h"
 #include "view/bin_pngs/32/message.h"
 #include "view/bin_pngs/32/missed-call.h"
 #include "view/bin_pngs/32/no-wifi.h"
+#include "view/bin_pngs/32/select-arrow.h"
 #include "view/bin_pngs/32/share.h"
 #include "view/bin_pngs/32/smart-glasses.h"
 #include "view/bin_pngs/32/text.h"
@@ -26,15 +27,16 @@ std::unique_ptr<Homepage> Homepage::Factory::create() {
         std::unique_ptr<Homepage>(new Homepage(nullptr));
 
     Image* selectionArrow = new Image(
-        RectType{Coordinates{SCREEN_WIDTH / 2 - 8, 0}, Size{16, 16}},
+        RectType{Coordinates{SCREEN_WIDTH - 64, SCREEN_HEIGHT / 2 - 16},
+                 Size{32, 32}},
         homepage.get(),
         std::vector<BinaryImageInfo>{
             BinaryImageInfo{16, 16, sizeof(select_arrow), select_arrow},
         });
 
     ConnectionStateImage* connectionStateImg = new ConnectionStateImage(
-        RectType{Coordinates{0, SCREEN_HEIGHT - 32}, Size{32, 32}},
-        homepage.get(), BinaryImageInfo{32, 32, sizeof(share), share},
+        RectType{Coordinates{0, 0}, Size{32, 32}}, homepage.get(),
+        BinaryImageInfo{32, 32, sizeof(share), share},
         BinaryImageInfo{32, 32, sizeof(no_wifi), no_wifi});
 
     auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
@@ -43,14 +45,13 @@ std::unique_ptr<Homepage> Homepage::Factory::create() {
                                   connectionStateImg);
 
     Notification* callNotification = new Notification(
-        RectType{Coordinates{20, SCREEN_HEIGHT - 32}, Size{32, 32}},
-        homepage.get(),
+        RectType{Coordinates{0, 32}, Size{32, 32}}, homepage.get(),
         BinaryImageInfo{32, 32, sizeof(missed_call), missed_call},
         ble::CallNotification::name);
 
     Notification* messageNotification = new Notification(
-        RectType{Coordinates{40, SCREEN_WIDTH - 32}, Size{32, 32}},
-        homepage.get(), BinaryImageInfo{32, 32, sizeof(text), text},
+        RectType{Coordinates{0, 64}, Size{32, 32}}, homepage.get(),
+        BinaryImageInfo{32, 32, sizeof(text), text},
         ble::MessageNotification::name);
 
     remoteDispatcher->addObserver(ble::CallNotification::name,
@@ -59,7 +60,8 @@ std::unique_ptr<Homepage> Homepage::Factory::create() {
     remoteDispatcher->addObserver(ble::MessageNotification::name,
                                   messageNotification);
 
-    Roll* roll = new Roll(RectType{Coordinates{0, 32}, Size{SCREEN_WIDTH, 120}},
+    Roll* roll = new Roll(
+        RectType{Coordinates{64, 0}, Size{SCREEN_WIDTH - 32, SCREEN_HEIGHT}},
                           homepage.get());
 
     auto inputManager = InputManager::getInstance();

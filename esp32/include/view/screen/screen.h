@@ -1,7 +1,7 @@
 #pragma once
 
-#define SCREEN_WIDTH 240
-#define SCREEN_HEIGHT 320
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
 
 #include <cstdint>
 #include "view/coordinates.h"

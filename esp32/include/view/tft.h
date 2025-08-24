@@ -11,6 +11,7 @@ public:
             return instance;
         instance = new TFT_eSPI();
         instance->begin();
+        instance->setRotation(3);
         instance->fillScreen(TFT_BLACK);
         return instance;
     }
