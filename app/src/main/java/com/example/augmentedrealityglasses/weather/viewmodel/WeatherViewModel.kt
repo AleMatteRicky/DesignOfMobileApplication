@@ -46,9 +46,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 import kotlin.coroutines.resume
 
 class WeatherViewModel(
@@ -220,50 +223,92 @@ class WeatherViewModel(
     }
 
     //TODO: add wind?
+    /**
+     * This method sends the update message to the external device. The message is created with the current weatherState value (location and conditions are read)
+     */
     private fun sendBluetoothMessage(
-        location: String,
-        temperature: Int,
-        iconId: Int,
-        pressure: Int,
         context: Context
     ) {
 
-        //In order to get the image's name instead of the android identifier of the resource
-        val iconName = context.resources.getResourceEntryName(iconId)
+        val location = weatherState.value.location
+        val conditions = weatherState.value.conditions
 
-        val msg = createBLEMessage(
-            location,
-            temperature,
-            iconName,
-            pressure
-        )
+        //Main json object that is sent through ble connection
+        val jsonToSend = JSONObject()
 
-        Log.d(TAG, "BLE message:\n$msg")
+        jsonToSend.put("command", "w")
+        jsonToSend.put("location", location.name) //location name
 
-        if (isExtDeviceConnected) {
-            viewModelScope.launch {
-                proxy.send(msg)
+        //Json array for the list of conditions
+        val jsonArray = JSONArray()
+
+        val currCond = weatherState.value.conditions.find { it.isCurrent }
+
+        if (currCond != null) {
+
+            //Current condition
+            jsonArray.put(
+                conditionToJsonObject(
+                    time = "Now",
+                    temperature = currCond.temp,
+
+                    //In order to get the image's name instead of the android identifier of the resource
+                    iconName = context.resources.getResourceEntryName(currCond.iconId),
+                    pressure = currCond.pressure
+                )
+            )
+
+            // Forecasts. The number of forecasts sent via BLE depends on Constants.FORECASTS_TO_SEND_WITH_BLE.
+            // To adjust how many are included, just change that constant.
+            conditions.filter { !it.isCurrent }.take(Constants.FORECASTS_TO_SEND_WITH_BLE)
+                .forEach { condition ->
+
+                    //In order to get the image's name instead of the android identifier of the resource
+                    val iconName = context.resources.getResourceEntryName(condition.iconId)
+
+                    //Time formatter
+                    val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+                    val jsonCond = conditionToJsonObject(
+                        time = timeFmt.format(condition.dateTime),
+                        condition.temp,
+                        iconName,
+                        condition.pressure
+                    )
+
+                    jsonArray.put(jsonCond)
+                }
+
+            jsonToSend.put("conditions", jsonArray)
+
+            val msg = jsonToSend.toString()
+
+            Log.d(TAG, "BLE message:\n$msg")
+
+            if (isExtDeviceConnected) {
+                viewModelScope.launch {
+                    proxy.send(msg)
+                }
+            } else {
+                Log.d(TAG, "External device not connected")
             }
-        } else {
-            Log.d(TAG, "External device not connected")
         }
     }
 
-    private fun createBLEMessage(
-        location: String,
+    private fun conditionToJsonObject(
+        time: String,
         temperature: Int,
         iconName: String,
         pressure: Int
-    ): String {
+    ): JSONObject {
         val json = JSONObject()
 
-        json.put("command", "w")
-        json.put("location", location)
+        json.put("time", time)
         json.put("temperature", temperature)
         json.put("iconName", iconName)
         json.put("pressure", pressure)
 
-        return json.toString()
+        return json
     }
 
     fun getGeolocationPermissions(context: Context): Map<String, Boolean> {
@@ -596,13 +641,7 @@ class WeatherViewModel(
                                         if (currentWeatherConditionState != null) {
 
                                             //send updates to ESP (just the current geolocation condition) //TODO
-                                            sendBluetoothMessage(
-                                                location = weatherState.value.location.name,
-                                                temperature = currentWeatherConditionState.temp,
-                                                iconId = currentWeatherConditionState.iconId,
-                                                pressure = currentWeatherConditionState.pressure,
-                                                context = context
-                                            )
+                                            sendBluetoothMessage(context = context)
                                         }
                                     }
 
@@ -714,13 +753,7 @@ class WeatherViewModel(
                                         if (currentWeatherConditionState != null) {
 
                                             //send updates to ESP (just the current geolocation condition) //TODO
-                                            sendBluetoothMessage(
-                                                location = weatherState.value.location.name,
-                                                temperature = currentWeatherConditionState.temp,
-                                                iconId = currentWeatherConditionState.iconId,
-                                                pressure = currentWeatherConditionState.pressure,
-                                                context = context
-                                            )
+                                            sendBluetoothMessage(context = context)
                                         }
                                     }
 
@@ -756,13 +789,7 @@ class WeatherViewModel(
                 if (currentWeatherConditionState != null) {
 
                     //send updates to ESP (just the current geolocation condition) //TODO
-                    sendBluetoothMessage(
-                        location = weatherState.value.location.name,
-                        temperature = currentWeatherConditionState.temp,
-                        iconId = currentWeatherConditionState.iconId,
-                        pressure = currentWeatherConditionState.pressure,
-                        context = context
-                    )
+                    sendBluetoothMessage(context = context)
                 }
             }
             isLoading = false
