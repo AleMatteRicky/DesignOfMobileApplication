@@ -25,8 +25,13 @@ void setup() {
     std::unique_ptr<view::PageFactory> pageFactory =
         std::make_unique<view::PageFactoryImpl>();
 
-    std::unique_ptr<view::Window> window = std::make_unique<view::Window>(
-        [&](view::PageType type) { controller->changePage(type); });
+    std::unique_ptr<view::Window> window =
+        std::make_unique<view::Window>([](view::PageType type) {
+            controller::CentralController* controller =
+                controller::CentralController::getInstance();
+
+            controller->changePage(type);
+        });
 
     window->setPage(pageFactory->createPage(view::PageType::HOME));
 
