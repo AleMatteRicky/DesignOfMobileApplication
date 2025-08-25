@@ -27,13 +27,15 @@ import java.io.File
  * This design allows multiple cache entries in one file, each with its own key and metadata.
  */
 class DataStoreMapCache(
-    context: Context,
-    fileName: String,
-
+    private val file: File,
+    private val externalScope: CoroutineScope? = null,
     // JSON instance used for serialization/deserialization.
     // Configured to ignore unknown keys by default for forward compatibility.
     override val json: Json = Json { ignoreUnknownKeys = true } //TODO: check this
 ) : Cache {
+
+    private val job = SupervisorJob()
+    private val scope = externalScope ?: CoroutineScope(Dispatchers.IO + job)
 
     // Serializer for Map<String, CacheEntry>
     private val mapSerializer = MapSerializer(String.serializer(), CacheEntry.serializer())
@@ -44,9 +46,9 @@ class DataStoreMapCache(
         // If the file is corrupted, replace with an empty map
         corruptionHandler = ReplaceFileCorruptionHandler { emptyMap() },
         // Store the file in the app's private internal storage
-        produceFile = { File(context.applicationContext.filesDir, fileName) },
+        produceFile = { file },
         // Run DataStore operations on IO dispatcher
-        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        scope = scope
     )
 
     // Mutex to ensure thread-safe read/write operations

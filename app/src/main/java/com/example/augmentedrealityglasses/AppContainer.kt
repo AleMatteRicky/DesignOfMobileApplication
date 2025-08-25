@@ -11,6 +11,7 @@ import com.example.augmentedrealityglasses.cache.DataStoreMapCache
 import com.example.augmentedrealityglasses.cache.MaxAgePolicy
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
+import java.io.File
 
 /**
  * Dependency Injection container at the application level.
@@ -42,7 +43,8 @@ class DefaultAppContainer(
         }
     override val weatherAPIRepository: WeatherRepositoryImpl =
         WeatherRepositoryImpl()
-    override val weatherCache: Cache = DataStoreMapCache(context, "weather_cache.json")
+    override val weatherCache: Cache =
+        DataStoreMapCache(File(context.applicationContext.filesDir, "weather_cache.json"))
     override val weatherCachePolicy: CachePolicy =
         MaxAgePolicy(Constants.MAX_AGE_WEATHER_CACHE_POLICY_MILLS)
 }
