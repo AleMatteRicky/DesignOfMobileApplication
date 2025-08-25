@@ -167,8 +167,9 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
             BinaryImageInfo{32, 32, sizeof(thunderstorm_1_3_night), thunderstorm_1_3_night},
             BinaryImageInfo{32, 32, sizeof(thunderstorm_2), thunderstorm_2},
             BinaryImageInfo{32, 32, sizeof(thunderstorm_3), thunderstorm_3},            
-        },
-        [](ble::UpdateMessage const& event, int& index){
+        });
+
+    auto onUpdateMessage = [](ble::UpdateMessage const& event, int& index){
             JsonDocument doc;
             deserializeJson(doc, event.msg);
 
@@ -221,8 +222,9 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
                 //iconName not valid. Default: clear icon
                 index = 0;
             }
-        }
-    );
+        };
+
+    weatherImage->setOnUpdateMessage(onUpdateMessage);
 
     remoteDispatcher->addObserver(ble::UpdateMessage::name, weatherImage);
 

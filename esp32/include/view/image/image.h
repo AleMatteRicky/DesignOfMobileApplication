@@ -36,12 +36,22 @@ public:
 
     void onEvent(Click const&) override { m_onClickCb(); }
 
+    void onEvent(ble::ConnectionState const& event) override {
+        m_onConnectionState(event);
+    }
+
     void setOnClick(std::function<void(void)> const& callback) {
         m_onClickCb = callback;
     }
 
-    void setOnUpdateMessage(std::function<void(ble::UpdateMessage const&, int&)> const& onUpdateMessage) {
+    void setOnUpdateMessage(std::function<void(ble::UpdateMessage const&,
+                                               int&)> const& onUpdateMessage) {
         m_onUpdateMessage = onUpdateMessage;
+    }
+
+    void setOnConnectionState(
+        std::function<void(ble::ConnectionState)> callback) {
+        m_onConnectionState = callback;
     }
 
 protected:
@@ -54,8 +64,9 @@ private:
     std::vector<BinaryImageInfo> m_binImages;
     std::string m_name;
 
-    std::function<void(void)> m_onClickCb;
-
-    std::function<void(ble::UpdateMessage const&, int&)> m_onUpdateMessage;
+    std::function<void(void)> m_onClickCb = [](){};
+    std::function<void(ble::ConnectionState)> m_onConnectionState =
+        [](ble::ConnectionState) {};
+    std::function<void(ble::UpdateMessage const&, int&)> m_onUpdateMessage = [](ble::UpdateMessage const&, int&){};
 };
 }  // namespace view
