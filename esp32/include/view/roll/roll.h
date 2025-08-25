@@ -28,11 +28,12 @@ public:
         v.onEvent(ev);
     }
 
-    void drawOnScreen() override;
-
     View& getImageAtIndex(int16_t i, bool clockwise) {
         return getSubViewAtIndex(getIdx(i, clockwise));
     }
+
+protected:
+    void drawOnScreen() override;
 
 private:
     int16_t getIdx(int16_t i, bool clockwise) {

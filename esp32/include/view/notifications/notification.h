@@ -54,7 +54,7 @@ public:
     }
 
     void drawOnScreen() override {
-        m_imageWhenTheEventIsTriggered.drawOnScreen();
+        m_imageWhenTheEventIsTriggered.draw();
     }
 
 private:

@@ -15,11 +15,8 @@ class Image : public View {
 public:
     Image(RectType frame,
           View* superiorView,
-          std::vector<BinaryImageInfo> binImages,
-          std::string name = "")
+          std::vector<BinaryImageInfo> binImages)
         : View::View(frame, superiorView, "Image"), m_binImages(binImages) {}
-
-    void drawOnScreen() override;
 
     int pngDraw(PNGDRAW* pDraw);
 
@@ -45,6 +42,8 @@ public:
 
 protected:
     void setIdxCurImage(byte idx) { m_idxCurImage = idx; }
+
+    void drawOnScreen() override;
 
 private:
     byte m_idxCurImage = 0;
