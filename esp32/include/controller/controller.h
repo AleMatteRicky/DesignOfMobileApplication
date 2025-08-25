@@ -40,18 +40,11 @@ public:
 
     void changePage(view::PageType);
 
-    void drawUI() {
-        assert(m_window != nullptr);
+    void advertise() { m_model->advertise(); }
 
-        /*
-        Serial.println("Printing the UI tree");
-        delay(1000);
-        m_window->printTree();
-        */
+    void disconnect() { m_model->disconnect(); }
 
-        Serial.println("Drawing the UI");
-        m_window->draw();
-    }
+    bool isConnected() { return m_model && m_model->isConnected(); }
 
 private:
     // remove the Views from the respective listeners to avoid them referencing
