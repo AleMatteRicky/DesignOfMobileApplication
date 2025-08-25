@@ -30,9 +30,7 @@ public:
         }
     }
 
-    virtual ~View() {
-        Serial.printf("%s at %p is destroyed\n", m_tag.c_str(), this);
-    }
+    virtual ~View();
 
     void draw() {
         if (m_isVisible) {
@@ -215,6 +213,7 @@ protected:
      * Detaches the provided view from the tree rooted in this View
      */
     std::unique_ptr<View> detach(View const& view) {
+        Serial.printf("Detaching view at %p\n", &view);
         std::unique_ptr<View> reference;
         int16_t idx = -1;
         for (byte i = 0; i < m_subViews.size() && idx == -1; i++) {
@@ -224,6 +223,7 @@ protected:
             }
         }
 
+        Serial.printf("The view to detach is at %d\n", idx);
         assert(idx != -1);
         m_subViews.erase(m_subViews.begin() + idx);
         return reference;

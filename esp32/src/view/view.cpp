@@ -1,6 +1,15 @@
 #include "view/view.h"
+#include "ble/remote_dispatcher.h"
 
 namespace view {
+
+View::~View() {
+    Serial.printf("%s at %p is destroyed\n", m_tag.c_str(), this);
+    auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
+    auto inputManager = InputManager::getInstance();
+    remoteDispatcher->removeFromAllEvents(*this);
+    inputManager->removeFromAllEvents(*this);
+}
 
 void View::applyRecursively(std::function<void(View&)> f) {
     for (auto const& subView : m_subViews) {

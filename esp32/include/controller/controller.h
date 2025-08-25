@@ -47,10 +47,6 @@ public:
     bool isConnected() { return m_model && m_model->isConnected(); }
 
 private:
-    // remove the Views from the respective listeners to avoid them referencing
-    // to deleted memory
-    void removeFromSubjects();
-
     CentralController() {}
 
 private:

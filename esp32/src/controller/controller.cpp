@@ -11,14 +11,4 @@ void CentralController::changePage(view::PageType page) {
     removeFromSubjects();
     m_window->setPage(m_pageFactory->createPage(view::PageType::HOME));
 }
-
-void CentralController::removeFromSubjects() {
-    m_window->applyRecursively([](view::View& v) {
-    auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
-    auto inputManager = InputManager::getInstance();
-        remoteDispatcher->removeFromAllEvents(v);
-        inputManager->removeFromAllEvents(v);
-    });
-}
-
 }  // namespace controller
