@@ -14,7 +14,7 @@ struct ObserverBase {
 
 template <typename... Args>
 struct Observer : ObserverBase<Args>... {
-    using ObserverBase<Args>::onEvent...;  // bring all handle() into scope
+    using ObserverBase<Args>::onEvent...;  // bring all 'onEvent()' into scope
 };
 
 template <typename... Args>
@@ -94,11 +94,12 @@ public:
 
         auto& observers = m_mapEventToObservers[eventName];
 
-        observers.erase(
-            std::remove_if(observers.begin(), observers.end(),
-                           [&](auto const& o) { return o == &observer; }),
+        observers.erase(std::remove_if(observers.begin(), observers.end(),
+                                       [&observer](auto const& o) {
+                                           return o == &observer;
+                                       }),
 
-            observers.end());
+                        observers.end());
     }
 
     void removeFromAllEvents(ObserverType<Args...> const& observer) override {
@@ -120,7 +121,7 @@ public:
 
         auto const& it =
             std::find_if(observers.begin(), observers.end(),
-                         [&](auto const& o) { return o == &observer; });
+                         [&observer](auto const& o) { return o == &observer; });
 
         return it != observers.end();
     }
@@ -130,7 +131,7 @@ public:
         auto const& observersToNotify = m_mapEventToObservers[eventName];
 
         for (auto const& o : observersToNotify) {
-            std::visit([&](auto&& n) { o->onEvent(n); }, notification);
+            std::visit([&o](auto&& n) { o->onEvent(n); }, notification);
         }
     }
 
