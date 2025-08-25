@@ -4,7 +4,7 @@
 #include "view/tft.h"
 
 namespace view {
-void Image::draw() {
+void Image::drawOnScreen() {
     BinaryImageInfo curBinImg = m_binImages[m_idxCurImage];
 
     MemberFunctionBridge<Image, int, PNGDRAW*>::setup(this, &Image::pngDraw);
@@ -34,12 +34,6 @@ void Image::draw() {
     rc = png->decode(NULL, 0);
 
     tft->endWrite();
-    /*
-   TODO: see maybe it can be optimized further. I guess this is because we are
-   not storing the binary format of the image in RAM but getting it from the
-   flash memory (use of PROGMEM for this purpose).
-    */
-    //
     // png.close(); // not needed for memory->memory decode
 
     MemberFunctionBridge<Image, int, PNGDRAW*>::setup(nullptr, nullptr);

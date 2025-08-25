@@ -28,7 +28,7 @@ public:
         v.onEvent(ev);
     }
 
-    void draw() override;
+    void drawOnScreen() override;
 
     View& getImageAtIndex(int16_t i, bool clockwise) {
         return getSubViewAtIndex(getIdx(i, clockwise));

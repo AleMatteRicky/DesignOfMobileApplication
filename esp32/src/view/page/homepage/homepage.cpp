@@ -120,9 +120,8 @@ std::unique_ptr<Homepage> Homepage::Factory::create() {
     return homepage;
 }
 
-void Homepage::draw() {
-    unsigned int remaining_stack = uxTaskGetStackHighWaterMark(NULL);
-    Serial.printf("Remaining stack size: %u bytes\n", remaining_stack);
+void Homepage::drawOnScreen() {
+    ResourceMonitor::printRemainingStackSize();
     for (byte i = 0; i < getNumSubViews(); i++) {
         getSubViewAtIndex(i).draw();
     }

@@ -40,7 +40,7 @@ public:
         }
     }
 
-    void clear() {
+    void clearFromScreen() {
         auto tft = tft::Tft::getTFT_eSPI();
         auto coordinates = getCoordinates();
         auto size = getSize();

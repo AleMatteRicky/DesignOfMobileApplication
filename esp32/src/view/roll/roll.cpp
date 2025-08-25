@@ -1,7 +1,7 @@
 #include "view/roll/roll.h"
 
 namespace view {
-void Roll::draw() {
+void Roll::drawOnScreen() {
     Serial.println("Drawing a roll");
 
     View& viewAtCenter = getSubViewAtIndex(m_idxImageAtTheCenter);

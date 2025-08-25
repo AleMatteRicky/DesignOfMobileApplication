@@ -21,7 +21,7 @@ public:
         static std::unique_ptr<Homepage> create();
     };
 
-    void draw() override;
+    void drawOnScreen() override;
 
 private:
     Homepage(Window* window)

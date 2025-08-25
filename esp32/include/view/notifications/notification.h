@@ -19,12 +19,13 @@ public:
                  BinaryImageInfo imageWhenTheEventIsTriggered,
                  std::string const& nameOfTheTriggeringEvent,
                  int durationOfTheNotificationInMs = 3000)
-        : View::View(frame, superiorView, "popup"),
+        : View::View(frame, superiorView, "notification"),
           m_imageWhenTheEventIsTriggered(frame,
                                          nullptr,
                                          {imageWhenTheEventIsTriggered}),
           m_nameOfTheTriggeringEvent(nameOfTheTriggeringEvent),
-          m_durationOfTheNotificationInMs(durationOfTheNotificationInMs) {}
+          m_durationOfTheNotificationInMs(durationOfTheNotificationInMs),
+          m_isVisible{false} {}
 
     ~Notification() override {
         // cancel to avoid the function 'close' be invoked after the object has
@@ -36,12 +37,8 @@ public:
      * Closes this notification
      */
     void close() {
-        auto tft = tft::Tft::getTFT_eSPI();
-        auto coordinates = getCoordinates();
-        auto size = getSize();
-        // equivalent to hide the component
-        tft->fillRect(coordinates.m_x, coordinates.m_y, size.m_width,
-                      size.m_height, TFT_BLACK);
+        m_isVisible = false;
+        clearFromScreen();
     }
 
     void onEvent(ble::CallNotification const& event) override {
@@ -56,12 +53,15 @@ public:
         }
     }
 
-    void draw() override { m_imageWhenTheEventIsTriggered.draw(); }
+    void drawOnScreen() override {
+        m_imageWhenTheEventIsTriggered.drawOnScreen();
+    }
 
 private:
     void doOnEvent() {
-        m_imageWhenTheEventIsTriggered.draw();
-        m_timer.delay(m_durationOfTheNotificationInMs, [&]() { close(); });
+        m_isVisible = true;
+        drawOnScreen();
+        m_timer.delay(m_durationOfTheNotificationInMs, [this]() { close(); });
     }
 
 private:
@@ -69,5 +69,6 @@ private:
     std::string m_nameOfTheTriggeringEvent;
     int m_durationOfTheNotificationInMs;
     Timer m_timer;
+    bool m_isVisible;
 };
 }  // namespace view

@@ -19,7 +19,7 @@ public:
           std::string name = "")
         : View::View(frame, superiorView, "Image"), m_binImages(binImages) {}
 
-    void draw() override;
+    void drawOnScreen() override;
 
     int pngDraw(PNGDRAW* pDraw);
 

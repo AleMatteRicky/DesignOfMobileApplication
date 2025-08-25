@@ -5,6 +5,7 @@
 #include "page/page.h"
 #include "page/type.h"
 #include "view/screen/screen.h"
+#include "view/tft.h"
 #include "view/view.h"
 
 namespace view {
@@ -17,22 +18,16 @@ public:
               "window"),
           m_onChangingPageCallback(onChangingPageCallback) {}
 
-    void draw() {
-        View& curPage = getSubViewAtIndex(0);
-        curPage.draw();
+    void drawOnScreen() override {
+        clearFromScreen();
+
+        for (byte i = 0; i < getNumSubViews(); i++) {
+            View& subView = getSubViewAtIndex(i);
+            subView.draw();
+        }
     }
 
-    void setPage(std::unique_ptr<Page> page) {
-        // destroy the current page and add the new one
-        if (View::getNumSubViews() > 0)
-            View::detach(View::getSubViewAtIndex(0));
-        View::appendSubView(std::move(page));
-        auto inputManager = InputManager::getInstance();
-        inputManager->addObserver(Press::name, this);
-        inputManager->addObserver(DoubleClick::name, this);
-        draw();
-        printTree();
-    }
+    void setPage(std::unique_ptr<Page> page);
 
     void onEvent(Press const& ev) override {
         m_onChangingPageCallback(PageType::HOME);
