@@ -10,12 +10,14 @@ namespace ble {
 
 ConnectionManager::ConnectionManager()
     : m_connectionState(ConnectionState{ConnectionState::DISCONNECTED}),
-      m_bondingState(BondingState{BondingState::NOTBONDED, 0}) {
+      m_bondingState(BondingState{BondingState::NOTBONDED, 0}),
+      m_isAdvertising{false} {
     // Create the BLE Device
     BLEDevice::init("ESP32 device");
     setupBonding();
     setupConnectionMonitoring();
     setupCharacteristics();
+    Serial.println("ConnectionManager setup correctly\n");
 }
 
 void ConnectionManager::setupBonding() {
@@ -66,26 +68,48 @@ void ConnectionManager::setupCharacteristics() {
 }
 
 void ConnectionManager::advertise() {
+    Serial.println("Start advertising");
+    if (m_connectionState.phase == ConnectionState::CONNECTED) {
+        disconnect();
+    }
     BLEAdvertising* pAdvertising = m_server->getAdvertising();
+    if (m_isAdvertising)
+        pAdvertising->stop();
     pAdvertising->addServiceUUID(service_uuid);
     pAdvertising->setScanResponse(true);
     // preferred minimum interval after which two devices exchange info
     pAdvertising->setMinPreferred(0x06);
     pAdvertising->setMinPreferred(0x12);
     pAdvertising->start();
+    m_isAdvertising = true;
+}
+
+void ConnectionManager::disconnect() {
+    auto connectionId = m_server->getConnId();
+    m_server->disconnect(connectionId);
 }
 
 void ConnectionManager::onConnectionStateChange(ConnectionState const& ev) {
+    if (ev.phase == ConnectionState::CONNECTED) {
+        Serial.printf("Received network event: device is connected\n");
+    } else {
+        Serial.printf("Received network event: device is not connected\n");
+    }
+    m_isAdvertising = false;
+    m_connectionState = ev;
     auto dispatcher = RemoteDispatcher::getInstance();
     dispatcher->notify(ConnectionState::name, ConnectionState(ev));
 }
 
 void ConnectionManager::onBondingStateChange(BondingState const& ev) {
+    m_bondingState = ev;
     auto dispatcher = RemoteDispatcher::getInstance();
     dispatcher->notify(BondingState::name, BondingState(ev));
 }
 
 void ConnectionManager::onCharacteristicChange(std::string const& msg) {
+    Serial.printf("A message arrived: %s\n", msg.c_str());
+
     // TODO: add msg to the buffer until one arrives contianing '$' (terminal
     // character). From that moment, the content of the buffer can be
     // interpreted as it refers to a valid message and so it can be parsed.

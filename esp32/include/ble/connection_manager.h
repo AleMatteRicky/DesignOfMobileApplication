@@ -25,7 +25,10 @@ public:
 
     void advertise() override;
 
+    void disconnect() override;
+
     bool isConnected() override {
+        Serial.println("Checking connection");
         return m_connectionState.phase == ConnectionState::CONNECTED;
     }
 
@@ -50,6 +53,7 @@ private:
     std::string buffer;
 
     // TODO: for now let us keep them non thread safe
+    bool m_isAdvertising;
     ConnectionState m_connectionState;
     BondingState m_bondingState;
 };
