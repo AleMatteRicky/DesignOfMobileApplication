@@ -204,6 +204,11 @@ protected:
         return reference;
     }
 
+    /**
+     * Detaches all subViews rooted in this View
+     */
+    void detachAll() { m_subViews.clear(); }
+
 private:
     View* m_parentView;
 
