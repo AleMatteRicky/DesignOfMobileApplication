@@ -7,6 +7,7 @@
 #include "view/remote_responder.h"
 #include "view/responder.h"
 #include "view/size.h"
+#include "view/tft.h"
 
 namespace view {
 
@@ -16,16 +17,36 @@ namespace view {
  */
 class View : public Responder, public RemoteResponder {
 public:
-    View(RectType frame, View* superiorView, std::string const& tag)
-        : m_frame(frame), m_parentView(nullptr), m_tag(tag) {
+    View(RectType frame,
+         View* superiorView,
+         std::string const& tag,
+         bool isVisible = true)
+        : m_frame(frame),
+          m_parentView(nullptr),
+          m_tag(tag),
+          m_isVisible(isVisible) {
         if (superiorView != nullptr) {
             superiorView->appendSubView(std::unique_ptr<View>(this));
         }
     }
 
-    virtual ~View() { Serial.printf("View at %p destroyed\n", this); }
+    virtual ~View() {
+        Serial.printf("%s at %p is destroyed\n", m_tag.c_str(), this);
+    }
 
-    virtual void draw() = 0;
+    void draw() {
+        if (m_isVisible) {
+            drawOnScreen();
+        }
+    }
+
+    void clear() {
+        auto tft = tft::Tft::getTFT_eSPI();
+        auto coordinates = getCoordinates();
+        auto size = getSize();
+        tft->fillRect(coordinates.m_x, coordinates.m_y, size.m_width,
+                      size.m_height, TFT_BLACK);
+    }
 
     /**
      * Moves the view, already present in the UI tree, to the tree rooted in
@@ -93,6 +114,8 @@ public:
 
         m_frame.m_coordinates.m_y = center.m_y - m_frame.m_size.m_height / 2;
     }
+
+    void makeVisible(bool isVisible) { m_isVisible = isVisible; }
 
     /**
      * Applies the given function recursively, visiting the tree of views
@@ -171,6 +194,8 @@ public:
     }
 
 protected:
+    virtual void drawOnScreen() = 0;
+
     size_t getNumSubViews() { return m_subViews.size(); }
 
     /**
@@ -218,6 +243,8 @@ private:
     RectType m_frame;
 
     std::string m_tag;
+
+    bool m_isVisible;
 };
 
 }  // namespace view
