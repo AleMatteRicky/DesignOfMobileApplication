@@ -6,7 +6,6 @@
 #include "controller/controller.h"
 #include "view/main_event_queue.h"
 #include "view/page/page_factory_impl.h"
-#include "view/tft.h"
 #include "view/ui_event.h"
 #include "view/window.h"
 
@@ -25,29 +24,24 @@ void setup() {
     std::unique_ptr<view::PageFactory> pageFactory =
         std::make_unique<view::PageFactoryImpl>();
 
-    std::unique_ptr<view::Window> window =
-        std::make_unique<view::Window>([](view::PageType type) {
-            controller::CentralController* controller =
-                controller::CentralController::getInstance();
+    std::unique_ptr<view::Window> window = std::make_unique<view::Window>(
+        pageFactory->createPage(view::PageType::CONNECTION));
 
-            controller->changePage(type);
-        });
-
-    window->setPage(pageFactory->createPage(view::PageType::HOME));
+    window->draw();
 
     controller->setModel(std::move(connectionManager));
     controller->setPageFactory(std::move(pageFactory));
     controller->setWindow(std::move(window));
 
-    delay(3000);
+    delay(1000);
     Serial.println("Setup finished");
 }
 
 void loop() {
     auto inputManager = InputManager::getInstance();
-#if 0
     auto controller = controller::CentralController::getInstance();
     if (!mainEventQueue->isEmpty()) {
+        Serial.println("Pulling event out from the main event queue");
         std::unique_ptr<view::UIEvent> event =
             std::move(mainEventQueue->remove());
         view::UIEventTag tag = event->getTag();
@@ -59,7 +53,6 @@ void loop() {
                 break;
         }
     }
-    delay(3000);
-#endif
     inputManager->handleInput();
+    delay(500);
 }

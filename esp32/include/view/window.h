@@ -11,13 +11,15 @@
 namespace view {
 class Window : public View {
 public:
-    Window(std::function<void(PageType)> onChangingPageCallback)
-        : View::View(
-              RectType{Coordinates{0, 0}, Size{SCREEN_WIDTH, SCREEN_HEIGHT}},
-              nullptr,
-              "window"),
-          m_onChangingPageCallback(onChangingPageCallback) {}
+    Window(std::unique_ptr<Page>&& firstPage);
 
+    void setPage(std::unique_ptr<Page> page);
+
+    void onEvent(Press const& ev) override;
+
+    void onEvent(DoubleClick const& ev) override;
+
+protected:
     void drawOnScreen() override {
         clearFromScreen();
 
@@ -27,17 +29,7 @@ public:
         }
     }
 
-    void setPage(std::unique_ptr<Page> page);
-
-    void onEvent(Press const& ev) override {
-        m_onChangingPageCallback(PageType::HOME);
-    }
-
-    void onEvent(DoubleClick const& ev) override {
-        m_onChangingPageCallback(PageType::CONNECTION);
-    }
-
 private:
-    std::function<void(PageType)> m_onChangingPageCallback;
+    byte const m_idxPage;
 };
 }  // namespace view

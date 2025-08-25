@@ -9,14 +9,12 @@
 #include "view/notifications/notification.h"
 
 namespace view {
-void Window::setPage(std::unique_ptr<Page> page) {
-    // destroy the current page and add the new one
-    Serial.printf("The window had %d direct subviews\n", getNumSubViews());
 
-    detachAll();
-
-    View::appendSubView(std::move(page));
-
+Window::Window(std::unique_ptr<Page>&& firstPage)
+    : View::View(RectType{Coordinates{0, 0}, Size{SCREEN_WIDTH, SCREEN_HEIGHT}},
+                 nullptr,
+                 "window"),
+      m_idxPage{4} {
     auto inputManager = InputManager::getInstance();
     inputManager->addObserver(Press::name, this);
     inputManager->addObserver(DoubleClick::name, this);
@@ -30,6 +28,9 @@ void Window::setPage(std::unique_ptr<Page> page) {
         new Notification(RectType{Coordinates{0, 64}, Size{32, 32}}, this,
                          BinaryImageInfo{32, 32, sizeof(text), text},
                          ble::MessageNotification::name);
+
+    callNotification->makeVisible(false);
+    messageNotification->makeVisible(false);
 
     Image* connectionImage =
         new Image(RectType{Coordinates{0, 0}, Size{32, 32}}, this,
@@ -85,8 +86,33 @@ void Window::setPage(std::unique_ptr<Page> page) {
     remoteDispatcher->addObserver(ble::MessageNotification::name,
                                   messageNotification);
 
+    appendSubView(std::move(firstPage));
+}
+
+void Window::setPage(std::unique_ptr<Page> page) {
+    // destroy the current page and add the new one
+    Serial.printf("The window had %d direct subviews\n", getNumSubViews());
+
+    // detach only the page, notifications need to have the same liveness of the
+    // window
+    detach(getSubViewAtIndex(m_idxPage));
+
+    View::appendSubView(std::move(page));
+
     printTree();
     draw();
+}
+
+void Window::onEvent(Press const&) {
+    controller::CentralController* controller =
+        controller::CentralController::getInstance();
+    controller->changePage(PageType::HOME);
+}
+
+void Window::onEvent(DoubleClick const& ev) {
+    controller::CentralController* controller =
+        controller::CentralController::getInstance();
+    controller->changePage(PageType::CONNECTION);
 }
 
 }  // namespace view
