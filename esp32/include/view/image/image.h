@@ -15,7 +15,7 @@ class Image : public View {
 public:
     Image(RectType frame,
           View* superiorView,
-          std::vector<BinaryImageInfo> binImages)
+          std::vector<BinaryImageInfo> const& binImages)
         : View::View(frame, superiorView, "Image"), m_binImages(binImages) {}
 
     int pngDraw(PNGDRAW* pDraw);
@@ -34,10 +34,14 @@ public:
         return false;
     }
 
-    void onEvent(Click const&) { m_onClickCb(); }
+    void onEvent(Click const&) override { m_onClickCb(); }
 
-    void setOnClick(std::function<void(void)> callback) {
+    void setOnClick(std::function<void(void)> const& callback) {
         m_onClickCb = callback;
+    }
+
+    void setOnUpdateMessage(std::function<void(ble::UpdateMessage const&, int&)> const& onUpdateMessage) {
+        m_onUpdateMessage = onUpdateMessage;
     }
 
 protected:
@@ -51,5 +55,7 @@ private:
     std::string m_name;
 
     std::function<void(void)> m_onClickCb;
+
+    std::function<void(ble::UpdateMessage const&, int&)> m_onUpdateMessage;
 };
 }  // namespace view
