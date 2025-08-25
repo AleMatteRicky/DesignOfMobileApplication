@@ -20,7 +20,8 @@ public:
         static std::unique_ptr<WeatherPage> create();
     };
 
-    void draw() override;
+protected:
+    void drawOnScreen() override;
 
 private:
     WeatherPage(Window* window)

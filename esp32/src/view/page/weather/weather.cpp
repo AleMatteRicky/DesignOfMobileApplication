@@ -30,6 +30,7 @@
 #include "view/bin_pngs/32/weather_conditions/thunderstorm_3.h"
 #include "view/text/text.h"
 #include <ArduinoJson.h>
+#include "utility/resource_monitor.h"
 
 namespace view {
 std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
@@ -231,9 +232,8 @@ std::unique_ptr<WeatherPage> WeatherPage::Factory::create() {
     return weatherPage;
 }
 
-void WeatherPage::draw() {
-    unsigned int remaining_stack = uxTaskGetStackHighWaterMark(NULL);
-    Serial.printf("Remaining stack size: %u bytes\n", remaining_stack);
+void WeatherPage::drawOnScreen(){
+    ResourceMonitor::printRemainingStackSize();
     for (byte i = 0; i < getNumSubViews(); i++) {
         getSubViewAtIndex(i).draw();
     }

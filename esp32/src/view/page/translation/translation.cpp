@@ -11,6 +11,7 @@
 #include "view/notifications/notification.h"
 #include "view/text/text.h"
 #include <ArduinoJson.h>
+#include "utility/resource_monitor.h"
 
 namespace view {
 std::unique_ptr<TranslationPage> TranslationPage::Factory::create() {
@@ -68,9 +69,8 @@ std::unique_ptr<TranslationPage> TranslationPage::Factory::create() {
     return translationPage;
 }
 
-void TranslationPage::draw() {
-    unsigned int remaining_stack = uxTaskGetStackHighWaterMark(NULL);
-    Serial.printf("Remaining stack size: %u bytes\n", remaining_stack);
+void TranslationPage::drawOnScreen(){
+    ResourceMonitor::printRemainingStackSize();
     for (byte i = 0; i < getNumSubViews(); i++) {
         getSubViewAtIndex(i).draw();
     }

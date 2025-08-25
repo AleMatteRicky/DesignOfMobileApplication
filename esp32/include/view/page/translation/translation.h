@@ -20,7 +20,8 @@ public:
         static std::unique_ptr<TranslationPage> create();
     };
 
-    void draw() override;
+protected:
+    void drawOnScreen() override;
 
 private:
     TranslationPage(Window* window)
