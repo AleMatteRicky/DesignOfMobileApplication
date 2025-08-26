@@ -208,12 +208,18 @@ class TranslationViewModel(
         }
     }
 
+    /*
+    todo improve the behaviour, when the user tries to translate for the first time,
+        the viewmodel needs to download the source language. if the download is interrupted the viewmodel
+        will start another one
+     */
+
     private fun downloadSourceAndTargetLanguageModel() {
 
         if (isSourceModelNotAvailable && !uiState.isDownloadingSourceLanguageModel) {
             viewModelScope.launch {
                 uiState = uiState.copy(isDownloadingSourceLanguageModel = true)
-                downloadSourceLanguageModel()
+                downloadSourceOrTargetLanguageModel(isSource = true)
                 uiState = uiState.copy(isDownloadingSourceLanguageModel = false)
                 if (!isTargetModelNotAvailable) {
                     translate()
@@ -223,7 +229,7 @@ class TranslationViewModel(
         if (isTargetModelNotAvailable && !uiState.isDownloadingTargetLanguageModel) { //in practice should never happen, a target language can only be selected if it is available
             viewModelScope.launch {
                 uiState = uiState.copy(isDownloadingTargetLanguageModel = true)
-                downloadTargetLanguageModel()
+                downloadSourceOrTargetLanguageModel(isSource = false)
                 uiState = uiState.copy(isDownloadingTargetLanguageModel = false)
                 if (!isSourceModelNotAvailable) {
                     translate()
@@ -256,20 +262,21 @@ class TranslationViewModel(
         }
     }
 
-    private suspend fun downloadSourceLanguageModel() {
-        modelManager.download(
-            TranslateRemoteModel.Builder(uiState.sourceLanguage!!).build(),
-            DownloadConditions.Builder().build()
-        ).await()
-        isSourceModelNotAvailable = false
-    }
-
-    private suspend fun downloadTargetLanguageModel() {
-        modelManager.download(
-            TranslateRemoteModel.Builder(uiState.targetLanguage!!).build(),
-            DownloadConditions.Builder().build()
-        ).await()
-        isTargetModelNotAvailable = false
+    private suspend fun downloadSourceOrTargetLanguageModel(isSource: Boolean) {
+        try {
+            modelManager.download(
+                TranslateRemoteModel.Builder(if (isSource) uiState.sourceLanguage!! else uiState.targetLanguage!!)
+                    .build(),
+                DownloadConditions.Builder().build()
+            ).await()
+            if (isSource) {
+                isSourceModelNotAvailable = false
+            } else {
+                isTargetModelNotAvailable = false
+            }
+        } catch (e: Exception) {
+            Log.e("Download Failed", "Failure") //todo add message in app
+        }
     }
 
     private suspend fun identifySourceLanguage(): Boolean { //True if the identification is successful, False otherwise
