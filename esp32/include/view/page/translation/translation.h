@@ -10,6 +10,7 @@
 #include "view/image/image.h"
 #include "view/page/page.h"
 #include "view/screen/screen.h"
+#include "view/text/text.h"
 #include "view/window.h"
 
 namespace view {
@@ -19,6 +20,11 @@ public:
     public:
         static std::unique_ptr<TranslationPage> create();
     };
+
+    void onEvent(ble::UpdateMessage const&) override;
+
+    void onEvent(SwipeAntiClockwise const&) override;
+    void onEvent(SwipeClockwise const&) override;
 
 protected:
     void drawOnScreen() override;
