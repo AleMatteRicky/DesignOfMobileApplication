@@ -65,26 +65,24 @@ class HomeViewModel(
         private val TAG = HomeViewModel::class.simpleName
     }
 
+    // Tracks the Bluetooth connection status with the external device
+    var isExtDeviceConnected by mutableStateOf(false)
+        private set
+
     // Start listening for Bluetooth packets
     init {
         viewModelScope.launch {
-            try {
+            if (proxy.isDeviceSet()) {
                 proxy.receiveUpdates()
                     .collect { connectionState ->
                         isExtDeviceConnected =
                             connectionState.connectionState is ConnectionState.Connected
                     }
-            } catch (_: Exception) {
-
             }
         }
     }
 
     var bondedDevices: List<BluetoothDevice> by mutableStateOf(emptyList())
-
-    // Tracks the Bluetooth connection status with the external device
-    var isExtDeviceConnected by mutableStateOf(false)
-        private set
 
     private val _isScanning: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isScanning: StateFlow<Boolean> = _isScanning.asStateFlow()
@@ -127,6 +125,15 @@ class HomeViewModel(
         }
 
         proxy.setDeviceToManage(device)
+
+        viewModelScope.launch {
+            proxy.receiveUpdates()
+                .collect { connectionState ->
+                    isExtDeviceConnected =
+                        connectionState.connectionState is ConnectionState.Connected
+                }
+        }
+
         proxy.connect()
         return true
     }

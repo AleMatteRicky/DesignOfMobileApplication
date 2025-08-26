@@ -64,21 +64,16 @@ class TranslationViewModel(
     private val TAG: String = "TranslationViewModel"
 
     init {
-
-        //FIXME: fix this in the proper branch
         viewModelScope.launch {
-            try {
+            if (bleManager.isDeviceSet()) {
                 bleManager.receiveUpdates()
                     .collect { connectionState ->
                         uiState =
                             uiState.copy(isExtDeviceConnected = connectionState.connectionState is ConnectionState.Connected)
                     }
-            } catch (_: Exception) {
-
             }
         }
         initializeDownloadedLanguages()
-
     }
 
     //TODO fix when mic is open but no audio is recorded

@@ -83,17 +83,19 @@ class WeatherViewModel(
         }
     }
 
+    // Tracks the Bluetooth connection status with the external device
+    var isExtDeviceConnected by mutableStateOf(false)
+        private set
+
     // Start listening for Bluetooth packets
     init {
         viewModelScope.launch {
-            try {
+            if (proxy.isDeviceSet()) {
                 proxy.receiveUpdates()
                     .collect { connectionState ->
                         isExtDeviceConnected =
                             connectionState.connectionState is ConnectionState.Connected
                     }
-            } catch (_: Exception) {
-
             }
         }
     }
@@ -120,10 +122,6 @@ class WeatherViewModel(
 
     //Flag for the loading animation
     var isLoading by mutableStateOf(false)
-
-    // Tracks the Bluetooth connection status with the external device
-    var isExtDeviceConnected by mutableStateOf(false)
-        private set
 
     //List of all the locations found by the API (by specifying a query)
     private var _searchedLocations = mutableStateListOf<WeatherLocation>()
