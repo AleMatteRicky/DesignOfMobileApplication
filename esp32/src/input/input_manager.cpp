@@ -23,7 +23,7 @@ InputManager::InputManager() {
             delay(1000);
         }
     } else {
-        Serial.println("Connected!");
+        Serial.println("Input is ready!");
         delay(2000);
     }
 
@@ -43,8 +43,8 @@ void InputManager::handleInput() {
     instead:  - left: pressing right: double click
     */
     if (sensor.isLeftTouched() == true) {
-        notify(Press::name, Press());
         Serial.println("Left");
+        notify(Press::name, Press());
     }
 
     if (sensor.isMiddleTouched() == true) {
@@ -53,8 +53,8 @@ void InputManager::handleInput() {
     }
 
     if (sensor.isRightTouched() == true) {
-        notify(DoubleClick::name, DoubleClick());
         Serial.println("Right");
+        notify(DoubleClick::name, DoubleClick());
     }
 
     if (sensor.isRightSwipePulled() == true) {

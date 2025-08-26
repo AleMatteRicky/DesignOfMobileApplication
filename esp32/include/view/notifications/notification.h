@@ -28,6 +28,7 @@ public:
           m_isVisible{false} {}
 
     ~Notification() override {
+        Serial.println("Destroying notification");
         // cancel to avoid the function 'close' be invoked after the object has
         // been destroyed
         m_timer.cancel();

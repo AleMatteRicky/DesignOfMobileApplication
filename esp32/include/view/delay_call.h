@@ -50,7 +50,8 @@ public:
             std::thread([name = m_name, timeMs, timerDispatcher, &mtx = m_mtx,
                          &cv = m_cv, &isValid = m_isValid]() {
                 std::unique_lock<std::mutex> lock(mtx);
-                // awake before the timeMs only if the thread needs to be killed
+                // awake before the timeMs only if the thread needs to be
+                // killed
                 cv.wait_for(lock, std::chrono::milliseconds(timeMs),
                             [&isValid] { return !isValid; });
                 if (isValid)
@@ -89,4 +90,4 @@ private:
     // would notify all the others that are yet to expire
     static inline int id = 0;
 };
-}
+}  // namespace view

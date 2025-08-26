@@ -5,6 +5,8 @@
 #include <BLEServer.h>
 #include <BLEUtils.h>
 
+#include <Arduino.h>
+
 #include <memory>
 #include "ble/remote_events_handler.h"
 #include "model/model.h"
@@ -18,6 +20,7 @@ public:
     ConnectionManager();
 
     void send(std::string const& msg) override {
+        Serial.printf("sending the message %s\n", msg.c_str());
         // TODO: check for message's length and performance on synchronous
         // write, alternatively use an apposite thread + threa-safe queue
         m_txCharacteristic->setValue(msg);

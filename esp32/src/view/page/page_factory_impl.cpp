@@ -10,6 +10,8 @@ std::unique_ptr<Page> PageFactoryImpl::createPage(PageType type) {
             return WeatherPage::Factory::create();
         case PageType::TRANSLATION:
             return TranslationPage::Factory::create();
+        case PageType::CONNECTION:
+            return Connectionpage::Factory::create();
         default:
             return Homepage::Factory::create();
     }
