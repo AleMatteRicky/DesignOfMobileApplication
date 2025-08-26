@@ -16,6 +16,7 @@ data class TranslationUiState(
     val isModelNotAvailable: Boolean = false,
     val currentNormalizedRms: Float = 0f,
     val currentlyDownloadingLanguageTags: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet()),
-    val isResultReady: Boolean = false
+    val isResultReady: Boolean = false,
+    val isExtDeviceConnected: Boolean = false
 )
 

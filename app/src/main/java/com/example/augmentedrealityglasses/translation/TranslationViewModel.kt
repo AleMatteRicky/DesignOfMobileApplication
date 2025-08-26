@@ -36,6 +36,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import org.json.JSONObject
 
 class TranslationViewModel(
     private val systemLanguage: String,
@@ -62,9 +63,6 @@ class TranslationViewModel(
 
     private val TAG: String = "TranslationViewModel"
 
-    var isConnected by mutableStateOf(false)
-        private set
-
     init {
 
         //FIXME: fix this in the proper branch
@@ -72,8 +70,8 @@ class TranslationViewModel(
             try {
                 bleManager.receiveUpdates()
                     .collect { connectionState ->
-                        isConnected =
-                            connectionState.connectionState is ConnectionState.Connected
+                        uiState =
+                            uiState.copy(isExtDeviceConnected = connectionState.connectionState is ConnectionState.Connected)
                     }
             } catch (_: Exception) {
 
@@ -153,10 +151,7 @@ class TranslationViewModel(
                                 uiState = uiState.copy(translatedText = translatedText)
                                 //send translated text to esp32
                                 Log.d(TAG, translatedText)
-                                //todo update with version with ble and without ble
-//                                    viewModelScope.launch {
-//                                        bleManager.send(uiState.translatedText)
-//                                    }
+                                sendBluetoothMessage(uiState.translatedText)
                             }
                             ?.addOnFailureListener { exception ->
                                 Log.e("Translation failed", exception.toString())
@@ -400,10 +395,7 @@ class TranslationViewModel(
                             translate()
                         } else {
                             Log.d("send", uiState.recognizedText)
-                            viewModelScope.launch {
-                                //todo update with version with ble and without ble
-                                //bleManager.send(uiState.recognizedText)
-                            }
+                            sendBluetoothMessage(uiState.recognizedText) //the method checks if the device is connected before sending anything
                         }
                     }
 
@@ -421,5 +413,28 @@ class TranslationViewModel(
             10f
         ) //not used in practice, empirically a speechRecognizer seems to record rms value between -2db and 10db
         return (rmsClipped + 2f) / 12f //max value 10db, min value -2db, linear normalization
+    }
+
+    private fun sendBluetoothMessage(
+        msgContent: String
+    ) {
+
+        //Main json object that is sent through ble connection
+        val jsonToSend = JSONObject()
+
+        jsonToSend.put("command", "t")
+        jsonToSend.put("text", msgContent)
+
+        val msg = jsonToSend.toString()
+
+        Log.d(TAG, "BLE message:\n$msg")
+
+        if (uiState.isExtDeviceConnected) {
+            viewModelScope.launch {
+                bleManager.send(msg)
+            }
+        } else {
+            Log.d(TAG, "External device not connected")
+        }
     }
 }
