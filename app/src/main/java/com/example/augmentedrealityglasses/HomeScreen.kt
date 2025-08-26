@@ -61,38 +61,45 @@ fun HomeScreen(
         viewModel.refreshBondedDevices(context, adapter)
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
+    ErrorWrapper(
+        message = viewModel.errorMessage,
+        onDismiss = { viewModel.hideErrorMessage() }
     ) {
-        Column {
-            Text(
-                text = "Home",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp)
-            )
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Column {
+                Text(
+                    text = "Home",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp)
+                )
 
-            DevicesPanel(
-                //TODO: do not show the connected device in the "Previously connected devices" panel
-                devices = viewModel.bondedDevices,
-                connected = viewModel.isExtDeviceConnected,
-                onDeviceClick = {
-                    viewModel.connect(it)
-                },
-                onDeviceStatusPanelClick = { viewModel.disconnectDevice() }
+                DevicesPanel(
+                    //TODO: do not show the connected device in the "Previously connected devices" panel
+                    devices = viewModel.bondedDevices,
+                    connected = viewModel.isExtDeviceConnected,
+                    onDeviceClick = {
+                        viewModel.tryToConnectBondedDevice(
+                            device = it
+                        )
+                    },
+                    onDeviceStatusPanelClick = { viewModel.disconnectDevice() }
+                )
+            }
+
+            AddDevicesButton(
+                onNavigateFindDevice,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 13.dp)
             )
         }
-
-        AddDevicesButton(
-            onNavigateFindDevice,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 13.dp)
-        )
     }
 }
 

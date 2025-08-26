@@ -33,10 +33,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -93,6 +95,16 @@ class HomeViewModel(
     val scannedDevices: StateFlow<List<BluetoothDevice>> = _scannedDevices.asStateFlow()
     private var getScannedDevicesJob: Job? = null
 
+    var errorMessage by mutableStateOf("")
+
+    fun hideErrorMessage() {
+        errorMessage = ""
+    }
+
+    private fun showErrorMessage(msg: String) {
+        errorMessage = msg
+    }
+
     fun disconnectDevice() {
         //FIXME: switch isExtDeviceConnected flag to false
         proxy.disconnect()
@@ -117,6 +129,56 @@ class HomeViewModel(
         proxy.setDeviceToManage(device)
         proxy.connect()
         return true
+    }
+
+    @SuppressLint("MissingPermission")
+    fun tryToConnectBondedDevice(
+        device: BluetoothDevice,
+        timeout: Duration = 5.seconds
+    ) {
+        viewModelScope.launch {
+            if (device.address != ESP32Proxy.ESP32MAC) {
+                showErrorMessage("Invalid device")
+                return@launch
+            }
+            if (device.bondState != BluetoothDevice.BOND_BONDED) {
+                return@launch
+            }
+
+            val filters = listOf(
+                ScanFilter.Builder()
+                    .setDeviceAddress(device.address)
+                    .build()
+            )
+
+            val settings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .build()
+
+            scan(timeout, filters, settings)
+
+            val found = withTimeoutOrNull(timeout) {
+                scannedDevices
+                    .map { list ->
+                        list.any {
+                            it.address.equals(
+                                device.address,
+                                ignoreCase = true
+                            )
+                        }
+                    }
+                    .first { it }
+            } ?: false
+
+            if (!found) {
+                showErrorMessage("Unavailable device")
+                return@launch
+            }
+
+            if (!connect(device)) {
+                showErrorMessage("Connection error")
+            }
+        }
     }
 
     //FIXME
