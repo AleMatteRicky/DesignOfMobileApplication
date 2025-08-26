@@ -24,11 +24,12 @@ protected:
     void drawOnScreen() override;
 
 private:
-    WeatherPage(Window* window)
+    inline static std::string const commandName = "w";
+
+    WeatherPage()
         : Page::Page(
               RectType{Coordinates{0, 0}, Size{SCREEN_WIDTH, SCREEN_HEIGHT}},
-              window) {};
-    inline static std::string const commandName = "w";
+              nullptr) {};
 };
 
 }  // namespace view

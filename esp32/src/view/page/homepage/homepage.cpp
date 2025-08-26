@@ -20,7 +20,7 @@
 namespace view {
 std::unique_ptr<Homepage> Homepage::Factory::create() {
     std::unique_ptr<Homepage> homepage =
-        std::unique_ptr<Homepage>(new Homepage(nullptr));
+        std::unique_ptr<Homepage>(new Homepage());
 
     Image* selectionArrow = new Image(
         RectType{Coordinates{SCREEN_WIDTH - 64, SCREEN_HEIGHT / 2 - 16},

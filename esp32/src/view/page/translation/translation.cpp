@@ -14,6 +14,14 @@
 #include "utility/resource_monitor.h"
 
 namespace view {
+
+TranslationPage::TranslationPage()
+    : Page::Page(RectType{Coordinates{0, 0}, Size{SCREEN_WIDTH, SCREEN_HEIGHT}},
+                 nullptr),
+      m_text(new Text(RectType{Coordinates{0, 0}, Size{120, 120}}, nullptr)) {
+    appendSubView(std::unique_ptr<Text>(m_text));
+};
+
 std::unique_ptr<TranslationPage> TranslationPage::Factory::create() {
     std::unique_ptr<TranslationPage> translationPage =
         std::unique_ptr<TranslationPage>(new TranslationPage(nullptr));

@@ -24,10 +24,10 @@ public:
     void drawOnScreen() override;
 
 private:
-    Homepage(Window* window)
+    Homepage()
         : Page::Page(
               RectType{Coordinates{0, 0}, Size{SCREEN_WIDTH, SCREEN_HEIGHT}},
-              window) {}
+              nullptr) {}
 };
 
 }  // namespace view

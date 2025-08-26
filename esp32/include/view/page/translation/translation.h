@@ -24,11 +24,12 @@ protected:
     void drawOnScreen() override;
 
 private:
-    TranslationPage(Window* window)
-        : Page::Page(
-              RectType{Coordinates{0, 0}, Size{SCREEN_WIDTH, SCREEN_HEIGHT}},
-              window) {};
-    inline static std::string const commandName = "t"; //TODO: check this
+    TranslationPage();
+
+    inline static std::string const commandName = "t";  // TODO: check this
+
+private:
+    Text* m_text;
 };
 
 }  // namespace view
