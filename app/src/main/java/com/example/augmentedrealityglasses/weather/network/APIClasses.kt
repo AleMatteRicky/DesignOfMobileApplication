@@ -9,6 +9,7 @@ data class APIWeatherCondition(
     private val _weather: List<APIWeather>,
     val coord: APICoord,
     val main: APIMain,
+    val wind: APIWind,
     val sys: APISys,
     val name: String,
     val dt: Date
@@ -73,6 +74,14 @@ data class APISys(
     val country: String
 )
 
+data class APIWind(
+    @SerializedName("speed")
+    private val _speed: String
+) {
+    val speed: Float
+        get() = _speed.toFloatOrNull() ?: 0f
+}
+
 data class APIWeatherForecasts(
     val list: List<APIForecast>
 )
@@ -82,6 +91,7 @@ data class APIForecast(
     val main: APIMain,
     @SerializedName("weather")
     private val _weather: List<APIWeather>,
+    val wind: APIWind
 ) {
     val weather: APIWeather
         get() = _weather[0]

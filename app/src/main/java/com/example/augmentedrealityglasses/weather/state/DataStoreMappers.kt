@@ -43,6 +43,7 @@ class WeatherConditionDS(
     val feelsLike: Int,
     val tempMin: Int,
     val tempMax: Int,
+    val windSpeed: Float,
     val pressure: Int,
     val dateTimeMillis: Long,
     val isCurrent: Boolean
@@ -57,6 +58,7 @@ fun WeatherCondition.toDS(): WeatherConditionDS =
         feelsLike = feelsLike,
         tempMin = tempMin,
         tempMax = tempMax,
+        windSpeed = windSpeed,
         pressure = pressure,
         dateTimeMillis = dateTime.time,
         isCurrent = isCurrent
@@ -72,6 +74,7 @@ fun WeatherConditionDS.toModel(): WeatherCondition =
         feelsLike = feelsLike,
         tempMin = tempMin,
         tempMax = tempMax,
+        windSpeed = windSpeed,
         pressure = pressure,
         dateTime = Date(dateTimeMillis),
         isCurrent = isCurrent

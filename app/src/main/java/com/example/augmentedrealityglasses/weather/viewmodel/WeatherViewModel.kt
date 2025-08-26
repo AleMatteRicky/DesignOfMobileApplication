@@ -220,7 +220,6 @@ class WeatherViewModel(
         _searchedLocations.clear()
     }
 
-    //TODO: add wind?
     /**
      * This method sends the update message to the external device. The message is created with the current weatherState value (location and conditions are read)
      */
@@ -249,7 +248,7 @@ class WeatherViewModel(
                 conditionToJsonObject(
                     time = "Now",
                     temperature = currCond.temp,
-
+                    wind = currCond.windSpeed,
                     //In order to get the image's name instead of the android identifier of the resource
                     iconName = context.resources.getResourceEntryName(currCond.iconId),
                     pressure = currCond.pressure
@@ -269,9 +268,10 @@ class WeatherViewModel(
 
                     val jsonCond = conditionToJsonObject(
                         time = timeFmt.format(condition.dateTime),
-                        condition.temp,
-                        iconName,
-                        condition.pressure
+                        temperature = condition.temp,
+                        wind = condition.windSpeed,
+                        iconName = iconName,
+                        pressure = condition.pressure
                     )
 
                     jsonArray.put(jsonCond)
@@ -296,6 +296,7 @@ class WeatherViewModel(
     private fun conditionToJsonObject(
         time: String,
         temperature: Int,
+        wind: Float,
         iconName: String,
         pressure: Int
     ): JSONObject {
@@ -303,6 +304,7 @@ class WeatherViewModel(
 
         json.put("time", time)
         json.put("temperature", temperature)
+        json.put("wind", wind)
         json.put("iconName", iconName)
         json.put("pressure", pressure)
 
@@ -344,6 +346,7 @@ class WeatherViewModel(
                 newCurrentCondition.main.feels_like,
                 newCurrentCondition.main.temp_min,
                 newCurrentCondition.main.temp_max,
+                newCurrentCondition.wind.speed,
                 newCurrentCondition.main.pressure,
                 newCurrentCondition.dt,
                 true
@@ -359,6 +362,7 @@ class WeatherViewModel(
                         forecast.main.feels_like,
                         forecast.main.temp_min,
                         forecast.main.temp_max,
+                        forecast.wind.speed,
                         forecast.main.pressure,
                         forecast.dt,
                         false
