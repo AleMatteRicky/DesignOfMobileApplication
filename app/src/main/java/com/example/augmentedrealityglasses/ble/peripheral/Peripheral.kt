@@ -50,4 +50,9 @@ interface Peripheral {
      * Discovers the services provided by the peripheral
      */
     suspend fun discoverServices()
+
+    /**
+     * Sets the mtu so to increase the longest value to be written in one time on a characteristic
+     */
+    suspend fun requestMtu(mtu : Int)
 }

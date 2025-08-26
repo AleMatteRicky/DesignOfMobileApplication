@@ -19,6 +19,7 @@ import com.example.augmentedrealityglasses.ble.peripheral.bonding.BondState
 import com.example.augmentedrealityglasses.ble.peripheral.bonding.BondingReceiver
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.MtuEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ServiceDiscoveredEvent
 import com.example.augmentedrealityglasses.ble.service.Service
 import com.example.augmentedrealityglasses.ble.service.ServiceImpl
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
@@ -62,6 +64,8 @@ class PeripheralImpl(
     override val areServicesAvailable: StateFlow<Boolean> = _areServicesAvailable.asStateFlow()
 
     val bondingReceiver: BondingReceiver = BondingReceiver(mac)
+
+    private var _mtu: Int = 23
 
     private val _connectionState: MutableStateFlow<ConnectionState> =
         MutableStateFlow(ConnectionState.Initial)
@@ -242,6 +246,7 @@ class PeripheralImpl(
                         .map { bleCharacteristic ->
                             WritableCharacteristicImpl(
                                 bleCharacteristic.uuid,
+                                _mtu,
                                 bluetoothGattCallback.events,
                                 gatt,
                                 bleCharacteristic,
@@ -258,6 +263,7 @@ class PeripheralImpl(
                         .map { bleCharacteristic ->
                             ReadableCharacteristicImpl(
                                 bleCharacteristic.uuid,
+                                _mtu,
                                 bluetoothGattCallback.events,
                                 gatt,
                                 bleCharacteristic,
@@ -284,6 +290,19 @@ class PeripheralImpl(
 
         _areServicesAvailable.emit(wasTheDiscoveryASuccess)
         isDiscoveringServices.set(false)
+    }
+
+    override suspend fun requestMtu(mtu: Int) {
+        checkBluetoothConnectPermission(context)
+        val mtuEvent = bluetoothGattCallback.events
+            .onSubscription {
+                gatt.requestMtu(mtu)
+            }.takeWhile { !it.isDisconnectionEvent }
+            .filterIsInstance<MtuEvent>()
+            .first()
+        if (mtuEvent.isValid) {
+            _mtu = mtuEvent.mtu
+        }
     }
 
     override fun equals(other: Any?): Boolean {

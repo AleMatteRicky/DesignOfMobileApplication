@@ -14,6 +14,11 @@ interface Characteristic {
      */
     val properties: Set<CharacteristicProperty>
 
+    /**
+     * Maximum bytes that can be contained in this characteristic
+     */
+    val maximumLength : Int
+
     enum class CharacteristicProperty {
         WRITE, // can be written
         SIGNED_WRITE, // encrypted => pairing if written

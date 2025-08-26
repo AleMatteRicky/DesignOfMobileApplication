@@ -11,6 +11,7 @@ import com.example.augmentedrealityglasses.ble.peripheral.gattevent.Characterist
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.DescriptorWriteEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.GattEvent
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.MtuEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ServiceChangedEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ServiceDiscoveredEvent
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.Status
@@ -85,6 +86,9 @@ class BluetoothGattCallbackImpl(
         _events.tryEmit(DescriptorWriteEvent(descriptor, status.genStatus()))
     }
 
+    override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
+        _events.tryEmit(MtuEvent(mtu, status == BluetoothGatt.GATT_SUCCESS))
+    }
 
     companion object {
         val TAG = BluetoothGattCallbackImpl::class.simpleName

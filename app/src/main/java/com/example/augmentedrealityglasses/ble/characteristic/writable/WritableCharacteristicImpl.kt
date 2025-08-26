@@ -23,14 +23,13 @@ import java.util.UUID
 
 class WritableCharacteristicImpl(
     override val uuid: UUID,
+    override val maximumLength : Int,
     val events: SharedFlow<GattEvent>,
     val gatt: BluetoothGatt,
     val characteristic: BluetoothGattCharacteristic,
     val context: Context,
     val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : WritableCharacteristic {
-    private val maxSz = 13
-
     private var msgDispatcher : MsgDispatcher = MsgDispatcherImpl(
         context
     )
@@ -40,8 +39,8 @@ class WritableCharacteristicImpl(
 
     override suspend fun write(value: ByteArray) {
         val n = value.size
-        for (i in 0 until n step maxSz) {
-            val data = value.sliceArray(i until minOf(i + maxSz, n))
+        for (i in 0 until n step maximumLength) {
+            val data = value.sliceArray(i until minOf(i + maximumLength, n))
             msgDispatcher.add(Message(data, gatt, characteristic))
         }
     }

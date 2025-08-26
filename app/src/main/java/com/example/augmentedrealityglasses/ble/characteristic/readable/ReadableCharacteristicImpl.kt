@@ -33,6 +33,7 @@ import java.util.UUID
 
 class ReadableCharacteristicImpl(
     override val uuid: UUID,
+    override val maximumLength: Int,
     val events: SharedFlow<GattEvent>,
     val gatt: BluetoothGatt,
     val characteristic: BluetoothGattCharacteristic,
