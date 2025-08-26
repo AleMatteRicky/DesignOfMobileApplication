@@ -2,27 +2,53 @@
 
 #include "view/view.h"
 
-namespace view{
-    class Text: public View{
-        public:
+namespace view {
+class Text : public View {
+public:
+    Text(RectType frame, View* superiorView, std::string const& content = "")
+        : View::View(frame, superiorView, "text"),
+          m_font{2},
+          m_tft{tft::Tft::getTFT_eSPI()},
+          m_fgColour{TFT_WHITE},
+          m_bgColour{TFT_BLACK},
+          m_currentTextFrame{0} {
+        m_tft->setTextDatum(TL_DATUM);
+        auto coordinates = getCoordinates();
+        auto size = getSize();
+        m_tft->setTextFont(2);
+        m_charWidth = m_tft->textWidth("A");
+        m_charHeight = m_tft->fontHeight();
+        m_frames.push_back(TextFrame{""});
 
-        Text(RectType frame, View* superiorView, std::function<void(ble::UpdateMessage const&, std::string&)> onEvent, std::string const& content): View::View(frame, superiorView, "text"), m_content(content), m_onEvent(onEvent){
-            
-        }
+        setContent(content);
+    }
 
-        void draw() override {
-            //TODO
-        }
+    void setContent(std::string const& content);
 
-        void onEvent(ble::UpdateMessage const& event) override {
-            m_onEvent(event, m_content);
-        }
+    void appendContent(std::string const& content);
 
-        private:
+    void onEvent(SwipeClockwise const&) override;
 
+    void onEvent(SwipeAntiClockwise const&) override;
+
+protected:
+    void drawOnScreen() override;
+
+private:
+    void drawFrame(byte);
+
+private:
+    struct TextFrame {
         std::string m_content;
-
-        std::function<void(ble::UpdateMessage const&, std::string&)> m_onEvent;
     };
-}
+    std::vector<TextFrame> m_frames;  // list of frames
+    byte m_currentTextFrame;  // index to keep track of the current frame
 
+    int const m_font;
+    TFT_eSPI* m_tft;
+    uint16_t const m_fgColour;
+    uint16_t const m_bgColour;
+    int16_t m_charWidth;
+    int16_t m_charHeight;
+};
+}  // namespace view
