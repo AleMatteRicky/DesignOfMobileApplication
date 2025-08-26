@@ -107,7 +107,7 @@ class ESP32Proxy(
             // receive updates from the peripheral
             scope.launch {
                 if (!peripheral.areServicesAvailable.value) {
-                    peripheral.requestMtu(400)
+                    peripheral.requestMtu(500)
                     peripheral.discoverServices()
                 }
 
@@ -129,7 +129,7 @@ class ESP32Proxy(
     override suspend fun send(msg: String) {
         val peripheral = bluetoothManager.getStub(ESP32MAC)!!
         if (!peripheral.areServicesAvailable.value) {
-            peripheral.requestMtu(400)
+            peripheral.requestMtu(500)
             peripheral.discoverServices()
         }
         peripheral.send(SERVICE_UUID, CHARACTERISTIC_UUID_TX, msg.toByteArray())
