@@ -9,6 +9,7 @@ import com.example.augmentedrealityglasses.cache.Cache
 import com.example.augmentedrealityglasses.cache.CachePolicy
 import com.example.augmentedrealityglasses.cache.DataStoreMapCache
 import com.example.augmentedrealityglasses.cache.MaxAgePolicy
+import com.example.augmentedrealityglasses.cache.NeverExpires
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
 import java.io.File
@@ -22,6 +23,8 @@ interface AppContainer {
     val weatherCache: Cache
     val weatherCachePolicy: CachePolicy
     val isDeviceSmsCapable: Boolean
+    val settingsCache: Cache
+    val settingsCachePolicy: CachePolicy
 }
 
 /**
@@ -47,4 +50,8 @@ class DefaultAppContainer(
         DataStoreMapCache(File(context.applicationContext.filesDir, "weather_cache.json"))
     override val weatherCachePolicy: CachePolicy =
         MaxAgePolicy(Constants.MAX_AGE_WEATHER_CACHE_POLICY_MILLS)
+    override val settingsCache: Cache =
+        DataStoreMapCache(File(context.applicationContext.filesDir, "settings_cache.json"))
+    override val settingsCachePolicy: CachePolicy =
+        NeverExpires
 }

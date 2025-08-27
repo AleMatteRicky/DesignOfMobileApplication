@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,8 @@ import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
 import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
+import com.example.augmentedrealityglasses.settings.SettingsScreen
+import com.example.augmentedrealityglasses.settings.SettingsViewModel
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.permission.PermissionsForTranslation
 import com.example.augmentedrealityglasses.translation.ui.TranslationHomeScreen
@@ -68,6 +71,10 @@ class MainActivity : ComponentActivity() {
             val navigationBarHeight = screenHeight * 0.111f //could be a global variable
             val navigationBarVisible = remember { mutableStateOf(true) }
 
+            val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+            LaunchedEffect(Unit) {
+                settingsViewModel.loadSettings()
+            }
 
             Scaffold(
                 bottomBar = {
@@ -354,7 +361,9 @@ class MainActivity : ComponentActivity() {
 
                     //TODO
                     composable(ScreenName.SETTINGS.name) {
-                        Text("Settings page")
+                        SettingsScreen(
+                            viewModel = settingsViewModel
+                        )
                     }
                 }
             }
