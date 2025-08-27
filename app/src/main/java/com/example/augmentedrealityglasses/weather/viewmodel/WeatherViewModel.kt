@@ -304,7 +304,7 @@ class WeatherViewModel(
 
         json.put("time", time)
         json.put("temperature", temperature)
-        json.put("wind", wind)
+        //json.put("wind", wind) //FIXME: decide whether to put or not
         json.put("iconName", iconName)
         json.put("pressure", pressure)
 
