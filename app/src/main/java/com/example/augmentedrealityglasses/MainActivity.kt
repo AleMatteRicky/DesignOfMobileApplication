@@ -16,6 +16,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -47,6 +49,7 @@ import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
 import com.example.augmentedrealityglasses.settings.SettingsScreen
 import com.example.augmentedrealityglasses.settings.SettingsViewModel
+import com.example.augmentedrealityglasses.settings.ThemeMode
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.permission.PermissionsForTranslation
 import com.example.augmentedrealityglasses.translation.ui.TranslationHomeScreen
@@ -71,9 +74,19 @@ class MainActivity : ComponentActivity() {
             val navigationBarHeight = screenHeight * 0.111f //could be a global variable
             val navigationBarVisible = remember { mutableStateOf(true) }
 
+            //Loading the user settings
             val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
             LaunchedEffect(Unit) {
+                //Try to load settings from cache
                 settingsViewModel.loadSettings()
+            }
+            val settingsUi by settingsViewModel.uiState.collectAsStateWithLifecycle()
+
+            //Use this flag in order to show properly the content of the screen
+            val isDarkThemeSelected = when (settingsUi.theme) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.DARK   -> true
+                ThemeMode.LIGHT  -> false
             }
 
             Scaffold(
