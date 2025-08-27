@@ -19,7 +19,7 @@ data class WeatherCondition(
     val feelsLike: Int,
     val tempMin: Int,
     val tempMax: Int,
-    val windSpeed: Float, // unit: meter/sec
+    val windSpeed: Float, // unit: km/h
     val pressure: Int,
     val dateTime: Date,
     val isCurrent: Boolean

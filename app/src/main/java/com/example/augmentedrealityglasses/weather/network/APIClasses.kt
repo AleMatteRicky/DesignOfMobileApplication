@@ -79,7 +79,7 @@ data class APIWind(
     private val _speed: String
 ) {
     val speed: Float
-        get() = _speed.toFloatOrNull() ?: 0f
+        get() = (_speed.toFloatOrNull() ?: 0f) * 3.6f // meter/sec --> km/h
 }
 
 data class APIWeatherForecasts(
