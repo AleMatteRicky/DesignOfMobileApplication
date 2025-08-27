@@ -21,6 +21,9 @@ data class WeatherCondition(
     val tempMax: Int,
     val windSpeed: Float, // unit: km/h
     val pressure: Int,
+    val humidity: Int, // %
+    val sunrise: Date?, //Defined only for current condition
+    val sunset: Date?, //Defined only for current condition
     val dateTime: Date,
     val isCurrent: Boolean
 ) {

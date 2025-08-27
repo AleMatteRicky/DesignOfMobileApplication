@@ -51,7 +51,9 @@ data class APIMain(
     private val _temp_max: String,
 
     @SerializedName("pressure")
-    private val _pressure: String
+    private val _pressure: String,
+
+    val humidity: Int
 ) {
     //TODO: handle "exceptions"
     val temp: Int
@@ -71,7 +73,9 @@ data class APIMain(
 }
 
 data class APISys(
-    val country: String
+    val country: String,
+    val sunrise: Date,
+    val sunset: Date
 )
 
 data class APIWind(
@@ -79,7 +83,8 @@ data class APIWind(
     private val _speed: String
 ) {
     val speed: Float
-        get() = (_speed.toFloatOrNull() ?: 0f) * 3.6f // meter/sec --> km/h
+        get() = ((_speed.toFloatOrNull()
+            ?: 0f) * 3.6f * 100).roundToInt() / 100f // Conversion: meters/second → kilometers/hour,then rounded to 2 decimal places
 }
 
 data class APIWeatherForecasts(

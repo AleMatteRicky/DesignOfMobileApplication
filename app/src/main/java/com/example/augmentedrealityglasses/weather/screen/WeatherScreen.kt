@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -258,6 +260,22 @@ fun WeatherScreen(
                                         viewModel.changeSelectedDay(it)
                                     },
                                     isSelectedDay = { uiState.selectedDay == it }
+                                )
+                            }
+                        }
+
+                        currentCondition?.let { condition ->
+                            item {
+                                //TODO: make this grid reactive to day changes
+                                AdditionalInfosGrid(
+                                    pressure = condition.pressure,
+                                    humidity = condition.humidity,
+
+                                    //Current condition must have these params
+                                    sunrise = condition.sunrise!!,
+                                    sunset = condition.sunset!!,
+
+                                    windSpeed = condition.windSpeed
                                 )
                             }
                         }
@@ -694,6 +712,224 @@ fun MultipleDaysForecastsItem(
                     tint = contentColor
                 )
                 Text(text = "${tempMin}°", fontSize = 14.sp, color = contentColor)
+            }
+        }
+    }
+}
+
+@Composable
+fun AdditionalInfosGrid(
+    pressure: Int,
+    humidity: Int,
+    sunrise: Date,
+    sunset: Date,
+    windSpeed: Float
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            StatBox(
+                title = "Pressure",
+                iconRes = R.drawable.pressure,
+                content = {
+                    StatValue(value = pressure.toString(), unit = "hPa")
+                },
+                modifier = Modifier.weight(1f)
+            )
+
+            StatBox(
+                title = "Humidity",
+                iconRes = R.drawable.humidity,
+                content = {
+                    StatValue(value = humidity.toString(), unit = "%")
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            SunriseSunsetBox(
+                sunrise = sunrise,
+                sunset = sunset,
+                modifier = Modifier.weight(1f)
+            )
+
+            StatBox(
+                title = "Wind Speed",
+                iconRes = R.drawable.wind,
+                content = {
+                    StatValue(value = windSpeed.toString(), unit = "km/h")
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatBox(
+    title: String,
+    content: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    iconRes: Int? = null
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier.aspectRatio(1f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                if (iconRes != null) {
+                    Image(
+                        painter = painterResource(iconRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            content()
+        }
+    }
+}
+
+@Composable
+private fun StatValue(
+    value: String,
+    unit: String
+) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 26.sp,
+                color = Color.Black
+            )
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = unit,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = Color.Gray
+            )
+        )
+    }
+}
+
+@Composable
+private fun SunriseSunsetBox(
+    sunrise: Date,
+    sunset: Date,
+    modifier: Modifier = Modifier,
+    title: String = "Sunrise / Sunset",
+    iconSize: Dp = 32.dp,
+    dividerWidth: Dp = 64.dp
+) {
+    val timeFmt = rememberTimeFormatter("HH:mm")
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier.aspectRatio(1f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
+                )
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(R.drawable.sunrise),
+                            contentDescription = null,
+                            modifier = Modifier.size(iconSize)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = timeFmt.format(sunrise),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .padding(vertical = 10.dp)
+                            .width(dividerWidth),
+                        thickness = 1.dp,
+                        color = Color.LightGray
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(R.drawable.sunset),
+                            contentDescription = null,
+                            modifier = Modifier.size(iconSize)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = timeFmt.format(sunset),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                }
             }
         }
     }

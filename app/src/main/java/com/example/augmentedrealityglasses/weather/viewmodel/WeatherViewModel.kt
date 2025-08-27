@@ -348,6 +348,9 @@ class WeatherViewModel(
                 newCurrentCondition.main.temp_max,
                 newCurrentCondition.wind.speed,
                 newCurrentCondition.main.pressure,
+                newCurrentCondition.main.humidity,
+                newCurrentCondition.sys.sunrise,
+                newCurrentCondition.sys.sunset,
                 newCurrentCondition.dt,
                 true
             )
@@ -364,6 +367,9 @@ class WeatherViewModel(
                         forecast.main.temp_max,
                         forecast.wind.speed,
                         forecast.main.pressure,
+                        forecast.main.humidity,
+                        null, //No sunrise/sunset in forecasts
+                        null,
                         forecast.dt,
                         false
                     )

@@ -45,6 +45,9 @@ class WeatherConditionDS(
     val tempMax: Int,
     val windSpeed: Float,
     val pressure: Int,
+    val humidity: Int,
+    val sunriseMillis: Long?,
+    val sunsetMillis: Long?,
     val dateTimeMillis: Long,
     val isCurrent: Boolean
 )
@@ -60,6 +63,9 @@ fun WeatherCondition.toDS(): WeatherConditionDS =
         tempMax = tempMax,
         windSpeed = windSpeed,
         pressure = pressure,
+        humidity = humidity,
+        sunsetMillis = sunset?.time,
+        sunriseMillis = sunrise?.time,
         dateTimeMillis = dateTime.time,
         isCurrent = isCurrent
     )
@@ -76,6 +82,9 @@ fun WeatherConditionDS.toModel(): WeatherCondition =
         tempMax = tempMax,
         windSpeed = windSpeed,
         pressure = pressure,
+        humidity = humidity,
+        sunset = sunsetMillis?.let { Date(it) },
+        sunrise = sunriseMillis?.let { Date(it) },
         dateTime = Date(dateTimeMillis),
         isCurrent = isCurrent
     )
