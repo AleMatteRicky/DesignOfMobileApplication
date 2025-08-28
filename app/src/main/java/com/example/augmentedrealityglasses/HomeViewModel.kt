@@ -125,6 +125,7 @@ class HomeViewModel(
         }
 
         proxy.setDeviceToManage(device)
+        proxy.connect()
 
         viewModelScope.launch {
             proxy.receiveUpdates()
@@ -134,7 +135,6 @@ class HomeViewModel(
                 }
         }
 
-        proxy.connect()
         return true
     }
 
