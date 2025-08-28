@@ -112,6 +112,23 @@ private val weatherIconMap: Map<Key, Int> = buildMap {
         dayRes = R.drawable.snow_3
     )
 
+    // 7xx - Atmosphere
+
+    putBoth(
+        ids = intArrayOf(701, 711, 721, 731, 741, 751, 761, 762),
+        dayRes = R.drawable.fog
+    )
+
+    putBoth(
+        ids = intArrayOf(771),
+        dayRes = R.drawable.squall
+    )
+
+    putBoth(
+        ids = intArrayOf(781),
+        dayRes = R.drawable.tornado
+    )
+
     // 800 – Clear
 
     putBoth(
