@@ -76,7 +76,7 @@ class PeripheralImpl(
     private var services: List<Service> = emptyList()
     private val isDiscoveringServices: AtomicBoolean = AtomicBoolean(false)
 
-    lateinit var gatt: BluetoothGatt
+    var gatt: BluetoothGatt? = null
 
     private var consumerBondingState: Job? = null
     private var consumerConnectionState: Job? = null
@@ -110,7 +110,7 @@ class PeripheralImpl(
 
     private fun cleanup() {
         checkBluetoothConnectPermission(context)
-        gatt.close()
+        gatt?.close()
         scope.cancel()
         context.unregisterReceiver(bondingReceiver)
         _connectionState.tryEmit(ConnectionState.Closed)
@@ -122,12 +122,12 @@ class PeripheralImpl(
 
     override fun disconnect() {
         if (connectionState.value is ConnectionState.Disconnected) {
-            Log.d(TAG, "Received disconnection, despite the current state being")
+            Log.d(TAG, "Received disconnection, despite the peripheral being already disconnected")
             return
         }
 
         checkBluetoothConnectPermission(context)
-        gatt.disconnect()
+        gatt?.disconnect()
     }
 
     override fun connect() {
@@ -225,7 +225,7 @@ class PeripheralImpl(
         val resultOfDiscovery: List<Service>? =
             bluetoothGattCallback.events
                 .onSubscription {
-                    startingDiscovering = gatt.discoverServices()
+                    startingDiscovering = gatt!!.discoverServices()
                 }
                 // the service started correctly and no disconnection in the meanwhile
                 .takeWhile { !it.isDisconnectionEvent && startingDiscovering }
@@ -247,7 +247,7 @@ class PeripheralImpl(
                                 bleCharacteristic.uuid,
                                 _mtu,
                                 bluetoothGattCallback.events,
-                                gatt,
+                                gatt!!,
                                 bleCharacteristic,
                                 context,
                                 scope
@@ -264,7 +264,7 @@ class PeripheralImpl(
                                 bleCharacteristic.uuid,
                                 _mtu,
                                 bluetoothGattCallback.events,
-                                gatt,
+                                gatt!!,
                                 bleCharacteristic,
                                 bleCharacteristic.descriptors.toSet(),
                                 context,
@@ -295,7 +295,7 @@ class PeripheralImpl(
         checkBluetoothConnectPermission(context)
         val mtuEvent = bluetoothGattCallback.events
             .onSubscription {
-                gatt.requestMtu(mtu)
+                gatt!!.requestMtu(mtu)
             }.takeWhile { !it.isDisconnectionEvent }
             .filterIsInstance<MtuEvent>()
             .firstOrNull()
