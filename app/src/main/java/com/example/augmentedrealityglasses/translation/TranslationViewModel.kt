@@ -38,6 +38,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
+//todo fix when offline multiple lines are repeated, offline recorder adds more partial results
+//todo fix behaviour when language is undefined
+
 class TranslationViewModel(
     private val systemLanguage: String,
     private val application: Application,
@@ -366,6 +369,9 @@ class TranslationViewModel(
                     identifySourceLanguage()
                     if (uiState.targetLanguage != null) {
                         translate()
+                    } else {
+                        Log.d("send final result", uiState.recognizedText)
+                        sendBluetoothMessage(uiState.recognizedText)
                     }
                 }
                 if (uiState.recognizedText.isNotEmpty()) {
