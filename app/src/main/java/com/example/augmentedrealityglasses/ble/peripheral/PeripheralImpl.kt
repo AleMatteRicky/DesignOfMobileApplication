@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
@@ -299,8 +298,8 @@ class PeripheralImpl(
                 gatt.requestMtu(mtu)
             }.takeWhile { !it.isDisconnectionEvent }
             .filterIsInstance<MtuEvent>()
-            .first()
-        if (mtuEvent.isValid) {
+            .firstOrNull()
+        if (mtuEvent != null && mtuEvent.isValid) {
             _mtu = mtuEvent.mtu
         }
     }
