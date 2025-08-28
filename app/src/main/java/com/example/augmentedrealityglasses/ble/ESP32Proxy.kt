@@ -111,6 +111,10 @@ class ESP32Proxy(
                     peripheral.discoverServices()
                 }
 
+                // an error happened before the service was successfully discovered, exit
+                if (!peripheral.areServicesAvailable.value)
+                    return@launch;
+
                 peripheral.subscribe(SERVICE_UUID, CHARACTERISTIC_UUID_RX)
                     .collect { msg ->
                         _peripheralConnectionState.update {
