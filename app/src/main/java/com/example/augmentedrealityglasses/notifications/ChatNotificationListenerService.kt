@@ -45,34 +45,35 @@ class ChatNotificationListenerService : NotificationListenerService() {
 
         val appName = when (pkg) {
             "com.whatsapp", "com.whatsapp.w4b" -> NotificationSource.WHATSAPP
-            else -> NotificationSource.TELEGRAM
+            "org.telegram.messenger" -> NotificationSource.TELEGRAM
+            else -> return
         }
 
         scope.launch {
             if (!NotificationFilters.isEnabled(
-                    this@ChatNotificationListenerService,
-                    appName
+                    context = this@ChatNotificationListenerService,
+                    source = appName
                 )
             ) return@launch
 
             val jsonToSend = JSONObject()
 
             jsonToSend.put("command", "n")
-            jsonToSend.put("app", appName)
+            jsonToSend.put("source", appName.toString().lowercase())
             //jsonToSend.put("conv", parsed.conversation)
             jsonToSend.put("sender", parsed.sender)
-            jsonToSend.put("body", parsed.text)
+            jsonToSend.put("content", parsed.text)
 
-            val payload = jsonToSend.toString()
+            val msg = jsonToSend.toString()
 
             val proxy: RemoteDeviceManager =
                 (applicationContext as App).container.proxy
 
             if (proxy.isConnected()) {
-                proxy.send(payload)
-                Log.d(TAG, "Sending to device: $payload")
+                proxy.send(msg)
+                Log.d(TAG, "Sending to device: $msg")
             } else {
-                Log.d(TAG, "Device offline. Notification: $payload")
+                Log.d(TAG, "Device offline. Notification: $msg")
             }
         }
     }
@@ -95,6 +96,7 @@ class ChatNotificationListenerService : NotificationListenerService() {
     private fun parseChatNotification(notification: Notification): ChatMessage? {
         val extras = notification.extras
 
+        //Messaging applications
         val style =
             NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(notification)
 
@@ -109,6 +111,7 @@ class ChatNotificationListenerService : NotificationListenerService() {
             }
         }
 
+        //Standard applications
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
         val text =
             extras.getCharSequence(Notification.EXTRA_TEXT)?.toString() ?: extras.getCharSequence(
