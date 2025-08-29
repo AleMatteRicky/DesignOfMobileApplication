@@ -29,6 +29,10 @@ class PhoneCallReceiver(
             if (TelephonyManager.ACTION_PHONE_STATE_CHANGED == action) {
                 val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
                 if (TelephonyManager.EXTRA_STATE_RINGING == state) {
+
+                    //TODO: add incoming number and filter null number events. Adopt standard syntax for ble message
+                    // val incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
+
                     Log.d(TAG, "Incoming call")
                     if (proxy.isConnected()) {
                         scope.launch {

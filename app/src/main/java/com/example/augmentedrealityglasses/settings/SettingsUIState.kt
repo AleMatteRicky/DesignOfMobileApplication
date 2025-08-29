@@ -2,9 +2,8 @@ package com.example.augmentedrealityglasses.settings
 
 import kotlinx.serialization.Serializable
 
-enum class ThemeMode { SYSTEM, LIGHT, DARK }
-
 @Serializable
 data class SettingsUIState(
-    val theme: ThemeMode
+    val theme: ThemeMode,
+    val notificationEnabled: Map<NotificationSource, Boolean>
 )

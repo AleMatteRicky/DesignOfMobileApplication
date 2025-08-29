@@ -53,19 +53,30 @@ class SettingsViewModel(
 
     private val _uiState = MutableStateFlow(
         SettingsUIState(
-            ThemeMode.SYSTEM
+            theme = ThemeMode.SYSTEM,
+            notificationEnabled = mapOf(Pair(NotificationSource.WHATSAPP, false), Pair(NotificationSource.TELEGRAM, false))
         )
     )
     val uiState: StateFlow<SettingsUIState> = _uiState
 
     private fun applyState(
-        newThemeMode: ThemeMode
+        newThemeMode: ThemeMode? = null,
+        updatedNotification: Pair<NotificationSource, Boolean>? = null
     ) {
         _uiState.update { old ->
+            val updatedMap = old.notificationEnabled.toMutableMap().apply {
+                updatedNotification?.let { (app, enabled) ->
+                    put(app, enabled)
+                }
+            }.toMap()
+
             old.copy(
-                theme = newThemeMode
+                theme = newThemeMode ?: old.theme,
+                notificationEnabled = updatedMap
             )
         }
+
+        saveSettingsSnapshotIntoCache()
     }
 
     fun onSystemToggle(checked: Boolean) {
@@ -74,26 +85,32 @@ class SettingsViewModel(
         } else {
             applyState(ThemeMode.LIGHT)
         }
-
-        saveSettingsSnapshotIntoCache()
     }
 
     fun onSelectLight() {
         applyState(ThemeMode.LIGHT)
-
-        saveSettingsSnapshotIntoCache()
     }
 
     fun onSelectDark() {
         applyState(ThemeMode.DARK)
-
-        saveSettingsSnapshotIntoCache()
     }
 
     fun loadSettings() {
         viewModelScope.launch(Dispatchers.IO) {
-            tryLoadDataFromCache()
+            tryLoadDataFromCache().toString()
         }
+    }
+
+    fun onEnableNotificationSource(source: NotificationSource){
+        applyState(
+            updatedNotification = Pair(source, true)
+        )
+    }
+
+    fun onDisableNotificationSource(source: NotificationSource){
+        applyState(
+            updatedNotification = Pair(source, false)
+        )
     }
 
     private fun saveSettingsSnapshotIntoCache() {
@@ -118,7 +135,12 @@ class SettingsViewModel(
             )
         } ?: return false
 
-        applyState(state.theme)
+        _uiState.update { old ->
+            old.copy(
+                theme = state.theme,
+                notificationEnabled = state.notificationEnabled
+            )
+        }
 
         return true
     }

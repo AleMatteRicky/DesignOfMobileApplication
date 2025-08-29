@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -82,7 +81,7 @@ class MainActivity : ComponentActivity() {
             }
             val settingsUi by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
-            //Use this flag in order to show properly the content of the screen
+            //Use this flag in order to show properly the content on the screen
             val isDarkThemeSelected = when (settingsUi.theme) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.DARK   -> true

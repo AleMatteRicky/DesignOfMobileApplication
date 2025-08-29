@@ -28,7 +28,10 @@ class SmsReceiver(
                     val sender = sms.originatingAddress
                     Log.d(TAG, "Sending message $body from $sender")
                     scope.launch {
-                        proxy.send("sender: $sender body: $body")
+                        if(proxy.isConnected()){
+                            //TODO: adopt standard syntax for ble messages. Show contact name?
+                            proxy.send("sender: $sender body: $body")
+                        }
                     }
                 }
             }
