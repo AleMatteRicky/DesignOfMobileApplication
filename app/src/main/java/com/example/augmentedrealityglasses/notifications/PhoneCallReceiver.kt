@@ -22,8 +22,6 @@ class PhoneCallReceiver(
     ) {
         Log.d(TAG, "Calling on receive")
 
-        val incomingCall = "incoming_call"
-
         intent?.let {
             val action: String? = it.action
 
@@ -31,23 +29,40 @@ class PhoneCallReceiver(
                 val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
                 if (TelephonyManager.EXTRA_STATE_RINGING == state) {
 
-                    //TODO: add incoming number and filter null number events. Adopt standard syntax for ble message
-                    // val incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
-
                     Log.d(TAG, "Incoming call")
-                    scope.launch {
-                        if (isNotificationSourceEnabled(context, NotificationSource.CALL)) {
-                            if (proxy.isConnected()) {
-                                proxy.send(incomingCall)
+
+                    val incomingNumber =
+                        intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
+
+                    if (incomingNumber != null) {
+                        val sender = getContactNameOrNull(context, incomingNumber) ?: incomingNumber
+
+                        scope.launch {
+                            if (isNotificationSourceEnabled(context, NotificationSource.CALL)) {
+                                Log.d(TAG, "Phone number/contact name: $sender")
+                                if (proxy.isConnected()) {
+
+                                    val msg = createBLEMessage(
+                                        command = "n",
+                                        source = NotificationSource.CALL,
+                                        sender = sender,
+                                        content = "Incoming call"
+                                    )
+
+                                    Log.d(TAG, "Ble message sent:\n$msg")
+                                    proxy.send(msg)
+                                } else {
+                                    Log.d(
+                                        TAG,
+                                        "Incoming call event not transmitted to the device because they are offline"
+                                    )
+                                }
                             } else {
-                                Log.d(
-                                    TAG,
-                                    "Incoming call event not transmitted to the device because they are offline"
-                                )
+                                Log.d(TAG, "Call notifications disabled")
                             }
-                        } else {
-                            Log.d(TAG, "Call notifications disabled")
                         }
+                    } else {
+                        Log.d(TAG, "Null phone number")
                     }
                 } else {
                     Log.d(TAG, "Not interesting state")

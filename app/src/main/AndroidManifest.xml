@@ -37,6 +37,7 @@
         It requires setting uses-feature to false because not all devices can support it (e.g. chromebooks) -->
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
 
     <application
         android:name=".App"

@@ -26,13 +26,34 @@ class SmsReceiver(
                 val messages = getMessagesFromIntent(intent)
                 for (sms in messages) {
                     val body = sms.messageBody
-                    val sender = sms.originatingAddress
+                    val address = sms.originatingAddress
+
+                    val sender = when {
+                        !address.isNullOrBlank() -> getContactNameOrNull(context, address)
+                            ?: address
+
+                        else -> "Unknown"
+                    }
+
                     scope.launch {
                         if (isNotificationSourceEnabled(context, NotificationSource.SMS)) {
-                            Log.d(TAG, "Sending message $body from $sender")
                             if (proxy.isConnected()) {
-                                //TODO: adopt standard syntax for ble messages. Show contact name?
-                                proxy.send("sender: $sender body: $body")
+
+                                val msg = createBLEMessage(
+                                    command = "n",
+                                    source = NotificationSource.SMS,
+                                    sender = sender,
+                                    content = body
+                                )
+
+                                Log.d(TAG, "Ble message sent:\n$msg")
+
+                                proxy.send(msg)
+                            } else {
+                                Log.d(
+                                    TAG,
+                                    "Incoming sms event not transmitted to the device because they are offline"
+                                )
                             }
                         } else {
                             Log.d(TAG, "Sms notifications disabled")
