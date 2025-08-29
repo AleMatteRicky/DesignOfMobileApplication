@@ -85,15 +85,12 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(15.dp))
 
-        if (!hasNotifAccess) {
-            NotificationAccessPanel()
-        } else {
-            NotificationPreferencesPanel(
-                notificationEnabled = uiState.notificationEnabled,
-                onEnableNotificationSource = { viewModel.onEnableNotificationSource(it) },
-                onDisableNotificationSource = { viewModel.onDisableNotificationSource(it) }
-            )
-        }
+        NotificationFiltersPanel(
+            hasNotificationAccess = hasNotifAccess,
+            notificationEnabled = uiState.notificationEnabled,
+            onEnableNotificationSource = { viewModel.onEnableNotificationSource(it) },
+            onDisableNotificationSource = { viewModel.onDisableNotificationSource(it) }
+        )
     }
 }
 
@@ -175,7 +172,8 @@ fun AppearancePanel(
 }
 
 @Composable
-fun NotificationPreferencesPanel(
+fun NotificationFiltersPanel(
+    hasNotificationAccess: Boolean,
     notificationEnabled: Map<NotificationSource, Boolean>,
     onEnableNotificationSource: (NotificationSource) -> Unit,
     onDisableNotificationSource: (NotificationSource) -> Unit
@@ -224,27 +222,31 @@ fun NotificationPreferencesPanel(
 
             HorizontalDivider(color = Color(0xFFE8E8E8))
 
-            AppToggleRow(
-                title = "WhatsApp",
-                subtitle = "Forward WhatsApp notifications to your device",
-                checked = notificationEnabled[NotificationSource.WHATSAPP] ?: false,
-                onCheckedChange = { checked ->
-                    if (checked) onEnableNotificationSource(NotificationSource.WHATSAPP)
-                    else onDisableNotificationSource(NotificationSource.WHATSAPP)
-                }
-            )
+            if (!hasNotificationAccess) {
+                NotificationAccessPanel()
+            } else {
+                AppToggleRow(
+                    title = "WhatsApp",
+                    subtitle = "Forward WhatsApp notifications to your device",
+                    checked = notificationEnabled[NotificationSource.WHATSAPP] ?: false,
+                    onCheckedChange = { checked ->
+                        if (checked) onEnableNotificationSource(NotificationSource.WHATSAPP)
+                        else onDisableNotificationSource(NotificationSource.WHATSAPP)
+                    }
+                )
 
-            HorizontalDivider(color = Color(0xFFE8E8E8))
+                HorizontalDivider(color = Color(0xFFE8E8E8))
 
-            AppToggleRow(
-                title = "Telegram",
-                subtitle = "Forward Telegram notifications to your device",
-                checked = notificationEnabled[NotificationSource.TELEGRAM] ?: false,
-                onCheckedChange = { checked ->
-                    if (checked) onEnableNotificationSource(NotificationSource.TELEGRAM)
-                    else onDisableNotificationSource(NotificationSource.TELEGRAM)
-                }
-            )
+                AppToggleRow(
+                    title = "Telegram",
+                    subtitle = "Forward Telegram notifications to your device",
+                    checked = notificationEnabled[NotificationSource.TELEGRAM] ?: false,
+                    onCheckedChange = { checked ->
+                        if (checked) onEnableNotificationSource(NotificationSource.TELEGRAM)
+                        else onDisableNotificationSource(NotificationSource.TELEGRAM)
+                    }
+                )
+            }
         }
     }
 }
@@ -301,47 +303,27 @@ fun rememberNotificationAccessState(): State<Boolean> {
 @Composable
 fun NotificationAccessPanel() {
     val context = LocalContext.current
-
-    Text(
-        text = "Notification filters",
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = MaterialTheme.colorScheme.onBackground
-    )
-
-    Spacer(Modifier.height(10.dp))
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF7F7F7), RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text("Enable access to read app notifications", fontWeight = FontWeight.SemiBold)
-            Text(
-                "Required to forward WhatsApp/Telegram notifications to your glasses.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                //This button redirect to phone settings
-                Button(
-                    onClick = {
-                        context.startActivity(
-                            Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        )
-                    }) {
-                    Text("Open settings")
-                }
+        Text("Notification access required", fontWeight = FontWeight.SemiBold)
+        Text(
+            "Enable notification access to forward WhatsApp and Telegram messages.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray
+        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Button(onClick = {
+                context.startActivity(
+                    Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }) {
+                Text("Open settings")
             }
         }
     }
