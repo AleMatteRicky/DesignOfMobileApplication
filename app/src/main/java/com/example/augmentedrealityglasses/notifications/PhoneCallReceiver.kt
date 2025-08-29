@@ -5,6 +5,7 @@ import android.content.Intent
 import android.telephony.TelephonyManager
 import android.util.Log
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.settings.NotificationSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,15 +35,19 @@ class PhoneCallReceiver(
                     // val incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
 
                     Log.d(TAG, "Incoming call")
-                    if (proxy.isConnected()) {
-                        scope.launch {
-                            proxy.send(incomingCall)
+                    scope.launch {
+                        if (isNotificationSourceEnabled(context, NotificationSource.CALL)) {
+                            if (proxy.isConnected()) {
+                                proxy.send(incomingCall)
+                            } else {
+                                Log.d(
+                                    TAG,
+                                    "Incoming call event not transmitted to the device because they are offline"
+                                )
+                            }
+                        } else {
+                            Log.d(TAG, "Call notifications disabled")
                         }
-                    } else {
-                        Log.d(
-                            TAG,
-                            "Incoming call event not transmitted to the device because they are offline"
-                        )
                     }
                 } else {
                     Log.d(TAG, "Not interesting state")

@@ -6,6 +6,7 @@ import android.provider.Telephony
 import android.provider.Telephony.Sms.Intents.getMessagesFromIntent
 import android.util.Log
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.settings.NotificationSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,11 +27,15 @@ class SmsReceiver(
                 for (sms in messages) {
                     val body = sms.messageBody
                     val sender = sms.originatingAddress
-                    Log.d(TAG, "Sending message $body from $sender")
                     scope.launch {
-                        if(proxy.isConnected()){
-                            //TODO: adopt standard syntax for ble messages. Show contact name?
-                            proxy.send("sender: $sender body: $body")
+                        if (isNotificationSourceEnabled(context, NotificationSource.SMS)) {
+                            Log.d(TAG, "Sending message $body from $sender")
+                            if (proxy.isConnected()) {
+                                //TODO: adopt standard syntax for ble messages. Show contact name?
+                                proxy.send("sender: $sender body: $body")
+                            }
+                        } else {
+                            Log.d(TAG, "Sms notifications disabled")
                         }
                     }
                 }

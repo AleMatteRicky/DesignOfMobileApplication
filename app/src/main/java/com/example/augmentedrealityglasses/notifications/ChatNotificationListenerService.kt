@@ -7,9 +7,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
-import com.example.augmentedrealityglasses.cache.DefaultTimeProvider
 import com.example.augmentedrealityglasses.settings.NotificationSource
-import com.example.augmentedrealityglasses.settings.SettingsUIState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,7 +49,11 @@ class ChatNotificationListenerService : NotificationListenerService() {
         }
 
         scope.launch {
-            if (!isNotificationsEnabledFor(appName)) return@launch
+            if (!NotificationFilters.isEnabled(
+                    this@ChatNotificationListenerService,
+                    appName
+                )
+            ) return@launch
 
             val jsonToSend = JSONObject()
 
@@ -75,20 +77,20 @@ class ChatNotificationListenerService : NotificationListenerService() {
         }
     }
 
-    private suspend fun isNotificationsEnabledFor(app: NotificationSource): Boolean {
-        val container = (applicationContext as App).container
-        val cache = container.settingsCache
-        val policy = container.settingsCachePolicy
-
-        val state = cache.getIfValid(
-            key = "settings",
-            policy = policy,
-            serializer = SettingsUIState.serializer(),
-            timeProvider = DefaultTimeProvider
-        )
-
-        return state?.notificationEnabled?.get(app) ?: false
-    }
+//    private suspend fun isNotificationsEnabledFor(app: NotificationSource): Boolean {
+//        val container = (applicationContext as App).container
+//        val cache = container.settingsCache
+//        val policy = container.settingsCachePolicy
+//
+//        val state = cache.getIfValid(
+//            key = "settings",
+//            policy = policy,
+//            serializer = SettingsUIState.serializer(),
+//            timeProvider = DefaultTimeProvider
+//        )
+//
+//        return state?.notificationEnabled?.get(app) ?: false
+//    }
 
     private fun parseChatNotification(notification: Notification): ChatMessage? {
         val extras = notification.extras

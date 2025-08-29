@@ -7,6 +7,7 @@ import android.content.Intent
 import android.util.Log
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.settings.NotificationSource
 
 abstract class NotificationReceiver : BroadcastReceiver() {
     private val TAG: String = "NotificationReceiver"
@@ -34,5 +35,9 @@ abstract class NotificationReceiver : BroadcastReceiver() {
         return filter == NotificationManager.INTERRUPTION_FILTER_NONE
                 || filter == NotificationManager.INTERRUPTION_FILTER_ALARMS
                 || filter == NotificationManager.INTERRUPTION_FILTER_PRIORITY
+    }
+
+    suspend fun isNotificationSourceEnabled(context: Context, source: NotificationSource): Boolean {
+        return NotificationFilters.isEnabled(context, source)
     }
 }

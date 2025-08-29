@@ -54,7 +54,12 @@ class SettingsViewModel(
     private val _uiState = MutableStateFlow(
         SettingsUIState(
             theme = ThemeMode.SYSTEM,
-            notificationEnabled = mapOf(Pair(NotificationSource.WHATSAPP, false), Pair(NotificationSource.TELEGRAM, false))
+            notificationEnabled = mapOf(
+                Pair(NotificationSource.WHATSAPP, false),
+                Pair(NotificationSource.TELEGRAM, false),
+                Pair(NotificationSource.CALL, false),
+                Pair(NotificationSource.SMS, false)
+            )
         )
     )
     val uiState: StateFlow<SettingsUIState> = _uiState
@@ -101,13 +106,13 @@ class SettingsViewModel(
         }
     }
 
-    fun onEnableNotificationSource(source: NotificationSource){
+    fun onEnableNotificationSource(source: NotificationSource) {
         applyState(
             updatedNotification = Pair(source, true)
         )
     }
 
-    fun onDisableNotificationSource(source: NotificationSource){
+    fun onDisableNotificationSource(source: NotificationSource) {
         applyState(
             updatedNotification = Pair(source, false)
         )

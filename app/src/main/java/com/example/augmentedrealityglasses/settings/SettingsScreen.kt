@@ -90,8 +90,8 @@ fun SettingsScreen(
         } else {
             NotificationPreferencesPanel(
                 notificationEnabled = uiState.notificationEnabled,
-                onSelectApplication = { viewModel.onEnableNotificationSource(it) },
-                onDeSelectApplication = { viewModel.onDisableNotificationSource(it) }
+                onEnableNotificationSource = { viewModel.onEnableNotificationSource(it) },
+                onDisableNotificationSource = { viewModel.onDisableNotificationSource(it) }
             )
         }
     }
@@ -177,8 +177,8 @@ fun AppearancePanel(
 @Composable
 fun NotificationPreferencesPanel(
     notificationEnabled: Map<NotificationSource, Boolean>,
-    onSelectApplication: (NotificationSource) -> Unit,
-    onDeSelectApplication: (NotificationSource) -> Unit
+    onEnableNotificationSource: (NotificationSource) -> Unit,
+    onDisableNotificationSource: (NotificationSource) -> Unit
 ) {
     Text(
         text = "Notification filters",
@@ -201,12 +201,36 @@ fun NotificationPreferencesPanel(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             AppToggleRow(
+                title = "Phone call",
+                subtitle = "Forward call notifications to your device",
+                checked = notificationEnabled[NotificationSource.CALL] ?: false,
+                onCheckedChange = { checked ->
+                    if (checked) onEnableNotificationSource(NotificationSource.CALL)
+                    else onDisableNotificationSource(NotificationSource.CALL)
+                }
+            )
+
+            HorizontalDivider(color = Color(0xFFE8E8E8))
+
+            AppToggleRow(
+                title = "Sms",
+                subtitle = "Forward sms notifications to your device",
+                checked = notificationEnabled[NotificationSource.SMS] ?: false,
+                onCheckedChange = { checked ->
+                    if (checked) onEnableNotificationSource(NotificationSource.SMS)
+                    else onDisableNotificationSource(NotificationSource.SMS)
+                }
+            )
+
+            HorizontalDivider(color = Color(0xFFE8E8E8))
+
+            AppToggleRow(
                 title = "WhatsApp",
                 subtitle = "Forward WhatsApp notifications to your device",
                 checked = notificationEnabled[NotificationSource.WHATSAPP] ?: false,
                 onCheckedChange = { checked ->
-                    if (checked) onSelectApplication(NotificationSource.WHATSAPP)
-                    else onDeSelectApplication(NotificationSource.WHATSAPP)
+                    if (checked) onEnableNotificationSource(NotificationSource.WHATSAPP)
+                    else onDisableNotificationSource(NotificationSource.WHATSAPP)
                 }
             )
 
@@ -217,8 +241,8 @@ fun NotificationPreferencesPanel(
                 subtitle = "Forward Telegram notifications to your device",
                 checked = notificationEnabled[NotificationSource.TELEGRAM] ?: false,
                 onCheckedChange = { checked ->
-                    if (checked) onSelectApplication(NotificationSource.TELEGRAM)
-                    else onDeSelectApplication(NotificationSource.TELEGRAM)
+                    if (checked) onEnableNotificationSource(NotificationSource.TELEGRAM)
+                    else onDisableNotificationSource(NotificationSource.TELEGRAM)
                 }
             )
         }
