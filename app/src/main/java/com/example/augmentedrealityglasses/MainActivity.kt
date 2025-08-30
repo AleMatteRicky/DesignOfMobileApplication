@@ -202,6 +202,7 @@ class MainActivity : ComponentActivity() {
 
                                 FindDeviceScreen(
                                     viewModel = viewModel,
+                                    modifier = Modifier,
                                     navigateOnError = {
                                         Log.d(TAG, "Error occurred during scanning")
                                         navController.navigate(ScreenName.ERROR_SCREEN.name)

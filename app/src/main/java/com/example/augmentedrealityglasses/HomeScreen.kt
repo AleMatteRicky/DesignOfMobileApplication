@@ -4,13 +4,23 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.SharedTransitionScope.ResizeMode
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,23 +41,38 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.example.augmentedrealityglasses.ble.ESP32Proxy
+import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     onNavigateFindDevice: () -> Unit
 ) {
 
+    val configuration = LocalConfiguration.current
+    val screenHeightDp = configuration.screenHeightDp.dp
+    val screenWidthDp = configuration.screenWidthDp.dp
     val context = LocalContext.current
     val bluetoothManager = remember(context) {
         checkNotNull(context.getSystemService(BluetoothManager::class.java))
@@ -56,17 +81,33 @@ fun HomeScreen(
         bluetoothManager.adapter
     }
 
+    var showFindDevicePanel by remember { mutableStateOf(false) }
+
+
     //FIXME: allow users to refresh data?
     LaunchedEffect(Unit) {
         viewModel.refreshBondedDevices(context, adapter)
     }
-
     ErrorWrapper(
         message = viewModel.errorMessage,
         onDismiss = { viewModel.hideErrorMessage() }
     ) {
+
+
+        val modifier = if (showFindDevicePanel) Modifier
+            .background(Color(0x80000000))
+            .fillMaxSize()
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                if (showFindDevicePanel) {
+                    showFindDevicePanel = false
+                }
+            } else Modifier.fillMaxSize()
+
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier
         ) {
             Column {
                 Text(
@@ -80,25 +121,91 @@ fun HomeScreen(
                         .padding(top = 16.dp)
                 )
 
-                DevicesPanel(
-                    //TODO: do not show the connected device in the "Previously connected devices" panel
-                    devices = viewModel.bondedDevices,
-                    connected = viewModel.isExtDeviceConnected,
-                    onDeviceClick = {
-                        viewModel.tryToConnectBondedDevice(
-                            device = it
-                        )
-                    },
-                    onDeviceStatusPanelClick = { viewModel.disconnectDevice() }
-                )
+                if(!showFindDevicePanel) { //todo
+                    DevicesPanel(
+                        //TODO: do not show the connected device in the "Previously connected devices" panel
+                        devices = viewModel.bondedDevices,
+                        connected = viewModel.isExtDeviceConnected,
+                        onDeviceClick = {
+                            viewModel.tryToConnectBondedDevice(
+                                device = it
+                            )
+                        },
+                        onDeviceStatusPanelClick = { viewModel.disconnectDevice() }
+                    )
+                }
             }
 
-            AddDevicesButton(
-                onNavigateFindDevice,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 13.dp)
-            )
+            SharedTransitionLayout(Modifier.fillMaxSize()) {
+
+                val sharedState = rememberSharedContentState(key = "find_device_transition")
+                val boxHeight = screenHeightDp * 0.6f
+                val boxWidth = screenWidthDp * 0.9f
+
+                AnimatedContent(targetState = showFindDevicePanel) { targetState ->
+                    if (!targetState) {
+
+                        Box(
+                            Modifier
+                                .offset(
+                                    x = (screenWidthDp - 64.dp) / 2,
+                                    y = screenHeightDp - 155.dp //todo fix with navBarHeight
+                                )
+                                .sharedBounds(
+                                    sharedContentState = sharedState,
+                                    animatedVisibilityScope = this@AnimatedContent,
+                                    resizeMode = ResizeMode.ScaleToBounds(),
+                                )
+                                .padding(bottom = 13.dp)
+
+                        ) {
+                            AddDevicesButton(
+                                { showFindDevicePanel = true },
+                                modifier = Modifier, showFindDevicePanel
+                            )
+                        }
+                    } else {
+
+                        Box(
+                            Modifier
+                                .offset(
+                                    x = (screenWidthDp - boxWidth) / 2,
+                                    y = (screenHeightDp - boxHeight) / 2
+                                )
+                                .background(Color.Transparent)
+                                .zIndex(1f)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {})
+                                .sharedBounds(
+                                    sharedContentState = sharedState,
+                                    animatedVisibilityScope = this@AnimatedContent,
+                                    resizeMode = ResizeMode.ScaleToBounds(),
+                                )
+
+                        ) {
+
+                            Box(
+                                Modifier
+                                    .height(boxHeight)
+                                    .width(boxWidth)
+                                    .clip(shape = RoundedCornerShape(22.dp))
+                                    .background(Color.White)
+
+                            ) {
+                                FindDeviceScreen(
+                                    viewModel,
+                                    Modifier.matchParentSize(),
+                                    { },
+                                    { })
+                            }
+                        }
+                    }
+                }
+
+
+            }
         }
     }
 }
@@ -129,6 +236,7 @@ fun DevicesPanel(
             connected = connected,
             onClick = onDeviceStatusPanelClick
         )
+
         DevicesListPanel(
             devices = devices,
             modifier = Modifier.weight(1f),
@@ -314,27 +422,27 @@ fun DeviceRow(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun AddDevicesButton(
+fun SharedTransitionScope.AddDevicesButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showFindDevicePanel: Boolean
 ) {
+
     FloatingActionButton(
         onClick = onClick,
         shape = CircleShape,
-        containerColor = Color.Black,
-        elevation = FloatingActionButtonDefaults.elevation(
-            defaultElevation = 6.dp,
-            pressedElevation = 8.dp
-        ),
+        containerColor = if (!showFindDevicePanel) Color.Black else Color.White,
         modifier = modifier.size(64.dp)
     ) {
         Icon(
             imageVector = Icons.Default.Add,
             contentDescription = "Add device",
             tint = Color.White,
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier
+                .size(32.dp)
+                .skipToLookaheadSize()
         )
     }
-
 }

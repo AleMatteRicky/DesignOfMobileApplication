@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +44,10 @@ import com.example.augmentedrealityglasses.ble.characteristic.checkBluetoothConn
 
 @Composable
 fun FindDeviceScreen(
-    viewModel: HomeViewModel, navigateOnError: () -> Unit, navigateOnFeatures: () -> Unit
+    viewModel: HomeViewModel,
+    modifier: Modifier,
+    navigateOnError: () -> Unit,
+    navigateOnFeatures: () -> Unit
 ) {
     checkBluetoothConnectPermission(LocalContext.current)
 
@@ -62,7 +67,9 @@ fun FindDeviceScreen(
         scanSettings,
     )
 
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier
+        .fillMaxSize()
+        .clip(shape = RoundedCornerShape(22.dp))) {
         Row(
             Modifier
                 .fillMaxWidth()
