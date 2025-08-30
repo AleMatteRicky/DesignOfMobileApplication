@@ -36,7 +36,7 @@ fun SelectLanguageButton(
 
     Button(
         onClick = {
-            onClick()
+            if (viewModel.uiState.isRecording) {} else onClick()
         },
         enabled = enabled,
         modifier = modifier
