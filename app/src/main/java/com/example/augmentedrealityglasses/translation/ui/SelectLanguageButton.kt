@@ -29,7 +29,8 @@ fun SelectLanguageButton(
     enabled: Boolean,
     viewModel: TranslationViewModel,
     modifier: Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    languageRole: LanguageRole
 ) {
     var expanded by remember { mutableStateOf(false) }
     val uiState = viewModel.uiState
@@ -49,10 +50,13 @@ fun SelectLanguageButton(
         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
         contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
     ) {
-        val textContent: String = if (uiState.targetLanguage == null) {
+        val buttonLanguage =
+            if (languageRole == LanguageRole.TARGET) uiState.targetLanguage else uiState.sourceLanguage
+
+        val textContent: String = if (buttonLanguage == null) {
             "Select Language"
         } else {
-            getFullLengthName(uiState.targetLanguage)
+            getFullLengthName(buttonLanguage)
         }
         Text(
             textContent,
@@ -88,7 +92,12 @@ fun SelectLanguageButton(
             DropdownMenuItem(
                 text = { Text(getFullLengthName(languageTag)) },
                 onClick = {
-                    viewModel.selectTargetLanguage(languageTag)
+                    if (languageRole == LanguageRole.TARGET) {
+                        viewModel.selectTargetLanguage(languageTag)
+                    } else {
+                        viewModel.selectSourceLanguage(languageTag)
+                    }
+
                     expanded = false
                 }
             )
@@ -100,6 +109,11 @@ fun getFullLengthName(tag: String): String {
     val locale = Locale.forLanguageTag(tag)
 
     return locale.displayName.replaceFirstChar { it.uppercase() }
+}
+
+enum class LanguageRole {
+    SOURCE,
+    TARGET;
 }
 
 

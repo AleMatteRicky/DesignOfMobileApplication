@@ -70,7 +70,10 @@ fun TranslationResultScreen(
                 contentText = uiState.recognizedText,
                 color = Color.Black,
                 language = if (uiState.sourceLanguage != null) getFullLengthName(uiState.sourceLanguage) else "",
-                onNavigateToLanguageSelection = {} //source language can not be modified
+                onNavigateToLanguageSelection = {
+                    viewModel.setSelectingLanguageRole(LanguageRole.SOURCE)
+                    onNavigateToLanguageSelection()
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -97,7 +100,10 @@ fun TranslationResultScreen(
                 contentText = uiState.translatedText,
                 color = Color(0xFF0B61A4),
                 language = if (uiState.targetLanguage != null) getFullLengthName(uiState.targetLanguage) else "Select Target Language",
-                onNavigateToLanguageSelection = onNavigateToLanguageSelection
+                onNavigateToLanguageSelection = {
+                    viewModel.setSelectingLanguageRole(LanguageRole.TARGET)
+                    onNavigateToLanguageSelection()
+                }
             )
 
         }

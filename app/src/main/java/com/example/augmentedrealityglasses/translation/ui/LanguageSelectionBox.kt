@@ -33,38 +33,20 @@ fun LanguageSelectionBox(
     Box(
         modifier = modifier
     ) {
-        Box(
+        SelectLanguageButton(
+            enabled = enabled,
+            viewModel = viewModel,
             modifier = Modifier
-                .width(123.dp)
-                .fillMaxHeight()
-                .shadow(
-                    elevation = 4.dp,
-                    shape = RoundedCornerShape(14.dp),
-                    clip = false
-
-                )
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color.White)
-                .padding(
-                    start = 16.dp,
-                    top = 8.dp,
-                    end = 16.dp,
-                    bottom = 8.dp
-                )
                 .align(Alignment.CenterStart)
-        ) {
-            Text(
-                "Detect Language",
-                color = Color.Black,
-                softWrap = true,
-                maxLines = 2,
-                textAlign = TextAlign.Center,
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            )
-        }
+                .width(123.dp)
+                .fillMaxHeight(),
+            onClick = {
+                viewModel.setSelectingLanguageRole(LanguageRole.SOURCE)
+                onClick()
+            },
+            languageRole = LanguageRole.SOURCE
+        )
+
         Image(
             painter = painterResource(id = Icon.RIGHT_ARROW.getID()),
             contentDescription = "An arrow from the source language to the target language",
@@ -77,7 +59,12 @@ fun LanguageSelectionBox(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .width(123.dp)
-                .fillMaxHeight(), onClick = onClick
+                .fillMaxHeight(),
+            onClick = {
+                viewModel.setSelectingLanguageRole(LanguageRole.TARGET)
+                onClick()
+            },
+            languageRole = LanguageRole.TARGET
         )
     }
 }

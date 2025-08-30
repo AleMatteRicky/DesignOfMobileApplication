@@ -23,6 +23,10 @@ import androidx.compose.ui.zIndex
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 //todo check if with animation is solved, selecting a target downloaded language and then switching immediately to recording lead to show for an instant DisplayModelMissing
+//todo before starting to record verify that the source language is not null
+//todo disable offline
+//todo verify tag compatibility
+
 
 @Composable
 fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: () -> Boolean) {
@@ -45,7 +49,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
             }
 
             Text(
-                text = "Select target language",
+                text = "Select " + (if (viewModel.uiState.selectingLanguageRole == LanguageRole.TARGET) "target" else "source") + " language",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)

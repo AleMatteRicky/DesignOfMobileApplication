@@ -46,7 +46,9 @@ fun LanguageRow(
     var isSelected = false
     var modelMissingAlertVisible by remember { mutableStateOf(false) }
 
-    if (languageTag.equals(viewModel.uiState.targetLanguage)) {
+    val selectedLanguage =
+        if (viewModel.uiState.selectingLanguageRole == LanguageRole.TARGET) viewModel.uiState.targetLanguage else viewModel.uiState.sourceLanguage
+    if (languageTag.equals(selectedLanguage)) {
         isSelected = true
     }
 
@@ -78,7 +80,11 @@ fun LanguageRow(
                 if (!isLanguageDownloading) {
                     isSelected = true
                     if (isDownloaded) {
-                        viewModel.selectTargetLanguage(languageTag)
+                        if (viewModel.uiState.selectingLanguageRole == LanguageRole.TARGET) {
+                            viewModel.selectTargetLanguage(languageTag)
+                        } else {
+                            viewModel.selectSourceLanguage(languageTag)
+                        }
                         onBack()
                     } else {
                         modelMissingAlertVisible = true
