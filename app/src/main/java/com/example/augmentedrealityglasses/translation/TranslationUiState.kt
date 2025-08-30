@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.translation
 
+import com.example.augmentedrealityglasses.translation.ui.LanguageRole
 import kotlinx.coroutines.flow.MutableStateFlow
 
 data class TranslationUiState(
@@ -17,6 +18,7 @@ data class TranslationUiState(
     val currentNormalizedRms: Float = 0f,
     val currentlyDownloadingLanguageTags: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet()),
     val isResultReady: Boolean = false,
-    val isExtDeviceConnected: Boolean = false
+    val isExtDeviceConnected: Boolean = false,
+    val selectingLanguageRole: LanguageRole? = null
 )
 
