@@ -10,6 +10,7 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SharedTransitionScope.ResizeMode
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -47,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -95,7 +97,7 @@ fun HomeScreen(
 
 
         val modifier = if (showFindDevicePanel) Modifier
-            .background(Color(0x80000000))
+            .background(Color.Transparent)
             .fillMaxSize()
             .clickable(
                 indication = null,
@@ -109,30 +111,42 @@ fun HomeScreen(
         Box(
             modifier = modifier
         ) {
-            Column {
-                Text(
-                    text = "Home",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier
-                        .padding(bottom = 8.dp)
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 16.dp)
-                )
 
-                if(!showFindDevicePanel) { //todo
-                    DevicesPanel(
-                        //TODO: do not show the connected device in the "Previously connected devices" panel
-                        devices = viewModel.bondedDevices,
-                        connected = viewModel.isExtDeviceConnected,
-                        onDeviceClick = {
-                            viewModel.tryToConnectBondedDevice(
-                                device = it
-                            )
-                        },
-                        onDeviceStatusPanelClick = { viewModel.disconnectDevice() }
+            Box(
+                modifier = if (showFindDevicePanel) {
+                    Modifier
+                        .fillMaxSize()
+                        .blur(20.dp)
+                } else {
+                    Modifier.fillMaxSize()
+                }
+            ) {
+
+                Column {
+                    Text(
+                        text = "Home",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 16.dp)
                     )
+
+                     //todo
+                        DevicesPanel(
+                            //TODO: do not show the connected device in the "Previously connected devices" panel
+                            devices = viewModel.bondedDevices,
+                            connected = viewModel.isExtDeviceConnected,
+                            onDeviceClick = {
+                                viewModel.tryToConnectBondedDevice(
+                                    device = it
+                                )
+                            },
+                            onDeviceStatusPanelClick = { viewModel.disconnectDevice() }
+                        )
+
                 }
             }
 
@@ -170,7 +184,7 @@ fun HomeScreen(
                             Modifier
                                 .offset(
                                     x = (screenWidthDp - boxWidth) / 2,
-                                    y = (screenHeightDp - boxHeight) / 2
+                                    y = (screenHeightDp - boxHeight) / 2 - 50.dp
                                 )
                                 .background(Color.Transparent)
                                 .zIndex(1f)
@@ -183,22 +197,43 @@ fun HomeScreen(
                                     animatedVisibilityScope = this@AnimatedContent,
                                     resizeMode = ResizeMode.ScaleToBounds(),
                                 )
+                                .height(boxHeight + 35.dp)
 
                         ) {
-
-                            Box(
+                            Column(
                                 Modifier
-                                    .height(boxHeight)
+                                    .background(Color.Transparent)
+                                    .fillMaxHeight()
                                     .width(boxWidth)
-                                    .clip(shape = RoundedCornerShape(22.dp))
-                                    .background(Color.White)
-
                             ) {
-                                FindDeviceScreen(
-                                    viewModel,
-                                    Modifier.matchParentSize(),
-                                    { },
-                                    { })
+                                Text(
+                                    text = "Pair Device",
+                                    fontSize = 30.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .skipToLookaheadSize()
+                                        .align(Alignment.CenterHorizontally)
+                                )
+
+                                Spacer(
+                                    modifier = Modifier.height(10.dp)
+                                )
+
+                                Box(
+                                    Modifier
+                                        .height(boxHeight)
+                                        .width(boxWidth)
+                                        .clip(shape = RoundedCornerShape(22.dp))
+                                        .background(Color.White)
+                                        .border(0.5.dp, Color.Black, shape = RoundedCornerShape(22.dp))
+
+                                ) {
+                                    FindDeviceScreen(
+                                        viewModel,
+                                        Modifier.matchParentSize(),
+                                        { },
+                                        { })
+                                }
                             }
                         }
                     }

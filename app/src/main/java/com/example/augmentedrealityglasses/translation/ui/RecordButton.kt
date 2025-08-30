@@ -75,7 +75,6 @@ fun RecordButton(
             Image(
                 painter = painterResource(id = recordingSymbol.getID()),
                 contentDescription = "Recording status icon"
-                //modifier = Modifier.size(24.dp)
             )
         }
     }
