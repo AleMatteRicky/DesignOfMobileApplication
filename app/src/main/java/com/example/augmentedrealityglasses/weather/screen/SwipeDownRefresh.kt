@@ -13,7 +13,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 @Composable
 fun SwipeDownRefresh(
     isRefreshing: Boolean,
-    scrollDownEnabled: Boolean,
+    canRefresh: Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
@@ -35,7 +35,7 @@ fun SwipeDownRefresh(
             }
         },
         update = { layout ->
-            layout.setOnChildScrollUpCallback { _, _ -> scrollDownEnabled }
+            layout.setOnChildScrollUpCallback { _, _ -> !canRefresh }
             layout.isRefreshing = isRefreshing
         }
     )

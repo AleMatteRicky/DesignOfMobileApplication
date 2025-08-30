@@ -1,6 +1,7 @@
 package com.example.augmentedrealityglasses.weather.screen
 
 import android.Manifest
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -199,16 +200,17 @@ fun WeatherScreen(
                 //List state attached to the LazyColumn (that contains all the screen's content)
                 val listState = rememberLazyListState()
 
-                //Allow scrolling only when the screen is fully scrolled to the top
-                val scrollDownEnabled by remember(listState) {
+                //Allow scrolling only when the screen is fully scrolled to the top and the user is not scrolling the LazyRow (Daily forecasts panel)
+                val canRefresh by remember(listState, dailyListState) {
                     derivedStateOf {
-                        listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
+                        Log.d("ciao", dailyListState.isScrollInProgress.toString())
+                        !(listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0) && !dailyListState.isScrollInProgress
                     }
                 }
 
                 SwipeDownRefresh(
                     isRefreshing = viewModel.isRefreshing,
-                    scrollDownEnabled = scrollDownEnabled,
+                    canRefresh = canRefresh,
                     onRefresh = {
                         viewModel.refreshWeatherInfos(fusedLocationClient, context)
                     },
