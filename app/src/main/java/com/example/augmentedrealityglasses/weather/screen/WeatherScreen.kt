@@ -189,9 +189,8 @@ fun WeatherScreen(
             Scaffold(
                 topBar = {
                     //TODO: fix background color when scrolling the page
-                    LocationAndBLEStatusBar(
-                        uiState.location.getFullName(),
-                        viewModel.isExtDeviceConnected
+                    LocationBar(
+                        uiState.location.getFullName()
                     )
 
                 }
@@ -294,7 +293,7 @@ fun WeatherScreen(
 }
 
 @Composable
-fun LocationAndBLEStatusBar(locationName: String, isExtDeviceConnected: Boolean) {
+fun LocationBar(locationName: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -321,33 +320,34 @@ fun LocationAndBLEStatusBar(locationName: String, isExtDeviceConnected: Boolean)
             )
         }
 
-        Row(
-            modifier = Modifier
-                .background(Color(0xFFEFEFEF), shape = RoundedCornerShape(16.dp)) //FIXME: fix color
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.eyeglasses),
-                contentDescription = null,
-                modifier = Modifier.size(30.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-
-            if (isExtDeviceConnected) {
-                Icon(
-                    painter = painterResource(id = R.drawable.bluetooth_connected),
-                    contentDescription = "Device connected",
-                    modifier = Modifier.size(30.dp)
-                )
-            } else {
-                Icon(
-                    painter = painterResource(id = R.drawable.bluetooth_disabled),
-                    contentDescription = "Device not connected",
-                    modifier = Modifier.size(30.dp)
-                )
-            }
-        }
+//        Row(
+//            modifier = Modifier
+//                .background(Color(0xFFEFEFEF), shape = RoundedCornerShape(16.dp)) //FIXME: fix color
+//                .padding(horizontal = 12.dp, vertical = 6.dp),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            //TODO: remove this
+//            Icon(
+//                painter = painterResource(id = R.drawable.eyeglasses),
+//                contentDescription = null,
+//                modifier = Modifier.size(30.dp)
+//            )
+//            Spacer(modifier = Modifier.width(12.dp))
+//
+//            if (isExtDeviceConnected) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.bluetooth_connected),
+//                    contentDescription = "Device connected",
+//                    modifier = Modifier.size(30.dp)
+//                )
+//            } else {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.bluetooth_disabled),
+//                    contentDescription = "Device not connected",
+//                    modifier = Modifier.size(30.dp)
+//                )
+//            }
+//        }
     }
 }
 
