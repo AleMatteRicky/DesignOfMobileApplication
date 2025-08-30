@@ -74,7 +74,8 @@ class MainActivity : ComponentActivity() {
             val navigationBarVisible = remember { mutableStateOf(true) }
 
             //Loading the user settings
-            val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+            val settingsViewModel: SettingsViewModel =
+                viewModel(factory = SettingsViewModel.Factory)
             LaunchedEffect(Unit) {
                 //Try to load settings from cache
                 settingsViewModel.loadSettings()
@@ -84,8 +85,8 @@ class MainActivity : ComponentActivity() {
             //Use this flag in order to show properly the content on the screen
             val isDarkThemeSelected = when (settingsUi.theme) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.DARK   -> true
-                ThemeMode.LIGHT  -> false
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
             }
 
             Scaffold(
@@ -160,58 +161,64 @@ class MainActivity : ComponentActivity() {
                                 extras = extras
                             )
 
-                            PermissionsForNotification(
-                                app.container.isDeviceSmsCapable,
-                                content = {
-                                    HomeScreen(
-                                        viewModel = viewModel,
-                                        onNavigateFindDevice = { navController.navigate(ScreenName.FIND_DEVICE.name) }
-                                    )
-                                }
-                            )
-                        }
-                        composable(ScreenName.FIND_DEVICE.name) { backStackEntry ->
-
-                            BluetoothSampleBox {
-                                val bluetoothManager: BluetoothManager =
-                                    checkNotNull(
-                                        applicationContext.getSystemService(
-                                            BluetoothManager::class.java
+                            BluetoothSampleBox { //todo fix permission logic
+                                PermissionsForNotification(
+                                    app.container.isDeviceSmsCapable,
+                                    content = {
+                                        HomeScreen(
+                                            viewModel = viewModel,
+                                            onNavigateFindDevice = {
+                                                navController.navigate(
+                                                    ScreenName.FIND_DEVICE.name
+                                                )
+                                            }
                                         )
-                                    )
-                                val adapter: BluetoothAdapter? = bluetoothManager.adapter
-
-                                // TODO: make the control at the beginning not making clickable the icon in case bluetooth is not supported, instead of checking it here
-                                require(adapter != null) {
-                                    "Bluetooth must be supported by this device"
-                                }
-
-                                val extras = MutableCreationExtras().apply {
-                                    set(HomeViewModel.ADAPTER_KEY, adapter)
-                                    set(APPLICATION_KEY, application)
-                                }
-
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry("HOME_GRAPH")
-                                }
-                                val viewModel = viewModel<HomeViewModel>(
-                                    viewModelStoreOwner = parentEntry,
-                                    factory = HomeViewModel.Factory,
-                                    extras = extras
-                                )
-
-                                FindDeviceScreen(
-                                    viewModel = viewModel,
-                                    modifier = Modifier,
-                                    navigateOnError = {
-                                        Log.d(TAG, "Error occurred during scanning")
-                                        navController.navigate(ScreenName.ERROR_SCREEN.name)
-                                    },
-                                    navigateOnFeatures = {
-                                        navController.navigate(ScreenName.HOME.name)
                                     }
                                 )
                             }
+                        }
+                        composable(ScreenName.FIND_DEVICE.name) { backStackEntry ->
+
+
+                            val bluetoothManager: BluetoothManager =
+                                checkNotNull(
+                                    applicationContext.getSystemService(
+                                        BluetoothManager::class.java
+                                    )
+                                )
+                            val adapter: BluetoothAdapter? = bluetoothManager.adapter
+
+                            // TODO: make the control at the beginning not making clickable the icon in case bluetooth is not supported, instead of checking it here
+                            require(adapter != null) {
+                                "Bluetooth must be supported by this device"
+                            }
+
+                            val extras = MutableCreationExtras().apply {
+                                set(HomeViewModel.ADAPTER_KEY, adapter)
+                                set(APPLICATION_KEY, application)
+                            }
+
+                            val parentEntry = remember(backStackEntry) {
+                                navController.getBackStackEntry("HOME_GRAPH")
+                            }
+                            val viewModel = viewModel<HomeViewModel>(
+                                viewModelStoreOwner = parentEntry,
+                                factory = HomeViewModel.Factory,
+                                extras = extras
+                            )
+
+                            FindDeviceScreen(
+                                viewModel = viewModel,
+                                modifier = Modifier,
+                                navigateOnError = {
+                                    Log.d(TAG, "Error occurred during scanning")
+                                    navController.navigate(ScreenName.ERROR_SCREEN.name)
+                                },
+                                navigateOnFeatures = {
+                                    navController.navigate(ScreenName.HOME.name)
+                                }
+                            )
+
                         }
                     }
                     composable(ScreenName.CONNECT_SCREEN.name) {
@@ -227,35 +234,6 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
-                    /*
-
-                    composable(ScreenName.TRANSLATION_SCREEN.name) {
-                        // TODO: integrate with the application by Ale
-                        val translationViewModel: com.example.augmentedrealityglasses.screens.TranslationViewModel =
-                            viewModel(factory = com.example.augmentedrealityglasses.screens.TranslationViewModel.Factory)
-                        TranslationScreen(
-                            translationViewModel = translationViewModel,
-                            onSendingData = { msg ->
-                                translationViewModel.send(msg)
-                            }
-                        )
-                    }
-                    */
-//                    composable(ScreenName.TRANSLATION_HOME_SCREEN.name) {
-//                        CheckRecordAudioPermission() //todo check if it works when permission are refused 1 time
-//                        TranslationScreen(
-//                            onNavigateToHome = {
-//                                navController.navigate(
-//                                    route = ScreenName.HOME.name
-//                                )
-//                            },
-//                            viewModel = viewModel(factory = TranslationViewModel.Factory),
-//                            enabled = translationFeatureAvailable(),
-//                            navigationBarVisible = navigationBarVisible,
-//                            navigationBarHeight = navigationBarHeight
-//
-//                        ) //todo update with system language from settings
-//                    }
 
                     navigation(
                         startDestination = ScreenName.TRANSLATION_HOME_SCREEN.name,
