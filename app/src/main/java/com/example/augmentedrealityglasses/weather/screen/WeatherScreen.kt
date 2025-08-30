@@ -1,7 +1,6 @@
 package com.example.augmentedrealityglasses.weather.screen
 
 import android.Manifest
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -21,12 +20,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -196,14 +196,13 @@ fun WeatherScreen(
                 }
             ) { innerPadding ->
 
-                //List state attached to the LazyColumn (that contains all the screen's content)
-                val listState = rememberLazyListState()
+                //List state attached to the main Column (that contains all the screen's content)
+                val scrollState = rememberScrollState()
 
                 //Allow scrolling only when the screen is fully scrolled to the top and the user is not scrolling the LazyRow (Daily forecasts panel)
-                val canRefresh by remember(listState, dailyListState) {
+                val canRefresh by remember(scrollState, dailyListState) {
                     derivedStateOf {
-                        Log.d("ciao", dailyListState.isScrollInProgress.toString())
-                        !(listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0) && !dailyListState.isScrollInProgress
+                        (scrollState.value == 0) && !dailyListState.isScrollInProgress
                     }
                 }
 
@@ -217,68 +216,60 @@ fun WeatherScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    LazyColumn(
+                    Column(
                         modifier = Modifier
-                            .fillMaxSize(),
-                        state = listState
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
                     ) {
 
                         currentCondition?.let { condition ->
-                            item {
-                                CurrentWeatherBar(
-                                    condition.temp,
-                                    condition.tempMax,
-                                    condition.tempMin,
-                                    condition.feelsLike,
-                                    condition.main,
-                                    condition.iconId
-                                )
-                            }
-                        }
-
-                        item {
-                            LocationManagerBar(
-                                onClickSearchBar = { onTextFieldClick() },
-                                onClickGeolocationIcon = {
-                                    viewModel.getGeolocationWeather(
-                                        fusedLocationClient,
-                                        context
-                                    )
-                                },
-                                geolocationEnabled = uiState.geolocationEnabled
+                            CurrentWeatherBar(
+                                condition.temp,
+                                condition.tempMax,
+                                condition.tempMin,
+                                condition.feelsLike,
+                                condition.main,
+                                condition.iconId
                             )
                         }
 
-                        if (dailyForecasts.isNotEmpty()) {
-                            item {
-                                DailyForecastsPanel(dailyForecasts, dailyListState)
-                            }
-
-                            item {
-                                MultipleDaysForecastsPanel(
-                                    forecasts = daysConditions,
-                                    onItemClick = {
-                                        viewModel.changeSelectedDay(it)
-                                    },
-                                    isSelectedDay = { uiState.selectedDay == it }
+                        LocationManagerBar(
+                            onClickSearchBar = { onTextFieldClick() },
+                            onClickGeolocationIcon = {
+                                viewModel.getGeolocationWeather(
+                                    fusedLocationClient,
+                                    context
                                 )
-                            }
+                            },
+                            geolocationEnabled = uiState.geolocationEnabled
+                        )
+
+                        if (dailyForecasts.isNotEmpty()) {
+                            DailyForecastsPanel(dailyForecasts, dailyListState)
+
+
+
+                            MultipleDaysForecastsPanel(
+                                forecasts = daysConditions,
+                                onItemClick = {
+                                    viewModel.changeSelectedDay(it)
+                                },
+                                isSelectedDay = { uiState.selectedDay == it }
+                            )
                         }
 
                         currentCondition?.let { condition ->
-                            item {
-                                //TODO: make this grid reactive to day changes
-                                AdditionalInfosGrid(
-                                    pressure = condition.pressure,
-                                    humidity = condition.humidity,
+                            //TODO: make this grid reactive to day changes
+                            AdditionalInfosGrid(
+                                pressure = condition.pressure,
+                                humidity = condition.humidity,
 
-                                    //Current condition must have these params
-                                    sunrise = condition.sunrise!!,
-                                    sunset = condition.sunset!!,
+                                //Current condition must have these params
+                                sunrise = condition.sunrise!!,
+                                sunset = condition.sunset!!,
 
-                                    windSpeed = condition.windSpeed
-                                )
-                            }
+                                windSpeed = condition.windSpeed
+                            )
                         }
                     }
                 }
