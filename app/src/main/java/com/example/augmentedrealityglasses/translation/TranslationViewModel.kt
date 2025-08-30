@@ -123,6 +123,12 @@ class TranslationViewModel(
         }
     }
 
+    fun selectSourceLanguage(sourceLanguage: String?){
+        uiState = uiState.copy(
+            sourceLanguage = sourceLanguage,
+        )
+    }
+
     fun resetResultStatus() {
         uiState = uiState.copy(isResultReady = false)
     }
