@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
+import com.example.augmentedrealityglasses.translation.ui.LanguageRole
 import com.example.augmentedrealityglasses.translation.ui.getFullLengthName
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModel
@@ -112,6 +113,9 @@ class TranslationViewModel(
         recorder?.destroy()
         recordJob?.cancel()
         uiState = uiState.copy(isRecording = false)
+        if(uiState.isResultReady == false && uiState.recognizedText.isNotEmpty()){
+            uiState = uiState.copy(isResultReady = true)
+        }
     }
 
     fun selectTargetLanguage(targetLanguage: String?) {
@@ -123,7 +127,7 @@ class TranslationViewModel(
         }
     }
 
-    fun selectSourceLanguage(sourceLanguage: String?){
+    fun selectSourceLanguage(sourceLanguage: String?) {
         uiState = uiState.copy(
             sourceLanguage = sourceLanguage,
         )
@@ -278,6 +282,10 @@ class TranslationViewModel(
         }
     }
 
+    fun setSelectingLanguageRole(languageRole: LanguageRole?) { //needed to communicate the selecting type of language to the translation language selection screen
+        uiState = uiState.copy(selectingLanguageRole = languageRole)
+    }
+
     private suspend fun identifySourceLanguage(): Boolean { //True if the identification is successful, False otherwise
         val languageIdentification = LanguageIdentification.getClient()
         val tag = languageIdentification.identifyLanguage(uiState.recognizedText).await()
@@ -304,11 +312,16 @@ class TranslationViewModel(
     }
 
     private fun createIntent(): Intent {
+
+        val sourceLanguageTag = adaptLanguageTag(uiState.sourceLanguage!!)//todo add exception
+
         return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, sourceLanguageTag)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, sourceLanguageTag) //can recognize other languages
             putExtra(
                 RecognizerIntent.EXTRA_PARTIAL_RESULTS, true
             )
@@ -322,6 +335,10 @@ class TranslationViewModel(
             )
         }
 
+    }
+
+    private fun adaptLanguageTag(languageTag: String) : String{ //ex: from "it" to "it-IT"
+        return languageTag + "-" + languageTag.uppercase()
     }
 
     private fun createRecognitionListener(): RecognitionListener {
