@@ -10,6 +10,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -125,9 +126,14 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             ) { innerPadding ->
+
+                val screenTransitionDuration = 150
+
                 NavHost(
                     navController = navController,
                     startDestination = "HOME_GRAPH",
+                    enterTransition = { fadeIn(animationSpec = tween(screenTransitionDuration)) },
+                    exitTransition = { fadeOut(animationSpec = tween(screenTransitionDuration)) },
                     modifier = Modifier.padding(innerPadding)
                 ) {
 
@@ -136,7 +142,23 @@ class MainActivity : ComponentActivity() {
                         route = "HOME_GRAPH"
                     ) {
                         //FIXME: create composable function for redundant code
-                        composable(ScreenName.HOME.name) { backStackEntry ->
+                        composable(
+                            ScreenName.HOME.name,
+                            enterTransition = {
+                                fadeIn(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                            exitTransition = {
+                                fadeOut(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                        ) { backStackEntry ->
 
                             val bluetoothManager: BluetoothManager =
                                 checkNotNull(applicationContext.getSystemService(BluetoothManager::class.java))
@@ -177,7 +199,23 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        composable(ScreenName.FIND_DEVICE.name) { backStackEntry ->
+                        composable(
+                            ScreenName.FIND_DEVICE.name,
+                            enterTransition = {
+                                fadeIn(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                            exitTransition = {
+                                fadeOut(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                        ) { backStackEntry ->
 
 
                             val bluetoothManager: BluetoothManager =
@@ -221,7 +259,11 @@ class MainActivity : ComponentActivity() {
 
                         }
                     }
-                    composable(ScreenName.CONNECT_SCREEN.name) {
+                    composable(
+                        ScreenName.CONNECT_SCREEN.name,
+                        enterTransition = { fadeIn(animationSpec = tween(screenTransitionDuration)) },
+                        exitTransition = { fadeOut(animationSpec = tween(screenTransitionDuration)) },
+                    ) {
                         ConnectScreen(
                             viewModel = viewModel(factory = ConnectViewModel.Factory),
                             onNavigateToFeature = { screen ->
@@ -239,7 +281,21 @@ class MainActivity : ComponentActivity() {
                         startDestination = ScreenName.TRANSLATION_HOME_SCREEN.name,
                         route = "TRANSLATION_GRAPH"
                     ) {
-                        composable(ScreenName.TRANSLATION_HOME_SCREEN.name) { backStackEntry ->
+                        composable(
+                            ScreenName.TRANSLATION_HOME_SCREEN.name,
+                            enterTransition = {
+                                fadeIn(
+                                    animationSpec = tween(screenTransitionDuration)
+                                )
+                            },
+                            exitTransition = {
+                                fadeOut(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                        ) { backStackEntry ->
                             val parentEntry = remember(backStackEntry) {
                                 navController.getBackStackEntry("TRANSLATION_GRAPH")
                             }
@@ -273,7 +329,21 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        composable(ScreenName.TRANSLATION_RESULT_SCREEN.name) { backStackEntry ->
+                        composable(
+                            ScreenName.TRANSLATION_RESULT_SCREEN.name,
+                            enterTransition = {
+                                fadeIn(
+                                    animationSpec = tween(screenTransitionDuration)
+                                )
+                            },
+                            exitTransition = {
+                                fadeOut(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                        ) { backStackEntry ->
                             val parentEntry = remember(backStackEntry) {
                                 navController.getBackStackEntry("TRANSLATION_GRAPH")
                             }
@@ -293,7 +363,21 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name) { backStackEntry ->
+                        composable(
+                            ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
+                            enterTransition = {
+                                fadeIn(
+                                    animationSpec = tween(screenTransitionDuration)
+                                )
+                            },
+                            exitTransition = {
+                                fadeOut(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                        ) { backStackEntry ->
                             val parentEntry = remember(backStackEntry) {
                                 navController.getBackStackEntry("TRANSLATION_GRAPH")
                             }
@@ -317,7 +401,21 @@ class MainActivity : ComponentActivity() {
                         startDestination = ScreenName.WEATHER_HOME_SCREEN.name,
                         route = "WEATHER_GRAPH"
                     ) {
-                        composable(ScreenName.WEATHER_HOME_SCREEN.name) {
+                        composable(
+                            ScreenName.WEATHER_HOME_SCREEN.name,
+                            enterTransition = {
+                                fadeIn(
+                                    animationSpec = tween(screenTransitionDuration)
+                                )
+                            },
+                            exitTransition = {
+                                fadeOut(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                        ) {
                             val parentEntry =
                                 remember { navController.getBackStackEntry("WEATHER_GRAPH") }
                             val viewModel = viewModel<WeatherViewModel>(
@@ -333,7 +431,21 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        composable(ScreenName.WEATHER_SEARCH_LOCATIONS.name) {
+                        composable(
+                            ScreenName.WEATHER_SEARCH_LOCATIONS.name,
+                            enterTransition = {
+                                fadeIn(
+                                    animationSpec = tween(screenTransitionDuration)
+                                )
+                            },
+                            exitTransition = {
+                                fadeOut(
+                                    animationSpec = tween(
+                                        screenTransitionDuration
+                                    )
+                                )
+                            },
+                        ) {
                             val parentEntry =
                                 remember { navController.getBackStackEntry("WEATHER_GRAPH") }
                             val viewModel = viewModel<WeatherViewModel>(
@@ -351,7 +463,11 @@ class MainActivity : ComponentActivity() {
                     }
 
                     //TODO
-                    composable(ScreenName.SETTINGS.name) {
+                    composable(
+                        ScreenName.SETTINGS.name,
+                        enterTransition = { fadeIn(animationSpec = tween(screenTransitionDuration)) },
+                        exitTransition = { fadeOut(animationSpec = tween(screenTransitionDuration)) },
+                    ) {
                         SettingsScreen(
                             viewModel = settingsViewModel
                         )
