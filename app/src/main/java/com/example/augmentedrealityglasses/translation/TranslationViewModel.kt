@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
+import com.example.augmentedrealityglasses.internet.ConnectivityStatus
 import com.example.augmentedrealityglasses.internet.InternetConnectionManager
 import com.example.augmentedrealityglasses.translation.ui.LanguageRole
 import com.example.augmentedrealityglasses.translation.ui.getFullLengthName
@@ -112,7 +113,7 @@ class TranslationViewModel(
     fun startRecording() {
         recordJob?.cancel()
 
-        if (uiState.sourceLanguage != null) {
+        if (!uiState.sourceLanguage.isNullOrBlank() && internetConnectionManager.status == ConnectivityStatus.ValidatedInternet) {
             initializeSpeechRecognizer()
             uiState = uiState.copy(isRecording = true, recognizedText = "")
             recordJob = viewModelScope.launch {
@@ -343,6 +344,7 @@ class TranslationViewModel(
             putExtra(
                 RecognizerIntent.EXTRA_PARTIAL_RESULTS, true
             )
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false)
             putExtra(
                 RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
                 60000L

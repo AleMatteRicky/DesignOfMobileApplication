@@ -37,12 +37,8 @@ fun RecordButton(
     var isButtonActive by remember { mutableStateOf(true) }
     var recordingSymbol by remember { mutableStateOf(Icon.MICROPHONE) }
 
-    if (viewModel.uiState.sourceLanguage.isNullOrBlank() || viewModel.internetConnectionManager.status != ConnectivityStatus.ValidatedInternet) { //add missing permission check
-        isButtonActive = false
-    }
-    else{
-        isButtonActive = true
-    }
+    isButtonActive =
+        !(viewModel.uiState.sourceLanguage.isNullOrBlank() || viewModel.internetConnectionManager.status != ConnectivityStatus.ValidatedInternet) //add missing permission check
 
     Box(modifier, contentAlignment = Alignment.Center) {
         var waveSoundRippleEffectVisible by remember { mutableStateOf(false) }
@@ -62,7 +58,7 @@ fun RecordButton(
                 .size(size)
                 .clickable(onClick = {
                     if (enabled) { // add an asking for permissions message
-                        if (viewModel.uiState.sourceLanguage != null) {
+                        if (isButtonActive) {
                             if (viewModel.uiState.isRecording) {
                                 viewModel.stopRecording()
                             } else {
