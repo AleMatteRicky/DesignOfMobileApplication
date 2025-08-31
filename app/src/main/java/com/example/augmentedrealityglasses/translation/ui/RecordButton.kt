@@ -37,7 +37,11 @@ fun RecordButton(
 
     Box(modifier, contentAlignment = Alignment.Center) {
         var waveSoundRippleEffectVisible by remember { mutableStateOf(false) }
-        WaveSoundRippleEffect(Modifier.size(size * 1.1f).alpha(if (waveSoundRippleEffectVisible) 1f else 0f), viewModel)
+        WaveSoundRippleEffect(
+            Modifier
+                .size(size * 1.1f)
+                .alpha(if (waveSoundRippleEffectVisible) 1f else 0f), viewModel
+        )
 
         Box(
             contentAlignment = Alignment.Center,
@@ -49,10 +53,15 @@ fun RecordButton(
                 .size(size)
                 .clickable(onClick = {
                     if (enabled) { // add an asking for permissions message
-                        if (viewModel.uiState.isRecording) {
-                            viewModel.stopRecording()
-                        } else {
-                            viewModel.startRecording()
+                        if (viewModel.uiState.sourceLanguage != null) {
+                            if (viewModel.uiState.isRecording) {
+                                viewModel.stopRecording()
+                            } else {
+                                viewModel.startRecording()
+                            }
+                        }
+                        else{
+                            //todo add model missing alert
                         }
                     }
                 })

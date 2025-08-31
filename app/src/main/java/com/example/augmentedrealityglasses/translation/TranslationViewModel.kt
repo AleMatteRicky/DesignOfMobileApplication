@@ -41,6 +41,7 @@ import org.json.JSONObject
 
 //todo fix when offline multiple lines are repeated, offline recorder adds more partial results
 //todo fix behaviour when language is undefined
+//todo languages are not always sorted by alphabetic order
 
 class TranslationViewModel(
     private val systemLanguage: String,
@@ -99,10 +100,13 @@ class TranslationViewModel(
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startRecording() {
         recordJob?.cancel()
-        initializeSpeechRecognizer()
-        uiState = uiState.copy(isRecording = true, recognizedText = "")
-        recordJob = viewModelScope.launch {
-            recorder?.startListening(createIntent())
+
+        if(uiState.sourceLanguage != null) {
+            initializeSpeechRecognizer()
+            uiState = uiState.copy(isRecording = true, recognizedText = "")
+            recordJob = viewModelScope.launch {
+                recorder?.startListening(createIntent())
+            }
         }
     }
 
@@ -290,13 +294,13 @@ class TranslationViewModel(
         val languageIdentification = LanguageIdentification.getClient()
         val tag = languageIdentification.identifyLanguage(uiState.recognizedText).await()
         if (tag != "und") {
-            uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
+            //uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
             //todo tag could be not supported by mlkit translate
             //todo
             return true
         } else {
             if (uiState.sourceLanguage != null) {
-                uiState = uiState.copy(sourceLanguage = null)
+                //uiState = uiState.copy(sourceLanguage = null) //todo add recommended language
             }
             Log.e("Undefined Language", "Exception")
             return false
@@ -389,7 +393,7 @@ class TranslationViewModel(
                     recognizedText = data.toString().removePrefix("[").removeSuffix("]"),
                 )
                 viewModelScope.launch {
-                    identifySourceLanguage()
+                    //identifySourceLanguage()
                     if (uiState.targetLanguage != null) {
                         translate()
                     } else {
@@ -414,7 +418,7 @@ class TranslationViewModel(
 
                 if (uiState.recognizedText != "") {
                     viewModelScope.launch {
-                        identifySourceLanguage()
+                        //identifySourceLanguage()
                         if (uiState.targetLanguage != null) {
                             translate()
                         } else {
