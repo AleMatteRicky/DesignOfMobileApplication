@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.example.augmentedrealityglasses.Icon
+import com.example.augmentedrealityglasses.internet.ConnectivityStatus
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 @SuppressLint("MissingPermission")
@@ -33,7 +34,15 @@ fun RecordButton(
     navigationBarVisible: MutableState<Boolean>?
 ) {
 
+    var isButtonActive by remember { mutableStateOf(true) }
     var recordingSymbol by remember { mutableStateOf(Icon.MICROPHONE) }
+
+    if (viewModel.uiState.sourceLanguage.isNullOrBlank() || viewModel.internetConnectionManager.status != ConnectivityStatus.ValidatedInternet) { //add missing permission check
+        isButtonActive = false
+    }
+    else{
+        isButtonActive = true
+    }
 
     Box(modifier, contentAlignment = Alignment.Center) {
         var waveSoundRippleEffectVisible by remember { mutableStateOf(false) }
@@ -48,7 +57,7 @@ fun RecordButton(
             modifier = Modifier
                 .clip(CircleShape)
                 .background(
-                    color = if (enabled) Color.Black else Color.Gray
+                    color = if (enabled && isButtonActive) Color.Black else Color.Gray
                 )
                 .size(size)
                 .clickable(onClick = {
@@ -59,8 +68,7 @@ fun RecordButton(
                             } else {
                                 viewModel.startRecording()
                             }
-                        }
-                        else{
+                        } else {
                             //todo add model missing alert
                         }
                     }

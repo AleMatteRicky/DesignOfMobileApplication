@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
+import com.example.augmentedrealityglasses.internet.InternetConnectionManager
 import com.example.augmentedrealityglasses.translation.ui.LanguageRole
 import com.example.augmentedrealityglasses.translation.ui.getFullLengthName
 import com.google.mlkit.common.model.DownloadConditions
@@ -66,6 +67,9 @@ class TranslationViewModel(
 
     var isTargetModelNotAvailable = false
 
+    val internetConnectionManager: InternetConnectionManager =
+        InternetConnectionManager(application)
+
     private val TAG: String = "TranslationViewModel"
 
     init {
@@ -79,6 +83,13 @@ class TranslationViewModel(
             }
         }
         initializeDownloadedLanguages()
+        internetConnectionManager.start()
+
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        internetConnectionManager.stop()
     }
 
     //TODO fix when mic is open but no audio is recorded
@@ -101,7 +112,7 @@ class TranslationViewModel(
     fun startRecording() {
         recordJob?.cancel()
 
-        if(uiState.sourceLanguage != null) {
+        if (uiState.sourceLanguage != null) {
             initializeSpeechRecognizer()
             uiState = uiState.copy(isRecording = true, recognizedText = "")
             recordJob = viewModelScope.launch {
@@ -117,7 +128,7 @@ class TranslationViewModel(
         recorder?.destroy()
         recordJob?.cancel()
         uiState = uiState.copy(isRecording = false)
-        if(uiState.isResultReady == false && uiState.recognizedText.isNotEmpty()){
+        if (!uiState.isResultReady && uiState.recognizedText.isNotEmpty()) {
             uiState = uiState.copy(isResultReady = true)
         }
     }
@@ -325,7 +336,10 @@ class TranslationViewModel(
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, sourceLanguageTag)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, sourceLanguageTag) //can recognize other languages
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
+                sourceLanguageTag
+            ) //can recognize other languages
             putExtra(
                 RecognizerIntent.EXTRA_PARTIAL_RESULTS, true
             )
@@ -341,7 +355,7 @@ class TranslationViewModel(
 
     }
 
-    private fun adaptLanguageTag(languageTag: String) : String{ //ex: from "it" to "it-IT"
+    private fun adaptLanguageTag(languageTag: String): String { //ex: from "it" to "it-IT"
         return languageTag + "-" + languageTag.uppercase()
     }
 
