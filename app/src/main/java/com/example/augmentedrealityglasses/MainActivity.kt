@@ -67,6 +67,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val app = application as App
         setContent {
+
+            //TODO: keep the screen stack empty
             val navController = rememberNavController()
             val configuration = LocalConfiguration.current
             val screenHeight = configuration.screenHeightDp.dp
