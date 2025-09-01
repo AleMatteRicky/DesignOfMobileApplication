@@ -39,6 +39,12 @@ enum class Icon {
         }
     },
 
+    ERROR{
+        override fun getID(): Int {
+            return R.drawable.error
+        }
+    },
+
     REFRESH{
         override fun getID(): Int {
             return R.drawable.refresh
