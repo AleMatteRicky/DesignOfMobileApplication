@@ -71,6 +71,8 @@ class TranslationViewModel(
     val internetConnectionManager: InternetConnectionManager =
         InternetConnectionManager(application)
 
+    var errorMessage by mutableStateOf("")
+
     private val TAG: String = "TranslationViewModel"
 
     init {
@@ -481,4 +483,9 @@ class TranslationViewModel(
             Log.d(TAG, "External device not connected")
         }
     }
+
+    fun hideErrorMessage() {
+        errorMessage = ""
+    }
+
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
+import com.example.augmentedrealityglasses.ErrorWrapper
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 
@@ -34,75 +35,77 @@ fun TranslationHomeScreen(
 
     val uiState = viewModel.uiState
 
-    BoxWithConstraints(
-        //todo check if it does support vertical scrolling
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFAFAFA))
-    ) {
-        val recordButtonSize = 65.dp
-        var newMaxHeight = recordButtonSize * 1.2f + 10.dp
+    ErrorWrapper(message = viewModel.errorMessage, onDismiss = { viewModel.hideErrorMessage() }) {
+        BoxWithConstraints(
+            //todo check if it does support vertical scrolling
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFFAFAFA))
+        ) {
+            val recordButtonSize = 65.dp
+            var newMaxHeight = recordButtonSize * 1.2f + 10.dp
 
-        RecordButton(
-            enabled,
-            viewModel,
-            Modifier
-                .offset(
-                    x = (maxWidth - recordButtonSize * 1.1f) / 2,
-                    y = maxHeight - newMaxHeight
-                ), recordButtonSize,
-            navigationBarVisible = navigationBarVisible
-        )
+            RecordButton(
+                enabled,
+                viewModel,
+                Modifier
+                    .offset(
+                        x = (maxWidth - recordButtonSize * 1.1f) / 2,
+                        y = maxHeight - newMaxHeight
+                    ), recordButtonSize,
+                navigationBarVisible = navigationBarVisible
+            )
 
-        val languageSelectionBoxWidth = 0.8 * maxWidth //fills 80% of the parent width
-        val languageSelectionBoxHeight =
-            0.07 * (maxHeight + navigationBarHeight) //fills 7% of the parent width
-        newMaxHeight = newMaxHeight + languageSelectionBoxHeight + 20.dp
+            val languageSelectionBoxWidth = 0.8 * maxWidth //fills 80% of the parent width
+            val languageSelectionBoxHeight =
+                0.07 * (maxHeight + navigationBarHeight) //fills 7% of the parent width
+            newMaxHeight = newMaxHeight + languageSelectionBoxHeight + 20.dp
 
-        LanguageSelectionBox(
-            enabled, viewModel, modifier = Modifier
-                .offset(
-                    x = (maxWidth - languageSelectionBoxWidth) / 2,
-                    y = maxHeight - newMaxHeight
-                )
-                .height(languageSelectionBoxHeight)
-                .width(languageSelectionBoxWidth), onClick = onNavigateToLanguageSelection
-        )
+            LanguageSelectionBox(
+                enabled, viewModel, modifier = Modifier
+                    .offset(
+                        x = (maxWidth - languageSelectionBoxWidth) / 2,
+                        y = maxHeight - newMaxHeight
+                    )
+                    .height(languageSelectionBoxHeight)
+                    .width(languageSelectionBoxWidth), onClick = onNavigateToLanguageSelection
+            )
 
-        val mainTextBoxHeight = maxHeight - newMaxHeight - 15.dp
+            val mainTextBoxHeight = maxHeight - newMaxHeight - 15.dp
 
-        newMaxHeight = newMaxHeight + mainTextBoxHeight + 15.dp
-        MainTextBox(
-            viewModel,
-            Modifier
-                .height(mainTextBoxHeight)
-        )
+            newMaxHeight = newMaxHeight + mainTextBoxHeight + 15.dp
+            MainTextBox(
+                viewModel,
+                Modifier
+                    .height(mainTextBoxHeight)
+            )
 
-        if (uiState.isDownloadingSourceLanguageModel && uiState.isDownloadingTargetLanguageModel) {
-            DisplayModelDownloading("Downloading the detected source language model and the target language model")
-        } else if (uiState.isDownloadingSourceLanguageModel) {
-            DisplayModelDownloading("Downloading the detected source language model")
-        } else if (uiState.isDownloadingTargetLanguageModel) {
-            DisplayModelDownloading("Downloading the target language model")
+            if (uiState.isDownloadingSourceLanguageModel && uiState.isDownloadingTargetLanguageModel) {
+                DisplayModelDownloading("Downloading the detected source language model and the target language model")
+            } else if (uiState.isDownloadingSourceLanguageModel) {
+                DisplayModelDownloading("Downloading the detected source language model")
+            } else if (uiState.isDownloadingTargetLanguageModel) {
+                DisplayModelDownloading("Downloading the target language model")
+            }
+
         }
 
-    }
-
-    LaunchedEffect(uiState.isResultReady) {
-        if (uiState.isResultReady) {
-            onNavigateToResult()
-            viewModel.resetResultStatus()//should reset also after recording in the other screen
+        LaunchedEffect(uiState.isResultReady) {
+            if (uiState.isResultReady) {
+                onNavigateToResult()
+                viewModel.resetResultStatus()//should reset also after recording in the other screen
+            }
         }
-    }
 
-    BackHandler(uiState.isRecording) {
-        viewModel.stopRecording()
-        onBack()
-    }
+        BackHandler(uiState.isRecording) {
+            viewModel.stopRecording()
+            onBack()
+        }
 
-    /*
+        /*
     todo, check if the device has a microphone otherwise disable the feature
     */
 
+    }
 }
 
