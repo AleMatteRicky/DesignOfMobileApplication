@@ -37,8 +37,12 @@ fun RecordButton(
     var isButtonActive by remember { mutableStateOf(true) }
     var recordingSymbol by remember { mutableStateOf(Icon.MICROPHONE) }
 
+    val notValidSourceLanguage = viewModel.uiState.sourceLanguage.isNullOrBlank()
+    val notValidInternetConnection =
+        viewModel.internetConnectionManager.status != ConnectivityStatus.ValidatedInternet
+
     isButtonActive =
-        !(viewModel.uiState.sourceLanguage.isNullOrBlank() || viewModel.internetConnectionManager.status != ConnectivityStatus.ValidatedInternet) //add missing permission check
+        !(notValidSourceLanguage || notValidInternetConnection) //add missing permission check
 
     Box(modifier, contentAlignment = Alignment.Center) {
         var waveSoundRippleEffectVisible by remember { mutableStateOf(false) }
@@ -65,7 +69,13 @@ fun RecordButton(
                                 viewModel.startRecording()
                             }
                         } else {
-                            //todo add model missing alert
+                            val message = when {
+                                //todo add permission missing error
+                                notValidInternetConnection -> "This feature is unavailable offline. Please connect to the internet and try again."
+                                notValidSourceLanguage -> "Please specify a source language before starting audio recording."
+                                else -> "An unexpected error occurred. Please try again."
+                            }
+                            viewModel.errorMessage = message
                         }
                     }
                 })
