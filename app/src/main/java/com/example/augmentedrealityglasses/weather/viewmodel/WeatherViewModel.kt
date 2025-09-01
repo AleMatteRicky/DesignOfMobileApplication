@@ -830,4 +830,17 @@ class WeatherViewModel(
             newSelectedDay = startOfDay(newDate)
         )
     }
+
+    /**
+     * Returns true if data is available to be displayed:
+     * - location latitude and longitude are not empty
+     * - at least one current condition exists
+     * - at least one forecast condition exists (not current)
+     */
+    fun isDataAvailable(): Boolean {
+        return weatherState.value.location.lat != ""
+                && weatherState.value.location.lon != ""
+                && weatherState.value.conditions.any { it.isCurrent }
+                && weatherState.value.conditions.any { !it.isCurrent }
+    }
 }

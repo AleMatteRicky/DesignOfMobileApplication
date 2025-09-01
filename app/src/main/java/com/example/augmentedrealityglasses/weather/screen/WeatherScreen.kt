@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -80,6 +81,7 @@ fun WeatherScreen(
         LocationServices.getFusedLocationProviderClient((context))
     }
 
+    //TODO: remove this
     val requestPermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -87,58 +89,19 @@ fun WeatherScreen(
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
         if (coarseLocationGranted || fineLocationGranted) {
+            viewModel.hideErrorMessage()
             viewModel.getGeolocationWeather(fusedLocationClient, context)
         } else {
             //TODO: handle
         }
     }
 
-    /*
-    var isFirstLaunch by rememberSaveable { mutableStateOf(true) }
-
-    LaunchedEffect(isFirstLaunch) {
-        if (isFirstLaunch) {
-            if (viewModel.getGeolocationPermissions(context).values.none { it }) {
-                //request permissions
-                requestPermissionsLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                )
-            } else {
-                viewModel.isLoading = true
-                viewModel.getGeolocationWeather(fusedLocationClient, context)
-            }
-            isFirstLaunch = false
-        }
-    }
-   */
-
     LaunchedEffect(Unit) {
         viewModel.hideErrorMessage()
-        if (uiState.location.name == "") {
-            if (viewModel.getGeolocationPermissions(context).values.none { it }) {
-                //request permissions
-                requestPermissionsLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                )
-            } else {
-                viewModel.getGeolocationWeather(fusedLocationClient, context)
-            }
+        if (!viewModel.isDataAvailable()) {
+            viewModel.getGeolocationWeather(fusedLocationClient, context)
         }
     }
-
-//    //To make the error message disappear after time
-//    LaunchedEffect(viewModel.errorVisible) {
-//        if (viewModel.errorVisible) {
-//            delay(Constants.ERROR_DISPLAY_TIME)
-//            viewModel.hideErrorMessage()
-//        }
-//    }
 
     val currentCondition by remember(uiState.conditions) {
         derivedStateOf { uiState.conditions.firstOrNull { it.isCurrent } }
@@ -178,103 +141,164 @@ fun WeatherScreen(
         }
     }
 
-    //TODO: swipe down to refresh data
+
     // ----  UI  ----
 
     if (!viewModel.isLoading) {
-        ErrorWrapper(
-            message = viewModel.errorMessage,
-            onDismiss = { viewModel.hideErrorMessage() }
-        ) {
-            Scaffold(
-                topBar = {
-                    //TODO: fix background color when scrolling the page
-                    LocationBar(
-                        uiState.location.getFullName()
-                    )
-
-                }
-            ) { innerPadding ->
-
-                //List state attached to the main Column (that contains all the screen's content)
-                val scrollState = rememberScrollState()
-
-                //Allow scrolling only when the screen is fully scrolled to the top and the user is not scrolling the LazyRow (Daily forecasts panel)
-                val canRefresh by remember(scrollState, dailyListState) {
-                    derivedStateOf {
-                        (scrollState.value == 0) && !dailyListState.isScrollInProgress
+        if (viewModel.isDataAvailable()) {
+            ErrorWrapper(
+                message = viewModel.errorMessage,
+                onDismiss = { viewModel.hideErrorMessage() }
+            ) {
+                Scaffold(
+                    topBar = {
+                        //TODO: fix background color when scrolling the page
+                        LocationBar(
+                            uiState.location.getFullName()
+                        )
                     }
-                }
+                ) { innerPadding ->
 
-                SwipeDownRefresh(
-                    isRefreshing = viewModel.isRefreshing,
-                    canRefresh = canRefresh,
-                    onRefresh = {
-                        viewModel.refreshWeatherInfos(fusedLocationClient, context)
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                ) {
-                    Column(
+                    //List state attached to the main Column (that contains all the screen's content)
+                    val scrollState = rememberScrollState()
+
+                    //Allow scrolling only when the screen is fully scrolled to the top and the user is not scrolling the LazyRow (Daily forecasts panel)
+                    val canRefresh by remember(scrollState, dailyListState) {
+                        derivedStateOf {
+                            (scrollState.value == 0) && !dailyListState.isScrollInProgress
+                        }
+                    }
+
+                    SwipeDownRefresh(
+                        isRefreshing = viewModel.isRefreshing,
+                        canRefresh = canRefresh,
+                        onRefresh = {
+                            viewModel.refreshWeatherInfos(fusedLocationClient, context)
+                        },
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(scrollState)
+                            .padding(innerPadding)
                     ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(scrollState)
+                        ) {
 
-                        currentCondition?.let { condition ->
-                            CurrentWeatherBar(
-                                condition.temp,
-                                condition.tempMax,
-                                condition.tempMin,
-                                condition.feelsLike,
-                                condition.main,
-                                condition.iconId
-                            )
-                        }
-
-                        LocationManagerBar(
-                            onClickSearchBar = { onTextFieldClick() },
-                            onClickGeolocationIcon = {
-                                viewModel.getGeolocationWeather(
-                                    fusedLocationClient,
-                                    context
+                            currentCondition?.let { condition ->
+                                CurrentWeatherBar(
+                                    condition.temp,
+                                    condition.tempMax,
+                                    condition.tempMin,
+                                    condition.feelsLike,
+                                    condition.main,
+                                    condition.iconId
                                 )
-                            },
-                            geolocationEnabled = uiState.geolocationEnabled
-                        )
+                            }
 
-                        if (dailyForecasts.isNotEmpty()) {
-                            DailyForecastsPanel(dailyForecasts, dailyListState)
-
-
-
-                            MultipleDaysForecastsPanel(
-                                forecasts = daysConditions,
-                                onItemClick = {
-                                    viewModel.changeSelectedDay(it)
+                            LocationManagerBar(
+                                onClickSearchBar = { onTextFieldClick() },
+                                onClickGeolocationIcon = {
+                                    viewModel.getGeolocationWeather(
+                                        fusedLocationClient,
+                                        context
+                                    )
                                 },
-                                isSelectedDay = { uiState.selectedDay == it }
+                                geolocationEnabled = uiState.geolocationEnabled
                             )
-                        }
 
-                        currentCondition?.let { condition ->
-                            //TODO: make this grid reactive to day changes
-                            AdditionalInfosGrid(
-                                pressure = condition.pressure,
-                                humidity = condition.humidity,
+                            if (dailyForecasts.isNotEmpty()) {
+                                DailyForecastsPanel(dailyForecasts, dailyListState)
 
-                                //Current condition must have these params
-                                sunrise = condition.sunrise!!,
-                                sunset = condition.sunset!!,
 
-                                windSpeed = condition.windSpeed
-                            )
+
+                                MultipleDaysForecastsPanel(
+                                    forecasts = daysConditions,
+                                    onItemClick = {
+                                        viewModel.changeSelectedDay(it)
+                                    },
+                                    isSelectedDay = { uiState.selectedDay == it }
+                                )
+                            }
+
+                            currentCondition?.let { condition ->
+                                //TODO: make this grid reactive to day changes
+                                AdditionalInfosGrid(
+                                    pressure = condition.pressure,
+                                    humidity = condition.humidity,
+
+                                    //Current condition must have these params
+                                    sunrise = condition.sunrise!!,
+                                    sunset = condition.sunset!!,
+
+                                    windSpeed = condition.windSpeed
+                                )
+                            }
                         }
                     }
                 }
             }
+        } else {
+            //data not available
+            if (viewModel.getGeolocationPermissions(context).values.none { it }) {
+                //permission not granted
+
+                //TODO: use a proper permission composable
+                Button(
+                    onClick = {
+                        //request permissions
+                        requestPermissionsLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            )
+                        )
+                    }
+                ) {
+                    Text("Grant permission")
+                }
+//                PermissionsBox(
+//                    permissions = listOf(
+//                        Manifest.permission.ACCESS_COARSE_LOCATION,
+//                        Manifest.permission.ACCESS_FINE_LOCATION
+//                    ),
+//                    onAllGranted = {
+//                        viewModel.hideErrorMessage()
+//                        viewModel.getGeolocationWeather(fusedLocationClient, context)
+//                    },
+//                    iconId = R.drawable.location_permission
+//                )
+            } else {
+                //permission granted
+
+                if (viewModel.errorMessage.isNotEmpty()) {
+
+                    val iconId = when (viewModel.errorMessage) {
+                        Constants.ERROR_NETWORK_CURRENT_WEATHER, Constants.ERROR_NETWORK_FORECASTS -> {
+                            R.drawable.wifi_off
+                        }
+
+                        Constants.ERROR_GEOLOCATION_NOT_AVAILABLE -> {
+                            R.drawable.location_off
+                        }
+
+                        else -> {
+                            R.drawable.generic_error
+                        }
+                    }
+
+                    WeatherErrorScreen(
+                        msg = viewModel.errorMessage,
+                        iconId = iconId,
+                        onRetry = {
+                            viewModel.hideErrorMessage()
+                            viewModel.getGeolocationWeather(fusedLocationClient, context)
+                        }
+                    )
+                }
+            }
         }
+
     } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             LoadingAnimation(modifier = Modifier.size(100.dp))
