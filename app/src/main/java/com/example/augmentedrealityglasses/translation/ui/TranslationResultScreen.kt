@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.example.augmentedrealityglasses.ErrorWrapper
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 @Composable
@@ -39,105 +40,108 @@ fun TranslationResultScreen(
     val recordButtonSize = 65.dp
     val uiState = viewModel.uiState
 
-    Box(Modifier.fillMaxSize()) {
+    ErrorWrapper(message = viewModel.errorMessage, onDismiss = { viewModel.hideErrorMessage() }) {
 
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp, start = 8.dp)
-                .zIndex(1f),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { onBack() }) {
-                Icon(
-                    painter = painterResource(com.example.augmentedrealityglasses.Icon.BACK_ARROW.getID()),
-                    contentDescription = "Go back to translation home screen",
-                    tint = Color.Black
-                )
-            }
-        }
+        Box(Modifier.fillMaxSize()) {
 
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(top = 48.dp, start = 24.dp, end = 24.dp)
-        ) {
-            ResultTextBox(
-                modifier = Modifier,
-                contentText = uiState.recognizedText,
-                color = Color.Black,
-                language = if (uiState.sourceLanguage != null) getFullLengthName(uiState.sourceLanguage) else "",
-                onNavigateToLanguageSelection = {
-                    viewModel.setSelectingLanguageRole(LanguageRole.SOURCE)
-                    onNavigateToLanguageSelection()
-                }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Box(
-                modifier = Modifier
+            Row(
+                Modifier
                     .fillMaxWidth()
-                    .height(2.dp),
-                contentAlignment = Alignment.Center
+                    .padding(top = 10.dp, start = 8.dp)
+                    .zIndex(1f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = { onBack() }) {
+                    Icon(
+                        painter = painterResource(com.example.augmentedrealityglasses.Icon.BACK_ARROW.getID()),
+                        contentDescription = "Go back to translation home screen",
+                        tint = Color.Black
+                    )
+                }
+            }
+
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+                    .padding(top = 55.dp, start = 24.dp, end = 24.dp)
+            ) {
+                ResultTextBox(
+                    modifier = Modifier,
+                    contentText = uiState.recognizedText,
+                    color = Color.Black,
+                    language = if (uiState.sourceLanguage != null) getFullLengthName(uiState.sourceLanguage) else "Select Source Language",
+                    onNavigateToLanguageSelection = {
+                        viewModel.setSelectingLanguageRole(LanguageRole.SOURCE)
+                        onNavigateToLanguageSelection()
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.6f)
-                        .height(2.dp)
-                        .background(color = Color.Black, shape = RoundedCornerShape(2.dp))
+                        .fillMaxWidth()
+                        .height(2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.6f)
+                            .height(2.dp)
+                            .background(color = Color.Black, shape = RoundedCornerShape(2.dp))
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+
+                ResultTextBox(
+                    modifier = Modifier,
+                    contentText = uiState.translatedText,
+                    color = Color(0xFF0B61A4),
+                    language = if (uiState.targetLanguage != null) getFullLengthName(uiState.targetLanguage) else "Select Target Language",
+                    onNavigateToLanguageSelection = {
+                        viewModel.setSelectingLanguageRole(LanguageRole.TARGET)
+                        onNavigateToLanguageSelection()
+                    }
                 )
+
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-
-            ResultTextBox(
-                modifier = Modifier,
-                contentText = uiState.translatedText,
-                color = Color(0xFF0B61A4),
-                language = if (uiState.targetLanguage != null) getFullLengthName(uiState.targetLanguage) else "Select Target Language",
-                onNavigateToLanguageSelection = {
-                    viewModel.setSelectingLanguageRole(LanguageRole.TARGET)
-                    onNavigateToLanguageSelection()
-                }
+            RecordButton(
+                true,
+                viewModel,
+                Modifier
+                    .offset(
+                        x = (maxWidth - recordButtonSize * 1.1f) / 2,
+                        y = maxHeight - recordButtonSize * 1.2f - 30.dp
+                    ), recordButtonSize,
+                navigationBarVisible = null
             )
 
+            if (uiState.isDownloadingSourceLanguageModel && uiState.isDownloadingTargetLanguageModel) {
+                DisplayModelDownloading("Downloading the detected source language model and the target language model")
+            } else if (uiState.isDownloadingSourceLanguageModel) {
+                DisplayModelDownloading("Downloading the detected source language model")
+            } else if (uiState.isDownloadingTargetLanguageModel) {
+                DisplayModelDownloading("Downloading the target language model")
+            }
+
         }
 
-        RecordButton(
-            true,
-            viewModel,
-            Modifier
-                .offset(
-                    x = (maxWidth - recordButtonSize * 1.1f) / 2,
-                    y = maxHeight - recordButtonSize * 1.2f - 30.dp
-                ), recordButtonSize,
-            navigationBarVisible = null
-        )
-
-        if (uiState.isDownloadingSourceLanguageModel && uiState.isDownloadingTargetLanguageModel) {
-            DisplayModelDownloading("Downloading the detected source language model and the target language model")
-        } else if (uiState.isDownloadingSourceLanguageModel) {
-            DisplayModelDownloading("Downloading the detected source language model")
-        } else if (uiState.isDownloadingTargetLanguageModel) {
-            DisplayModelDownloading("Downloading the target language model")
+        if (uiState.isResultReady) {
+            viewModel.resetResultStatus() //isResultReady is only used to switch screen  when the recording starts in translation home
         }
 
-    }
+        BackHandler {
+            if (uiState.isRecording) {
+                viewModel.stopRecording()
+            }
+            onBack()
 
-    if (uiState.isResultReady) {
-        viewModel.resetResultStatus() //isResultReady is only used to switch screen  when the recording starts in translation home
-    }
-
-    BackHandler {
-        if (uiState.isRecording) {
-            viewModel.stopRecording()
         }
-        onBack()
-
     }
 }
