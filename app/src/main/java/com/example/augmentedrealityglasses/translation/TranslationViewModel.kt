@@ -22,7 +22,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.BluetoothUpdateStatus
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
-import com.example.augmentedrealityglasses.ble.peripheral.bonding.BondState
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.internet.ConnectivityStatus
 import com.example.augmentedrealityglasses.internet.InternetConnectionManager
@@ -39,7 +38,6 @@ import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -240,7 +238,8 @@ class TranslationViewModel(
                 }
 
             uiState = uiState.copy(
-                downloadedLanguageTags = downloaded, notDownloadedLanguageTags = notDownloaded
+                downloadedLanguageTags = MutableStateFlow(downloaded),
+                notDownloadedLanguageTags = MutableStateFlow(notDownloaded)
             )
         }
     }
@@ -280,21 +279,37 @@ class TranslationViewModel(
 
     fun downloadLanguageModel(languageTag: String) {
         viewModelScope.launch {
-            val currentlyDownloadedLanguageTags = uiState.currentlyDownloadingLanguageTags
-            currentlyDownloadedLanguageTags.update { currentlyDownloadedLanguageTags.value + languageTag }
+            val currentlyDownloadingLanguageTags = uiState.currentlyDownloadingLanguageTags
+            currentlyDownloadingLanguageTags.update { currentlyDownloadingLanguageTags.value + languageTag }
             try {
                 modelManager.download(
                     TranslateRemoteModel.Builder(languageTag).build(),
                     DownloadConditions.Builder().build()
                 ).await()
-                uiState = uiState.copy(
-                    downloadedLanguageTags = uiState.downloadedLanguageTags + languageTag,
-                    notDownloadedLanguageTags = uiState.notDownloadedLanguageTags - languageTag
-                )
-            } catch (e: Exception) {
-                Log.e("Download Failed", "Failure") //todo add message in app
+                val downloadedLanguageTags = uiState.downloadedLanguageTags
+                val notDownloadedLanguageTags = uiState.notDownloadedLanguageTags
+                notDownloadedLanguageTags.update {
+                    notDownloadedLanguageTags.value - languageTag
+                }
+                downloadedLanguageTags.update {
+                    val elementIndex =
+                        downloadedLanguageTags.value.map { tag -> getFullLengthName(tag) }
+                            .binarySearch(getFullLengthName(languageTag))
+                    val insertionIndex =
+                        if (elementIndex >= 0) elementIndex else -(elementIndex + 1)
+                    downloadedLanguageTags.value.take(insertionIndex) + languageTag + downloadedLanguageTags.value.drop(
+                        insertionIndex
+                    )
+                }
+//                uiState = uiState.copy(
+//                    downloadedLanguageTags = uiState.downloadedLanguageTags + languageTag,
+//                    notDownloadedLanguageTags = uiState.notDownloadedLanguageTags - languageTag
+//                )
+            } catch (_: Exception) {
+                Log.e("Download Failed", "Failure")
+                errorMessage.value = "Download failed"
             } finally {
-                currentlyDownloadedLanguageTags.update { currentlyDownloadedLanguageTags.value - languageTag }
+                currentlyDownloadingLanguageTags.update { currentlyDownloadingLanguageTags.value - languageTag }
             }
         }
     }

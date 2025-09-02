@@ -35,6 +35,8 @@ import com.example.augmentedrealityglasses.translation.TranslationViewModel
 fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: () -> Boolean) {
 
     val message by viewModel.errorMessage.collectAsState()
+    val downloadedLanguageTags by viewModel.uiState.downloadedLanguageTags.collectAsState()
+    val notDownloadedLanguageTags by viewModel.uiState.notDownloadedLanguageTags.collectAsState()
 
     UpdateWrapper(
         message = message,
@@ -69,6 +71,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
 
             }
 
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 24.dp)
@@ -87,7 +90,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                     LanguageRow(Modifier, viewModel, null, onBack, true)
                 }
 
-                items(viewModel.uiState.downloadedLanguageTags) { tag ->
+                items(downloadedLanguageTags) { tag ->
                     LanguageRow(Modifier, viewModel, tag, onBack, true)
                 }
 
@@ -100,7 +103,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                     )
                 }
 
-                items(viewModel.uiState.notDownloadedLanguageTags) { tag ->
+                items(notDownloadedLanguageTags) { tag ->
                     LanguageRow(Modifier, viewModel, tag, onBack, false)
                 }
 
