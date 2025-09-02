@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -22,17 +23,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.MutableCreationExtras
@@ -42,11 +46,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import com.example.augmentedrealityglasses.ble.permissions.BluetoothSampleBox
 import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
 import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
-import com.example.augmentedrealityglasses.notifications.permissions.PermissionsForNotification
 import com.example.augmentedrealityglasses.settings.SettingsScreen
 import com.example.augmentedrealityglasses.settings.SettingsViewModel
 import com.example.augmentedrealityglasses.settings.ThemeMode
@@ -59,6 +61,7 @@ import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 
+//TODO: delete all unused files/composables/...
 class MainActivity : ComponentActivity() {
     private val TAG = "myActivity"
 
@@ -185,10 +188,74 @@ class MainActivity : ComponentActivity() {
                                 extras = extras
                             )
 
-                            BluetoothSampleBox { //todo fix permission logic
-                                PermissionsForNotification(
-                                    app.container.isDeviceSmsCapable,
-                                    content = {
+                            // If we derive physical location from BT devices or if the device runs on Android 11 or below
+                            // we need location permissions otherwise we don't need to request them (see AndroidManifest).
+                            val locationPermission: Set<String> =
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                                    setOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                                    )
+                                } else {
+                                    emptySet()
+                                }
+
+                            // For Android 12 and above we only need connect and scan
+                            val bluetoothPermissionSet: Set<String> =
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    setOf(
+                                        Manifest.permission.BLUETOOTH_CONNECT,
+                                        Manifest.permission.BLUETOOTH_SCAN,
+                                    )
+                                } else {
+                                    setOf(
+                                        Manifest.permission.BLUETOOTH,
+                                        Manifest.permission.BLUETOOTH_ADMIN,
+                                    )
+                                }
+
+                            val homePermissions: Map<String, Boolean> = buildMap {
+                                put(Manifest.permission.READ_PHONE_STATE, true)
+                                put(Manifest.permission.READ_CALL_LOG, true)
+                                put(Manifest.permission.READ_CONTACTS, false)
+
+                                if (app.container.isDeviceSmsCapable) {
+                                    put(Manifest.permission.RECEIVE_SMS, true)
+                                }
+
+                                putAll((locationPermission + bluetoothPermissionSet).associateWith { true })
+                            }
+
+                            val bluetoothAdapter =
+                                applicationContext.getSystemService<BluetoothManager>()?.adapter
+
+                            //TODO: check whether this check is useful or not
+                            //Check to see if the Bluetooth classic feature is available.
+                            val hasBT =
+                                packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
+
+                            // Check to see if the BLE feature is available.
+                            val hasBLE =
+                                packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+
+                            //TODO: make this field instantly reactive to changes (in case ble is disabled while user is in HomeScreen)
+                            //Check if the adapter is enabled
+                            var isBTEnabled by remember {
+                                mutableStateOf(bluetoothAdapter?.isEnabled == true)
+                            }
+
+                            //TODO: refine title and message
+                            PermissionsBox(
+                                title = "Welcome",
+                                message = "In order to communicate with the external device, you need to grant these permissions",
+                                permissionsRequired = homePermissions,
+                                onSatisfied = {}
+                            ) {
+                                if (!hasBLE) {
+                                    //TODO
+                                    Text("No BLE feature available")
+                                } else {
+                                    if (isBTEnabled) {
                                         HomeScreen(
                                             viewModel = viewModel,
                                             onNavigateFindDevice = {
@@ -197,8 +264,14 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         )
+                                    } else {
+
+                                        //TODO: improve this component
+                                        BluetoothDisabledScreen {
+                                            isBTEnabled = true
+                                        }
                                     }
-                                )
+                                }
                             }
                         }
                         composable(
@@ -425,12 +498,25 @@ class MainActivity : ComponentActivity() {
                                 factory = WeatherViewModel.Factory
                             )
 
-                            WeatherScreen(
-                                onTextFieldClick = {
-                                    navController.navigate(ScreenName.WEATHER_SEARCH_LOCATIONS.name)
-                                },
-                                viewModel = viewModel
-                            )
+                            //TODO: refine title and message
+                            PermissionsBox(
+                                permissionsRequired = mapOf(
+                                    Pair(Manifest.permission.ACCESS_COARSE_LOCATION, false),
+                                    Pair(Manifest.permission.ACCESS_FINE_LOCATION, false)
+                                ),
+                                iconId = R.drawable.location,
+                                message = "We need your location to show live local weather. Choose Precise or Approximate location (only one). You can update this in Settings at any time.",
+                                onSatisfied = {
+                                    viewModel.hideErrorMessage()
+                                }
+                            ) {
+                                WeatherScreen(
+                                    onTextFieldClick = {
+                                        navController.navigate(ScreenName.WEATHER_SEARCH_LOCATIONS.name)
+                                    },
+                                    viewModel = viewModel
+                                )
+                            }
                         }
 
                         composable(

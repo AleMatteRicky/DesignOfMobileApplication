@@ -65,9 +65,9 @@ import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
+    //TODO: delete this parameter and also his ScreenName value?
     onNavigateFindDevice: () -> Unit
 ) {
-
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp.dp
     val screenWidthDp = configuration.screenWidthDp.dp

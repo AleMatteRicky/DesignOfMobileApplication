@@ -1,8 +1,5 @@
 package com.example.augmentedrealityglasses.weather.screen
 
-import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,7 +24,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -79,21 +75,6 @@ fun WeatherScreen(
     //Client for fetching the geolocation infos
     val fusedLocationClient = remember {
         LocationServices.getFusedLocationProviderClient((context))
-    }
-
-    //TODO: remove this
-    val requestPermissionsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
-        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-
-        if (coarseLocationGranted || fineLocationGranted) {
-            viewModel.hideErrorMessage()
-            viewModel.getGeolocationWeather(fusedLocationClient, context)
-        } else {
-            //TODO: handle
-        }
     }
 
     LaunchedEffect(Unit) {
@@ -240,62 +221,29 @@ fun WeatherScreen(
             }
         } else {
             //data not available
-            if (viewModel.getGeolocationPermissions(context).values.none { it }) {
-                //permission not granted
-
-                //TODO: use a proper permission composable
-                Button(
-                    onClick = {
-                        //request permissions
-                        requestPermissionsLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.ACCESS_COARSE_LOCATION,
-                                Manifest.permission.ACCESS_FINE_LOCATION
-                            )
-                        )
-                    }
-                ) {
-                    Text("Grant permission")
-                }
-//                PermissionsBox(
-//                    permissions = listOf(
-//                        Manifest.permission.ACCESS_COARSE_LOCATION,
-//                        Manifest.permission.ACCESS_FINE_LOCATION
-//                    ),
-//                    onAllGranted = {
-//                        viewModel.hideErrorMessage()
-//                        viewModel.getGeolocationWeather(fusedLocationClient, context)
-//                    },
-//                    iconId = R.drawable.location_permission
-//                )
-            } else {
-                //permission granted
-
-                if (viewModel.errorMessage.isNotEmpty()) {
-
-                    val iconId = when (viewModel.errorMessage) {
-                        Constants.ERROR_NETWORK_CURRENT_WEATHER, Constants.ERROR_NETWORK_FORECASTS -> {
-                            R.drawable.wifi_off
-                        }
-
-                        Constants.ERROR_GEOLOCATION_NOT_AVAILABLE -> {
-                            R.drawable.location_off
-                        }
-
-                        else -> {
-                            R.drawable.generic_error
-                        }
+            if (viewModel.errorMessage.isNotEmpty()) {
+                val iconId = when (viewModel.errorMessage) {
+                    Constants.ERROR_NETWORK_CURRENT_WEATHER, Constants.ERROR_NETWORK_FORECASTS -> {
+                        R.drawable.wifi_off
                     }
 
-                    WeatherErrorScreen(
-                        msg = viewModel.errorMessage,
-                        iconId = iconId,
-                        onRetry = {
-                            viewModel.hideErrorMessage()
-                            viewModel.getGeolocationWeather(fusedLocationClient, context)
-                        }
-                    )
+                    Constants.ERROR_GEOLOCATION_NOT_AVAILABLE -> {
+                        R.drawable.location_off
+                    }
+
+                    else -> {
+                        R.drawable.generic_error
+                    }
                 }
+
+                WeatherErrorScreen(
+                    msg = viewModel.errorMessage,
+                    iconId = iconId,
+                    onRetry = {
+                        viewModel.hideErrorMessage()
+                        viewModel.getGeolocationWeather(fusedLocationClient, context)
+                    }
+                )
             }
         }
 
