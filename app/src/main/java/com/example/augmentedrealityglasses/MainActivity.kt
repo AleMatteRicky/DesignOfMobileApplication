@@ -4,6 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -24,6 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -232,10 +237,36 @@ class MainActivity : ComponentActivity() {
                             val hasBLE =
                                 packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
 
-                            //TODO: make this field instantly reactive to changes (in case ble is disabled while user is in HomeScreen)
                             //Check if the adapter is enabled
                             var isBTEnabled by remember {
                                 mutableStateOf(bluetoothAdapter?.isEnabled == true)
+                            }
+
+                            //Update in real time isBTEnabled flag
+                            DisposableEffect(Unit) {
+                                val receiver = object : BroadcastReceiver() {
+                                    override fun onReceive(ctx: Context?, intent: Intent?) {
+                                        if (intent?.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                                            val state = intent.getIntExtra(
+                                                BluetoothAdapter.EXTRA_STATE,
+                                                BluetoothAdapter.ERROR
+                                            )
+                                            isBTEnabled = (state == BluetoothAdapter.STATE_ON)
+                                        }
+                                    }
+                                }
+
+                                val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    applicationContext.registerReceiver(
+                                        receiver,
+                                        filter,
+                                        Context.RECEIVER_NOT_EXPORTED
+                                    )
+                                } else {
+                                    applicationContext.registerReceiver(receiver, filter)
+                                }
+                                onDispose { applicationContext.unregisterReceiver(receiver) }
                             }
 
                             //TODO: refine title and message
