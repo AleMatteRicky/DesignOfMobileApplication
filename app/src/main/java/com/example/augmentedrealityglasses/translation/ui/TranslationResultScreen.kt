@@ -108,7 +108,7 @@ fun TranslationResultScreen(
                 val targetLanguage = uiState.targetLanguage
 
                 ResultTextBox(
-                    modifier = Modifier,
+                    modifier = Modifier.padding(bottom = 50.dp),
                     contentText = uiState.translatedText,
                     color = Color(0xFF0B61A4),
                     language = if (targetLanguage != null) getFullLengthName(targetLanguage) else "Select Target Language",

@@ -45,20 +45,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
+//todo check if user uninstall language when the application is opened
 //todo fix when offline multiple lines are repeated, offline recorder adds more partial results
 //todo fix behaviour when language is undefined
-//todo languages are not always sorted by alphabetic order
-//todo if target language is changed in result screen to null delete previous translated text
 
 class TranslationViewModel(
     private val systemLanguage: String,
     private val application: Application,
     private val bleManager: RemoteDeviceManager
 ) : AndroidViewModel(application) {
-//    var uiState by mutableStateOf(TranslationUiState())
-//        private set
 
     private val _uiState = MutableStateFlow(TranslationUiState())
+
     val uiState = _uiState.asStateFlow()
 
     var recorder: SpeechRecognizer? = null
@@ -162,7 +160,16 @@ class TranslationViewModel(
             )
         }
         if (_uiState.value.recognizedText.isNotEmpty()) {
-            translate() //todo check if it could be useful to use a coroutine
+            if(_uiState.value.targetLanguage.isNullOrBlank()){
+                _uiState.update {
+                    _uiState.value.copy(
+                        translatedText = "",
+                    )
+                }
+            }
+            else {
+                translate()
+            }
         }
     }
 
