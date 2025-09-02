@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -64,6 +65,8 @@ import com.example.augmentedrealityglasses.translation.ui.TranslationResultScree
 import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 //TODO: delete all unused files/composables/...
 class MainActivity : ComponentActivity() {
@@ -403,6 +406,9 @@ class MainActivity : ComponentActivity() {
 
                             PermissionsForTranslation(isMicrophoneAvailable = isMicrophoneAvailable()) {
                                 TranslationHomeScreen(
+                                    onScreenComposition = {
+                                        sendChangeScreenBLEMessage("t")
+                                    },
                                     onNavigateToHome = {
                                         navController.navigate(
                                             route = ScreenName.HOME.name
@@ -533,6 +539,9 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) {
                                 WeatherScreen(
+                                    onScreenComposition = {
+                                        sendChangeScreenBLEMessage("w")
+                                    },
                                     onTextFieldClick = {
                                         navController.navigate(ScreenName.WEATHER_SEARCH_LOCATIONS.name)
                                     },
@@ -613,5 +622,27 @@ class MainActivity : ComponentActivity() {
 
     private fun translationFeatureAvailable(): Boolean {
         return audioPermissionGranted() && isMicrophoneAvailable()
+    }
+
+    /**
+     * This function creates a ble message that notifies to the external device the change of screen (weather/translate features)
+     */
+    private fun sendChangeScreenBLEMessage(screenTag: String) {
+        val proxy = (application as App).container.proxy
+
+        val jsonToSend = JSONObject()
+
+        jsonToSend.put("command", "c")
+        jsonToSend.put("page", screenTag)
+
+        val msg = jsonToSend.toString()
+
+        if (proxy.isDeviceSet()) {
+            Log.d(TAG, "Change page command sent: $msg")
+
+            lifecycleScope.launch {
+                proxy.send(msg)
+            }
+        }
     }
 }

@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.R
+import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.translation.ui.LoadingAnimation
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.state.DayCondition
@@ -64,7 +64,8 @@ import java.util.Locale
 @Composable
 fun WeatherScreen(
     viewModel: WeatherViewModel,
-    onTextFieldClick: () -> Unit
+    onTextFieldClick: () -> Unit,
+    onScreenComposition: () -> Unit
 ) {
     //Main UI state
     val uiState by viewModel.weatherState.collectAsStateWithLifecycle()
@@ -78,6 +79,7 @@ fun WeatherScreen(
     }
 
     LaunchedEffect(Unit) {
+        onScreenComposition()
         viewModel.hideErrorMessage()
         if (!viewModel.isDataAvailable()) {
             viewModel.getGeolocationWeather(fusedLocationClient, context)
