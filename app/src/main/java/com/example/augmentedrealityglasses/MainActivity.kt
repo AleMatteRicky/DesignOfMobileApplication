@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -229,11 +228,6 @@ class MainActivity : ComponentActivity() {
                             val bluetoothAdapter =
                                 applicationContext.getSystemService<BluetoothManager>()?.adapter
 
-                            //TODO: check whether this check is useful or not
-                            //Check to see if the Bluetooth classic feature is available.
-                            val hasBT =
-                                packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
-
                             // Check to see if the BLE feature is available.
                             val hasBLE =
                                 packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
@@ -252,8 +246,7 @@ class MainActivity : ComponentActivity() {
                                 onSatisfied = {}
                             ) {
                                 if (!hasBLE) {
-                                    //TODO
-                                    Text("No BLE feature available")
+                                    BLENotSupportedScreen()
                                 } else {
                                     if (isBTEnabled) {
                                         HomeScreen(
@@ -265,8 +258,6 @@ class MainActivity : ComponentActivity() {
                                             }
                                         )
                                     } else {
-
-                                        //TODO: improve this component
                                         BluetoothDisabledScreen {
                                             isBTEnabled = true
                                         }

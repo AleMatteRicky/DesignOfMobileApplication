@@ -36,7 +36,6 @@ fun WeatherErrorScreen(
     //TODO: adjust colors
     val titleColor = Color(0xFF111827)
     val textColor = Color(0xFF6B7280)
-    val iconTint = Color(0xFF374151)
 
     Box(
         modifier = modifier
@@ -52,7 +51,6 @@ fun WeatherErrorScreen(
             Icon(
                 painter = painterResource(id = iconId),
                 contentDescription = null,
-                tint = iconTint,
                 modifier = Modifier.size(96.dp)
             )
 
