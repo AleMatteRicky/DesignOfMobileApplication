@@ -93,7 +93,6 @@ fun HomeScreen(
         onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }
     ) {
 
-
         val modifier = if (showFindDevicePanel) Modifier
             .background(Color.Transparent)
             .fillMaxSize()

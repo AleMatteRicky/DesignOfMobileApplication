@@ -39,6 +39,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.notifications.ChatNotificationListenerService
 
 @Composable
@@ -57,40 +58,46 @@ fun SettingsScreen(
     }
 
     //Access of the application to read phone notifications
-    val hasNotifAccess by rememberNotificationAccessState()
+    val hasNotifyAccess by rememberNotificationAccessState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F6F7)) //FIXME: fix color
-            .padding(horizontal = 16.dp)
-    ) {
-        Spacer(Modifier.height(16.dp))
+    UpdateWrapper(
+        message = viewModel.errorMessage,
+        bluetoothUpdateStatus = viewModel.bluetoothUpdateStatus,
+        onErrorDismiss = { viewModel.hideErrorMessage() },
+        onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF5F6F7)) //FIXME: fix color
+                .padding(horizontal = 16.dp)
+        ) {
+            Spacer(Modifier.height(16.dp))
 
-        Text(
-            text = "Settings",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
-        )
+            Text(
+                text = "Settings",
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
 
-        Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(20.dp))
 
-        AppearancePanel(
-            useSystemThemeMode = useSystem,
-            isDarkSelected = isDarkSelected,
-            onSystemToggle = { viewModel.onSystemToggle(it) },
-            onSelectDark = { viewModel.onSelectDark() },
-            onSelectLight = { viewModel.onSelectLight() }
-        )
+            AppearancePanel(
+                useSystemThemeMode = useSystem,
+                isDarkSelected = isDarkSelected,
+                onSystemToggle = { viewModel.onSystemToggle(it) },
+                onSelectDark = { viewModel.onSelectDark() },
+                onSelectLight = { viewModel.onSelectLight() }
+            )
 
-        Spacer(Modifier.height(15.dp))
+            Spacer(Modifier.height(15.dp))
 
-        NotificationFiltersPanel(
-            hasNotificationAccess = hasNotifAccess,
-            notificationEnabled = uiState.notificationEnabled,
-            onEnableNotificationSource = { viewModel.onEnableNotificationSource(it) },
-            onDisableNotificationSource = { viewModel.onDisableNotificationSource(it) }
-        )
+            NotificationFiltersPanel(
+                hasNotificationAccess = hasNotifyAccess,
+                notificationEnabled = uiState.notificationEnabled,
+                onEnableNotificationSource = { viewModel.onEnableNotificationSource(it) },
+                onDisableNotificationSource = { viewModel.onDisableNotificationSource(it) }
+            )
+        }
     }
 }
 

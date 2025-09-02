@@ -37,6 +37,9 @@ class SettingsViewModel(
     var isExtDeviceConnected by mutableStateOf(false)
         private set
 
+    var errorMessage by mutableStateOf("")
+        private set
+
     //Initialize the viewModel
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
@@ -144,6 +147,10 @@ class SettingsViewModel(
         applyState(
             updatedNotification = Pair(source, false)
         )
+    }
+
+    fun hideErrorMessage() {
+        errorMessage = ""
     }
 
     private fun saveSettingsSnapshotIntoCache() {
