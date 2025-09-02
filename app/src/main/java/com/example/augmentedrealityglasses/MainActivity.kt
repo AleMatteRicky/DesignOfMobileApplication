@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,10 +88,7 @@ class MainActivity : ComponentActivity() {
             //Loading the user settings
             val settingsViewModel: SettingsViewModel =
                 viewModel(factory = SettingsViewModel.Factory)
-            LaunchedEffect(Unit) {
-                //Try to load settings from cache
-                settingsViewModel.loadSettings()
-            }
+
             val settingsUi by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
             //Use this flag in order to show properly the content on the screen

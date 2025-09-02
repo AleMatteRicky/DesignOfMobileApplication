@@ -25,6 +25,7 @@ interface AppContainer {
     val isDeviceSmsCapable: Boolean
     val settingsCache: Cache
     val settingsCachePolicy: CachePolicy
+    val bootstrapPrefs: BootstrapPrefs
 }
 
 /**
@@ -54,4 +55,5 @@ class DefaultAppContainer(
         DataStoreMapCache(File(context.applicationContext.filesDir, "settings_cache.json"))
     override val settingsCachePolicy: CachePolicy =
         NeverExpires
+    override val bootstrapPrefs: BootstrapPrefs = BootstrapPrefs(context)
 }

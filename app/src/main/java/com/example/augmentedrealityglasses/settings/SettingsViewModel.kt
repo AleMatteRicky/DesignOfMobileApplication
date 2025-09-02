@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
 import com.example.augmentedrealityglasses.BluetoothUpdateStatus
+import com.example.augmentedrealityglasses.BootstrapPrefs
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.cache.Cache
@@ -26,7 +27,7 @@ import kotlinx.coroutines.withContext
 class SettingsViewModel(
 
     private val proxy: RemoteDeviceManager,
-
+    private val bootstrapPrefs: BootstrapPrefs,
     private val cache: Cache,
     private val cachePolicy: CachePolicy
 ) : ViewModel() {
@@ -50,11 +51,13 @@ class SettingsViewModel(
                     (this[APPLICATION_KEY] as App).container.settingsCache
                 val policy =
                     (this[APPLICATION_KEY] as App).container.settingsCachePolicy
-
+                val bootstrapPrefs =
+                    (this[APPLICATION_KEY] as App).container.bootstrapPrefs
                 SettingsViewModel(
                     proxy = bleManager,
                     cache = cache,
-                    cachePolicy = policy
+                    cachePolicy = policy,
+                    bootstrapPrefs = bootstrapPrefs
                 )
             }
         }
@@ -65,9 +68,11 @@ class SettingsViewModel(
 
     private val CACHE_KEY = "settings"
 
+    private val initialTheme = bootstrapPrefs.getTheme() ?: ThemeMode.SYSTEM
+
     private val _uiState = MutableStateFlow(
         SettingsUIState(
-            theme = ThemeMode.SYSTEM,
+            theme = initialTheme,
             notificationEnabled = mapOf(
                 Pair(NotificationSource.WHATSAPP, false),
                 Pair(NotificationSource.TELEGRAM, false),
@@ -93,6 +98,10 @@ class SettingsViewModel(
                     }
             }
         }
+
+        viewModelScope.launch {
+            loadSettings()
+        }
     }
 
     private fun applyState(
@@ -113,6 +122,7 @@ class SettingsViewModel(
         }
 
         saveSettingsSnapshotIntoCache()
+        bootstrapPrefs.setTheme(_uiState.value.theme)
     }
 
     fun onSystemToggle(checked: Boolean) {
@@ -131,9 +141,9 @@ class SettingsViewModel(
         applyState(ThemeMode.DARK)
     }
 
-    fun loadSettings() {
+    private fun loadSettings() {
         viewModelScope.launch(Dispatchers.IO) {
-            tryLoadDataFromCache().toString()
+            tryLoadDataFromCache()
         }
     }
 
@@ -185,7 +195,7 @@ class SettingsViewModel(
         return true
     }
 
-    fun hideBluetoothUpdate(){
+    fun hideBluetoothUpdate() {
         bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
     }
 }
