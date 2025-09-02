@@ -39,6 +39,18 @@ enum class Icon {
         }
     },
 
+    BLUETOOTH_CONNECTED{
+        override fun getID(): Int {
+            return R.drawable.bluetooth_connected
+        }
+    },
+
+    BLUETOOTH_DISABLED{
+        override fun getID(): Int {
+            return R.drawable.bluetooth_disabled
+        }
+    },
+
     ERROR{
         override fun getID(): Int {
             return R.drawable.error
