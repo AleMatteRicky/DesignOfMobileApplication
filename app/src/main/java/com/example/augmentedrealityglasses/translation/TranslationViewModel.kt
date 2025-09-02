@@ -38,6 +38,8 @@ import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -53,8 +55,11 @@ class TranslationViewModel(
     private val application: Application,
     private val bleManager: RemoteDeviceManager
 ) : AndroidViewModel(application) {
-    var uiState by mutableStateOf(TranslationUiState())
-        private set
+//    var uiState by mutableStateOf(TranslationUiState())
+//        private set
+
+    private val _uiState = MutableStateFlow(TranslationUiState())
+    val uiState = _uiState.asStateFlow()
 
     var recorder: SpeechRecognizer? = null
 
@@ -129,9 +134,9 @@ class TranslationViewModel(
     fun startRecording() {
         recordJob?.cancel()
 
-        if (!uiState.sourceLanguage.isNullOrBlank() && internetConnectionManager.status == ConnectivityStatus.ValidatedInternet) {
+        if (!_uiState.value.sourceLanguage.isNullOrBlank() && internetConnectionManager.status == ConnectivityStatus.ValidatedInternet) {
             initializeSpeechRecognizer()
-            uiState = uiState.copy(isRecording = true, recognizedText = "")
+            _uiState.update { _uiState.value.copy(isRecording = true, recognizedText = "") }
             recordJob = viewModelScope.launch {
                 recorder?.startListening(createIntent())
             }
@@ -144,54 +149,60 @@ class TranslationViewModel(
         recorder?.stopListening()
         recorder?.destroy()
         recordJob?.cancel()
-        uiState = uiState.copy(isRecording = false)
-        if (!uiState.isResultReady && uiState.recognizedText.isNotEmpty()) {
-            uiState = uiState.copy(isResultReady = true)
+        _uiState.update { _uiState.value.copy(isRecording = false) }
+        if (!_uiState.value.isResultReady && _uiState.value.recognizedText.isNotEmpty()) {
+            _uiState.update { _uiState.value.copy(isResultReady = true) }
         }
     }
 
     fun selectTargetLanguage(targetLanguage: String?) {
-        uiState = uiState.copy(
-            targetLanguage = targetLanguage,
-        )
-        if (uiState.recognizedText.isNotEmpty()) {
+        _uiState.update {
+            _uiState.value.copy(
+                targetLanguage = targetLanguage,
+            )
+        }
+        if (_uiState.value.recognizedText.isNotEmpty()) {
             translate() //todo check if it could be useful to use a coroutine
         }
     }
 
     fun selectSourceLanguage(sourceLanguage: String?) {
-        uiState = uiState.copy(
-            sourceLanguage = sourceLanguage,
-        )
+        _uiState.update {
+            _uiState.value.copy(
+                sourceLanguage = sourceLanguage,
+            )
+        }
     }
 
     fun resetResultStatus() {
-        uiState = uiState.copy(isResultReady = false)
+        _uiState.update { _uiState.value.copy(isResultReady = false) }
     }
 
     fun clearText() {
-        uiState = uiState.copy(recognizedText = "", translatedText = "")
+        _uiState.update { _uiState.value.copy(recognizedText = "", translatedText = "") }
     }
 
     fun translate() {
 
         translatorJob?.cancel()
 
-        if (uiState.targetLanguage != null) {
+        if (_uiState.value.targetLanguage != null) {
             translatorJob = viewModelScope.launch {
-                if (uiState.targetLanguage != null && uiState.sourceLanguage != null) {
+                if (_uiState.value.targetLanguage != null && _uiState.value.sourceLanguage != null) {
                     checkModelDownloaded()
-                    if (uiState.isModelNotAvailable) {
+                    if (_uiState.value.isModelNotAvailable) {
                         downloadSourceAndTargetLanguageModel()
                     } else { //not executed, translation called by downloadSourceAndTargetLanguage after the download is finished
                         initializeTranslator()
-                        translator?.translate(uiState.recognizedText)
+                        translator?.translate(_uiState.value.recognizedText)
                             ?.addOnSuccessListener { translatedText ->
                                 Log.d("Translation succeeded", translatedText)
-                                uiState = uiState.copy(translatedText = translatedText)
+                                _uiState.update {
+                                    _uiState.value.copy(translatedText = translatedText)
+                                }
                                 //send translated text to esp32
                                 Log.d(TAG, translatedText)
-                                sendBluetoothMessage(uiState.translatedText)
+                                sendBluetoothMessage(_uiState.value.translatedText)
                             }
                             ?.addOnFailureListener { exception ->
                                 Log.e("Translation failed", exception.toString())
@@ -206,8 +217,8 @@ class TranslationViewModel(
 
     private fun initializeTranslator() {
         val options = TranslatorOptions.Builder()
-            .setSourceLanguage(uiState.sourceLanguage!!)
-            .setTargetLanguage(uiState.targetLanguage!!)
+            .setSourceLanguage(_uiState.value.sourceLanguage!!)
+            .setTargetLanguage(_uiState.value.targetLanguage!!)
             .build()
 
         translator = Translation.getClient(options)
@@ -215,16 +226,17 @@ class TranslationViewModel(
 
     private suspend fun checkModelDownloaded() {
         val targetLanguageRemoteModel: RemoteModel =
-            TranslateRemoteModel.Builder(uiState.targetLanguage!!).build()
+            TranslateRemoteModel.Builder(_uiState.value.targetLanguage!!).build()
         val sourceLanguageRemoteModel: RemoteModel =
-            TranslateRemoteModel.Builder(uiState.sourceLanguage!!).build()
+            TranslateRemoteModel.Builder(_uiState.value.sourceLanguage!!).build()
         isSourceModelNotAvailable =
             !modelManager.isModelDownloaded(sourceLanguageRemoteModel).await()
         isTargetModelNotAvailable =
             !modelManager.isModelDownloaded(targetLanguageRemoteModel).await()
 
-        uiState =
-            uiState.copy(isModelNotAvailable = isSourceModelNotAvailable || isTargetModelNotAvailable)
+        _uiState.update {
+            _uiState.value.copy(isModelNotAvailable = isSourceModelNotAvailable || isTargetModelNotAvailable)
+        }
     }
 
     private fun initializeDownloadedLanguages() {
@@ -237,10 +249,12 @@ class TranslationViewModel(
                     ).await()
                 }
 
-            uiState = uiState.copy(
-                downloadedLanguageTags = MutableStateFlow(downloaded),
-                notDownloadedLanguageTags = MutableStateFlow(notDownloaded)
-            )
+            _uiState.update {
+                _uiState.value.copy(
+                    downloadedLanguageTags = MutableStateFlow(downloaded),
+                    notDownloadedLanguageTags = MutableStateFlow(notDownloaded)
+                )
+            }
         }
     }
 
@@ -252,42 +266,43 @@ class TranslationViewModel(
 
     private fun downloadSourceAndTargetLanguageModel() {
 
-        if (isSourceModelNotAvailable && !uiState.isDownloadingSourceLanguageModel) {
+        if (isSourceModelNotAvailable && !_uiState.value.isDownloadingSourceLanguageModel) {
             viewModelScope.launch {
-                uiState = uiState.copy(isDownloadingSourceLanguageModel = true)
+                _uiState.update { _uiState.value.copy(isDownloadingSourceLanguageModel = true)}
                 downloadSourceOrTargetLanguageModel(isSource = true)
-                uiState = uiState.copy(isDownloadingSourceLanguageModel = false)
+                _uiState.update { _uiState.value.copy(isDownloadingSourceLanguageModel = false)}
                 if (!isTargetModelNotAvailable) {
                     translate()
                 }
             }
         }
-        if (isTargetModelNotAvailable && !uiState.isDownloadingTargetLanguageModel) { //in practice should never happen, a target language can only be selected if it is available
+        if (isTargetModelNotAvailable && !_uiState.value.isDownloadingTargetLanguageModel) { //in practice should never happen, a target language can only be selected if it is available
             viewModelScope.launch {
-                uiState = uiState.copy(isDownloadingTargetLanguageModel = true)
+                _uiState.update { _uiState.value.copy(isDownloadingTargetLanguageModel = true) }
                 downloadSourceOrTargetLanguageModel(isSource = false)
-                uiState = uiState.copy(isDownloadingTargetLanguageModel = false)
+                _uiState.update { _uiState.value.copy(isDownloadingTargetLanguageModel = false) }
                 if (!isSourceModelNotAvailable) {
                     translate()
                 }
             }
         }
-        uiState =
-            uiState.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
+        _uiState.update {
+            _uiState.value.copy(isModelNotAvailable = isTargetModelNotAvailable || isSourceModelNotAvailable)
+        }
 
     }
 
     fun downloadLanguageModel(languageTag: String) {
         viewModelScope.launch {
-            val currentlyDownloadingLanguageTags = uiState.currentlyDownloadingLanguageTags
+            val currentlyDownloadingLanguageTags = _uiState.value.currentlyDownloadingLanguageTags
             currentlyDownloadingLanguageTags.update { currentlyDownloadingLanguageTags.value + languageTag }
             try {
                 modelManager.download(
                     TranslateRemoteModel.Builder(languageTag).build(),
                     DownloadConditions.Builder().build()
                 ).await()
-                val downloadedLanguageTags = uiState.downloadedLanguageTags
-                val notDownloadedLanguageTags = uiState.notDownloadedLanguageTags
+                val downloadedLanguageTags = _uiState.value.downloadedLanguageTags
+                val notDownloadedLanguageTags = _uiState.value.notDownloadedLanguageTags
                 notDownloadedLanguageTags.update {
                     notDownloadedLanguageTags.value - languageTag
                 }
@@ -317,7 +332,7 @@ class TranslationViewModel(
     private suspend fun downloadSourceOrTargetLanguageModel(isSource: Boolean) {
         try {
             modelManager.download(
-                TranslateRemoteModel.Builder(if (isSource) uiState.sourceLanguage!! else uiState.targetLanguage!!)
+                TranslateRemoteModel.Builder(if (isSource) _uiState.value.sourceLanguage!! else _uiState.value.targetLanguage!!)
                     .build(),
                 DownloadConditions.Builder().build()
             ).await()
@@ -332,19 +347,19 @@ class TranslationViewModel(
     }
 
     fun setSelectingLanguageRole(languageRole: LanguageRole?) { //needed to communicate the selecting type of language to the translation language selection screen
-        uiState = uiState.copy(selectingLanguageRole = languageRole)
+        _uiState.update { _uiState.value.copy(selectingLanguageRole = languageRole) }
     }
 
     private suspend fun identifySourceLanguage(): Boolean { //True if the identification is successful, False otherwise
         val languageIdentification = LanguageIdentification.getClient()
-        val tag = languageIdentification.identifyLanguage(uiState.recognizedText).await()
+        val tag = languageIdentification.identifyLanguage(_uiState.value.recognizedText).await()
         if (tag != "und") {
             //uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
             //todo tag could be not supported by mlkit translate
             //todo
             return true
         } else {
-            if (uiState.sourceLanguage != null) {
+            if (_uiState.value.sourceLanguage != null) {
                 //uiState = uiState.copy(sourceLanguage = null) //todo add recommended language
             }
             Log.e("Undefined Language", "Exception")
@@ -362,7 +377,8 @@ class TranslationViewModel(
 
     private fun createIntent(): Intent {
 
-        val sourceLanguageTag = adaptLanguageTag(uiState.sourceLanguage!!)//todo add exception
+        val sourceLanguageTag =
+            adaptLanguageTag(_uiState.value.sourceLanguage!!)//todo add exception
 
         return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
@@ -406,9 +422,9 @@ class TranslationViewModel(
             override fun onRmsChanged(rmsDbValue: Float) {
                 Log.d("SpeechRecognition", "Rms changed. Parameters: $rmsDbValue")
 
-                uiState =
-                    uiState.copy(currentNormalizedRms = normalizeRms(rmsDbValue)) //normalized value are used to limit the animation behaviour
-
+                _uiState.update {
+                    _uiState.value.copy(currentNormalizedRms = normalizeRms(rmsDbValue)) //normalized value are used to limit the animation behaviour
+                }
             }
 
             override fun onBufferReceived(value: ByteArray?) {
@@ -438,20 +454,22 @@ class TranslationViewModel(
             override fun onResults(results: Bundle?) {
                 val data: ArrayList<String>? =
                     results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                uiState = uiState.copy(
-                    recognizedText = data.toString().removePrefix("[").removeSuffix("]"),
-                )
+                _uiState.update {
+                    _uiState.value.copy(
+                        recognizedText = data.toString().removePrefix("[").removeSuffix("]"),
+                    )
+                }
                 viewModelScope.launch {
                     //identifySourceLanguage()
-                    if (uiState.targetLanguage != null) {
+                    if (_uiState.value.targetLanguage != null) {
                         translate()
                     } else {
-                        Log.d("send final result", uiState.recognizedText)
-                        sendBluetoothMessage(uiState.recognizedText)
+                        Log.d("send final result", _uiState.value.recognizedText)
+                        sendBluetoothMessage(_uiState.value.recognizedText)
                     }
                 }
-                if (uiState.recognizedText.isNotEmpty()) {
-                    uiState = uiState.copy(isResultReady = true)
+                if (_uiState.value.recognizedText.isNotEmpty()) {
+                    _uiState.update { _uiState.value.copy(isResultReady = true) }
                 }
                 stopRecording()
                 Log.d("SpeechRecognizer", "Speech recognition results received: $data")
@@ -460,19 +478,21 @@ class TranslationViewModel(
             override fun onPartialResults(partialResults: Bundle?) {
                 val data: ArrayList<String>? =
                     partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                uiState = uiState.copy(
-                    recognizedText = data.toString().removePrefix("[").removeSuffix("]")
-                )
+                _uiState.update {
+                    _uiState.value.copy(
+                        recognizedText = data.toString().removePrefix("[").removeSuffix("]")
+                    )
+                }
                 Log.d(TAG, "Speech recognition partial results received: $data")
 
-                if (uiState.recognizedText != "") {
+                if (_uiState.value.recognizedText != "") {
                     viewModelScope.launch {
                         //identifySourceLanguage()
-                        if (uiState.targetLanguage != null) {
+                        if (_uiState.value.targetLanguage != null) {
                             translate()
                         } else {
-                            Log.d("send", uiState.recognizedText)
-                            sendBluetoothMessage(uiState.recognizedText) //the method checks if the device is connected before sending anything
+                            Log.d("send", _uiState.value.recognizedText)
+                            sendBluetoothMessage(_uiState.value.recognizedText) //the method checks if the device is connected before sending anything
                         }
                     }
 

@@ -40,7 +40,7 @@ fun TranslationResultScreen(
     val maxHeight = configuration.screenHeightDp.dp
     val maxWidth = configuration.screenWidthDp.dp
     val recordButtonSize = 65.dp
-    val uiState = viewModel.uiState
+    val uiState by viewModel.uiState.collectAsState()
     val message by viewModel.errorMessage.collectAsState()
 
     UpdateWrapper(
@@ -75,11 +75,12 @@ fun TranslationResultScreen(
                     )
                     .padding(top = 55.dp, start = 24.dp, end = 24.dp)
             ) {
+                val sourceLanguage = uiState.sourceLanguage
                 ResultTextBox(
                     modifier = Modifier,
                     contentText = uiState.recognizedText,
                     color = Color.Black,
-                    language = if (uiState.sourceLanguage != null) getFullLengthName(uiState.sourceLanguage) else "Select Source Language",
+                    language = if (sourceLanguage != null) getFullLengthName(sourceLanguage) else "Select Source Language",
                     onNavigateToLanguageSelection = {
                         viewModel.setSelectingLanguageRole(LanguageRole.SOURCE)
                         onNavigateToLanguageSelection()
@@ -104,12 +105,13 @@ fun TranslationResultScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                val targetLanguage = uiState.targetLanguage
 
                 ResultTextBox(
                     modifier = Modifier,
                     contentText = uiState.translatedText,
                     color = Color(0xFF0B61A4),
-                    language = if (uiState.targetLanguage != null) getFullLengthName(uiState.targetLanguage) else "Select Target Language",
+                    language = if (targetLanguage != null) getFullLengthName(targetLanguage) else "Select Target Language",
                     onNavigateToLanguageSelection = {
                         viewModel.setSelectingLanguageRole(LanguageRole.TARGET)
                         onNavigateToLanguageSelection()

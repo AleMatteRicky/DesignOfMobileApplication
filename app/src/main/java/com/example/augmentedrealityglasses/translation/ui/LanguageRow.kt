@@ -41,13 +41,15 @@ fun LanguageRow(
     onBack: () -> Boolean,
     isDownloaded: Boolean
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     val downloadingLanguageTags =
-        viewModel.uiState.currentlyDownloadingLanguageTags.collectAsState()
+        uiState.currentlyDownloadingLanguageTags.collectAsState()
     var isSelected = false
     var modelMissingAlertVisible by remember { mutableStateOf(false) }
 
     val selectedLanguage =
-        if (viewModel.uiState.selectingLanguageRole == LanguageRole.TARGET) viewModel.uiState.targetLanguage else viewModel.uiState.sourceLanguage
+        if (uiState.selectingLanguageRole == LanguageRole.TARGET) uiState.targetLanguage else uiState.sourceLanguage
     if (languageTag.equals(selectedLanguage)) {
         isSelected = true
     }
@@ -80,7 +82,7 @@ fun LanguageRow(
                 if (!isLanguageDownloading) {
                     isSelected = true
                     if (isDownloaded) {
-                        if (viewModel.uiState.selectingLanguageRole == LanguageRole.TARGET) {
+                        if (uiState.selectingLanguageRole == LanguageRole.TARGET) {
                             viewModel.selectTargetLanguage(languageTag)
                         } else {
                             viewModel.selectSourceLanguage(languageTag)

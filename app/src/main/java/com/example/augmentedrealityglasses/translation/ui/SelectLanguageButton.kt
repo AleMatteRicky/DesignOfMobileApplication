@@ -8,6 +8,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,11 +34,13 @@ fun SelectLanguageButton(
     languageRole: LanguageRole
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val uiState = viewModel.uiState
+    val uiState by viewModel.uiState.collectAsState()
 
     Button(
         onClick = {
-            if (viewModel.uiState.isRecording) {} else onClick()
+            if (!uiState.isRecording) {
+                onClick()
+            }
         },
         enabled = enabled,
         modifier = modifier

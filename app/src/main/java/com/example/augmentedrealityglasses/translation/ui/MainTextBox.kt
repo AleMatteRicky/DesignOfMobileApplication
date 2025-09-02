@@ -12,6 +12,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -25,8 +27,9 @@ import com.example.augmentedrealityglasses.translation.TranslationViewModel
 @Composable
 fun MainTextBox(viewModel: TranslationViewModel, modifier: Modifier) {
 
+    val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
-    val contentText = viewModel.uiState.recognizedText
+    val contentText = uiState.recognizedText
 
     Box(
         modifier = modifier

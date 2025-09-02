@@ -1,6 +1,7 @@
 package com.example.augmentedrealityglasses.translation.ui
 
 import android.annotation.SuppressLint
+import androidx.compose.runtime.getValue
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -40,7 +40,7 @@ fun TranslationHomeScreen(
         onScreenComposition()
     }
 
-    val uiState = viewModel.uiState
+    val uiState by viewModel.uiState.collectAsState()
     val message by viewModel.errorMessage.collectAsState()
 
     UpdateWrapper(

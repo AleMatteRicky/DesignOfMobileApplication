@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,10 +35,11 @@ fun RecordButton(
     navigationBarVisible: MutableState<Boolean>?
 ) {
 
+    val uiState by viewModel.uiState.collectAsState()
     var isButtonActive by remember { mutableStateOf(true) }
     var recordingSymbol by remember { mutableStateOf(Icon.MICROPHONE) }
 
-    val notValidSourceLanguage = viewModel.uiState.sourceLanguage.isNullOrBlank()
+    val notValidSourceLanguage = uiState.sourceLanguage.isNullOrBlank()
     val notValidInternetConnection =
         viewModel.internetConnectionManager.status != ConnectivityStatus.ValidatedInternet
 
@@ -63,7 +65,7 @@ fun RecordButton(
                 .clickable(onClick = {
                     if (enabled) { // add an asking for permissions message
                         if (isButtonActive) {
-                            if (viewModel.uiState.isRecording) {
+                            if (uiState.isRecording) {
                                 viewModel.stopRecording()
                             } else {
                                 viewModel.startRecording()
@@ -81,7 +83,7 @@ fun RecordButton(
                 })
         ) {
 
-            if (viewModel.uiState.isRecording) {
+            if (uiState.isRecording) {
                 recordingSymbol = Icon.STOP
                 if (navigationBarVisible != null) {
                     navigationBarVisible.value = false
