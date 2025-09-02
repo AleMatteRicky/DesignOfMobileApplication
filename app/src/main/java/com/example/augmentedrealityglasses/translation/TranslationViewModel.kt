@@ -20,7 +20,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.BluetoothUpdateStatus
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.peripheral.bonding.BondState
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.internet.ConnectivityStatus
 import com.example.augmentedrealityglasses.internet.InternetConnectionManager
@@ -36,6 +38,8 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -44,6 +48,7 @@ import org.json.JSONObject
 //todo fix when offline multiple lines are repeated, offline recorder adds more partial results
 //todo fix behaviour when language is undefined
 //todo languages are not always sorted by alphabetic order
+//todo if target language is changed in result screen to null delete previous translated text
 
 class TranslationViewModel(
     private val systemLanguage: String,
@@ -68,10 +73,16 @@ class TranslationViewModel(
 
     var isTargetModelNotAvailable = false
 
+    var isExtDeviceConnected by mutableStateOf(false)
+        private set
+
     val internetConnectionManager: InternetConnectionManager =
         InternetConnectionManager(application)
 
-    var errorMessage by mutableStateOf("")
+    var bluetoothUpdateStatus by mutableStateOf(BluetoothUpdateStatus.NONE)
+        private set
+
+    var errorMessage = MutableStateFlow("")
 
     private val TAG: String = "TranslationViewModel"
 
@@ -80,8 +91,13 @@ class TranslationViewModel(
             if (bleManager.isDeviceSet()) {
                 bleManager.receiveUpdates()
                     .collect { connectionState ->
-                        uiState =
-                            uiState.copy(isExtDeviceConnected = connectionState.connectionState is ConnectionState.Connected)
+                        if (connectionState.connectionState is ConnectionState.Connected) {
+                            isExtDeviceConnected = true
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_CONNECTED
+                        } else {
+                            isExtDeviceConnected = false
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_DISCONNECTED
+                        }
                     }
             }
         }
@@ -475,7 +491,7 @@ class TranslationViewModel(
 
         Log.d(TAG, "BLE message:\n$msg")
 
-        if (uiState.isExtDeviceConnected) {
+        if (isExtDeviceConnected) {
             viewModelScope.launch {
                 bleManager.send(msg)
             }
@@ -485,7 +501,11 @@ class TranslationViewModel(
     }
 
     fun hideErrorMessage() {
-        errorMessage = ""
+        errorMessage.value = ""
+    }
+
+    fun hideBluetoothUpdate() {
+        bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
     }
 
 }

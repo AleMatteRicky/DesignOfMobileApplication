@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.augmentedrealityglasses.ErrorWrapper
+import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.R
 import com.example.augmentedrealityglasses.translation.ui.LoadingAnimation
 import com.example.augmentedrealityglasses.weather.constants.Constants
@@ -127,9 +127,11 @@ fun WeatherScreen(
 
     if (!viewModel.isLoading) {
         if (viewModel.isDataAvailable()) {
-            ErrorWrapper(
+            UpdateWrapper(
                 message = viewModel.errorMessage,
-                onDismiss = { viewModel.hideErrorMessage() }
+                bluetoothUpdateStatus = viewModel.bluetoothUpdateStatus,
+                onErrorDismiss = { viewModel.hideErrorMessage() },
+                onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }
             ) {
                 Scaffold(
                     topBar = {

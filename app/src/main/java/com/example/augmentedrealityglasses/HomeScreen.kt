@@ -86,9 +86,11 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.refreshBondedDevices(context, adapter)
     }
-    ErrorWrapper(
+    UpdateWrapper(
         message = viewModel.errorMessage,
-        onDismiss = { viewModel.hideErrorMessage() }
+        bluetoothUpdateStatus = viewModel.bluetoothUpdateStatus,
+        onErrorDismiss = { viewModel.hideErrorMessage() },
+        onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }
     ) {
 
 

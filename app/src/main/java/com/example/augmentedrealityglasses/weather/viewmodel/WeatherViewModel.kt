@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.BluetoothUpdateStatus
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.cache.Cache
@@ -87,14 +88,22 @@ class WeatherViewModel(
     var isExtDeviceConnected by mutableStateOf(false)
         private set
 
+    var bluetoothUpdateStatus by mutableStateOf(BluetoothUpdateStatus.NONE)
+        private set
+
     // Start listening for Bluetooth packets
     init {
         viewModelScope.launch {
             if (proxy.isDeviceSet()) {
                 proxy.receiveUpdates()
                     .collect { connectionState ->
-                        isExtDeviceConnected =
-                            connectionState.connectionState is ConnectionState.Connected
+                        if (connectionState.connectionState is ConnectionState.Connected) {
+                            isExtDeviceConnected = true
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_CONNECTED
+                        } else {
+                            isExtDeviceConnected = false
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_DISCONNECTED
+                        }
                     }
             }
         }
@@ -842,5 +851,9 @@ class WeatherViewModel(
                 && weatherState.value.location.lon != ""
                 && weatherState.value.conditions.any { it.isCurrent }
                 && weatherState.value.conditions.any { !it.isCurrent }
+    }
+
+    fun hideBluetoothUpdate(){
+        bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
     }
 }

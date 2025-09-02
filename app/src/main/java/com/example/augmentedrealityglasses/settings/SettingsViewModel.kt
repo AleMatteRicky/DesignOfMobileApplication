@@ -1,5 +1,8 @@
 package com.example.augmentedrealityglasses.settings
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -7,7 +10,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.BluetoothUpdateStatus
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
+import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.cache.Cache
 import com.example.augmentedrealityglasses.cache.CachePolicy
 import com.example.augmentedrealityglasses.cache.DefaultTimeProvider
@@ -19,12 +24,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class SettingsViewModel(
-    //FIXME: useless?
+
     private val proxy: RemoteDeviceManager,
 
     private val cache: Cache,
     private val cachePolicy: CachePolicy
 ) : ViewModel() {
+
+    var bluetoothUpdateStatus by mutableStateOf(BluetoothUpdateStatus.NONE)
+        private set
+
+    var isExtDeviceConnected by mutableStateOf(false)
+        private set
 
     //Initialize the viewModel
     companion object {
@@ -63,6 +74,23 @@ class SettingsViewModel(
         )
     )
     val uiState: StateFlow<SettingsUIState> = _uiState
+
+    init {
+        viewModelScope.launch {
+            if (proxy.isDeviceSet()) {
+                proxy.receiveUpdates()
+                    .collect { connectionState ->
+                        if (connectionState.connectionState is ConnectionState.Connected) {
+                            isExtDeviceConnected = true
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_CONNECTED
+                        } else {
+                            isExtDeviceConnected = false
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_DISCONNECTED
+                        }
+                    }
+            }
+        }
+    }
 
     private fun applyState(
         newThemeMode: ThemeMode? = null,
@@ -148,5 +176,9 @@ class SettingsViewModel(
         }
 
         return true
+    }
+
+    fun hideBluetoothUpdate(){
+        bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
     }
 }

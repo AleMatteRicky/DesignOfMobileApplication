@@ -17,6 +17,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,7 +26,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.example.augmentedrealityglasses.ErrorWrapper
+import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 @Composable
@@ -39,8 +41,13 @@ fun TranslationResultScreen(
     val maxWidth = configuration.screenWidthDp.dp
     val recordButtonSize = 65.dp
     val uiState = viewModel.uiState
+    val message by viewModel.errorMessage.collectAsState()
 
-    ErrorWrapper(message = viewModel.errorMessage, onDismiss = { viewModel.hideErrorMessage() }) {
+    UpdateWrapper(
+        message = message,
+        bluetoothUpdateStatus = viewModel.bluetoothUpdateStatus,
+        onErrorDismiss = { viewModel.hideErrorMessage() },
+        onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }) {
 
         Box(Modifier.fillMaxSize()) {
 

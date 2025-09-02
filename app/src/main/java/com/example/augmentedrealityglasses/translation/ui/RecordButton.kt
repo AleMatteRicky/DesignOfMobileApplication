@@ -75,7 +75,7 @@ fun RecordButton(
                                 notValidSourceLanguage -> "Please specify a source language before starting audio recording."
                                 else -> "An unexpected error occurred. Please try again."
                             }
-                            viewModel.errorMessage = message
+                            viewModel.errorMessage.value = message
                         }
                     }
                 })

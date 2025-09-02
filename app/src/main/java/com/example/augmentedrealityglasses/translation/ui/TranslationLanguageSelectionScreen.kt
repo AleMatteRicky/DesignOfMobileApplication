@@ -12,6 +12,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.augmentedrealityglasses.ErrorWrapper
+import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 //todo check if with animation is solved, selecting a target downloaded language and then switching immediately to recording lead to show for an instant DisplayModelMissing
@@ -32,7 +34,13 @@ import com.example.augmentedrealityglasses.translation.TranslationViewModel
 @Composable
 fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: () -> Boolean) {
 
-    ErrorWrapper(message = viewModel.errorMessage, onDismiss = { viewModel.hideErrorMessage() }) {
+    val message by viewModel.errorMessage.collectAsState()
+
+    UpdateWrapper(
+        message = message,
+        bluetoothUpdateStatus = viewModel.bluetoothUpdateStatus,
+        onErrorDismiss = { viewModel.hideErrorMessage() },
+        onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }) {
 
         Column(Modifier.fillMaxSize()) {
 

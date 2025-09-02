@@ -47,6 +47,9 @@ class HomeViewModel(
     private val scanner: Scanner
 ) : ViewModel() {
 
+    var bluetoothUpdateStatus by mutableStateOf(BluetoothUpdateStatus.NONE)
+        private set
+
     //Initialize the viewModel
     companion object {
         val ADAPTER_KEY = object : CreationExtras.Key<BluetoothAdapter> {}
@@ -75,8 +78,13 @@ class HomeViewModel(
             if (proxy.isDeviceSet()) {
                 proxy.receiveUpdates()
                     .collect { connectionState ->
-                        isExtDeviceConnected =
-                            connectionState.connectionState is ConnectionState.Connected
+                        if (connectionState.connectionState is ConnectionState.Connected) {
+                            isExtDeviceConnected = true
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_CONNECTED
+                        } else {
+                            isExtDeviceConnected = false
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_DISCONNECTED
+                        }
                     }
             }
         }
@@ -97,6 +105,10 @@ class HomeViewModel(
 
     fun hideErrorMessage() {
         errorMessage = ""
+    }
+
+    fun hideBluetoothUpdate(){
+        bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
     }
 
     private fun showErrorMessage(msg: String) {

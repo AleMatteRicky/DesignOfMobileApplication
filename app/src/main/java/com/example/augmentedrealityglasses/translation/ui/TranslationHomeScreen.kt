@@ -1,6 +1,7 @@
 package com.example.augmentedrealityglasses.translation.ui
 
 import android.annotation.SuppressLint
+import androidx.compose.runtime.getValue
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -11,12 +12,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
-import com.example.augmentedrealityglasses.ErrorWrapper
+import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 
 
@@ -34,8 +36,13 @@ fun TranslationHomeScreen(
 ) {
 
     val uiState = viewModel.uiState
+    val message by viewModel.errorMessage.collectAsState()
 
-    ErrorWrapper(message = viewModel.errorMessage, onDismiss = { viewModel.hideErrorMessage() }) {
+    UpdateWrapper(
+        message = message,
+        bluetoothUpdateStatus = viewModel.bluetoothUpdateStatus,
+        onErrorDismiss = { viewModel.hideErrorMessage() },
+        onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }) {
         BoxWithConstraints(
             //todo check if it does support vertical scrolling
             modifier = Modifier
