@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -67,7 +68,8 @@ import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 fun HomeScreen(
     viewModel: HomeViewModel,
     //TODO: delete this parameter and also his ScreenName value?
-    onNavigateFindDevice: () -> Unit
+    onNavigateFindDevice: () -> Unit,
+    navigationBarHeight: Dp
 ) {
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp.dp
@@ -121,16 +123,6 @@ fun HomeScreen(
             ) {
 
                 Column {
-                    Text(
-                        text = "Home",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier
-                            .padding(bottom = 8.dp)
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 16.dp)
-                    )
                     DevicesPanel(
                         //TODO: do not show the connected device in the "Previously connected devices" panel
                         devices = viewModel.bondedDevices,
@@ -157,8 +149,8 @@ fun HomeScreen(
                         Box(
                             Modifier
                                 .offset(
-                                    x = (screenWidthDp - 64.dp) / 2,
-                                    y = screenHeightDp - 155.dp //todo fix with navBarHeight
+                                    x = (screenWidthDp - 65.dp) / 2,
+                                    y = screenHeightDp - navigationBarHeight - 65.dp * 1.2f - 10.dp //todo fix with navBarHeight
                                 )
                                 .sharedBounds(
                                     sharedContentState = sharedState,
@@ -192,7 +184,7 @@ fun HomeScreen(
                                     animatedVisibilityScope = this@AnimatedContent,
                                     resizeMode = ResizeMode.ScaleToBounds(),
                                 )
-                                .height(boxHeight + 35.dp)
+                                .height(boxHeight + 60.dp)
 
                         ) {
                             Column(
@@ -259,15 +251,16 @@ fun DevicesPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(bottom = 70.dp) //Padding for AddDevicesButton
+            .padding(bottom = 100.dp) //Padding for AddDevicesButton
     ) {
         Text(
             text = "Your Devices",
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            fontSize = 28.sp,
             modifier = Modifier
                 .padding(bottom = 8.dp)
                 .padding(horizontal = 16.dp)
-                .padding(top = 10.dp)
+                .padding(top = 20.dp)
         )
 
         DeviceStatusPanel(
@@ -475,7 +468,7 @@ fun SharedTransitionScope.AddDevicesButton(
         onClick = onClick,
         shape = CircleShape,
         containerColor = if (!showFindDevicePanel) Color.Black else Color.White,
-        modifier = modifier.size(64.dp)
+        modifier = modifier.size(65.dp)
     ) {
         Icon(
             imageVector = Icons.Default.Add,
