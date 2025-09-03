@@ -97,7 +97,7 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
                 onClick = {
                     if (currentDestination != item.route) {
                         navController.navigate(item.route) {
-                            popUpTo(navController.graph.startDestinationId)
+                            popUpTo(ScreenName.HOME.name)
                         }
                     }
                 }
