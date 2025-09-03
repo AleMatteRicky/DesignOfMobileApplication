@@ -85,8 +85,7 @@ class WeatherViewModel(
     }
 
     // Tracks the Bluetooth connection status with the external device
-    var isExtDeviceConnected by mutableStateOf(false)
-        private set
+    private var isExtDeviceConnected by mutableStateOf(false)
 
     var bluetoothUpdateStatus by mutableStateOf(BluetoothUpdateStatus.NONE)
         private set
@@ -320,7 +319,7 @@ class WeatherViewModel(
         return json
     }
 
-    fun getGeolocationPermissions(context: Context): Map<String, Boolean> {
+    private fun getGeolocationPermissions(context: Context): Map<String, Boolean> {
         val hasCoarseLocationPermission = ContextCompat.checkSelfPermission(
             context,
             ACCESS_COARSE_LOCATION
@@ -657,7 +656,7 @@ class WeatherViewModel(
 
                                         if (currentWeatherConditionState != null) {
 
-                                            //send updates to ESP (just the current geolocation condition) //TODO
+                                            //send updates to ESP
                                             sendBluetoothMessage(context = context)
                                         }
                                     }
@@ -769,7 +768,7 @@ class WeatherViewModel(
 
                                         if (currentWeatherConditionState != null) {
 
-                                            //send updates to ESP (just the current geolocation condition) //TODO
+                                            //send updates to ESP
                                             sendBluetoothMessage(context = context)
                                         }
                                     }
@@ -805,7 +804,7 @@ class WeatherViewModel(
 
                 if (currentWeatherConditionState != null) {
 
-                    //send updates to ESP (just the current geolocation condition) //TODO
+                    //send updates to ESP
                     sendBluetoothMessage(context = context)
                 }
             }
@@ -853,7 +852,7 @@ class WeatherViewModel(
                 && weatherState.value.conditions.any { !it.isCurrent }
     }
 
-    fun hideBluetoothUpdate(){
+    fun hideBluetoothUpdate() {
         bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
     }
 }
