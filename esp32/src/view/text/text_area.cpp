@@ -1,6 +1,6 @@
 #include "view/text/text_area.h"
 
-#include "fonts/RobotoMono_Regular9pt7b.h"
+#include "fonts/NotoSansMono15pt.h"
 #include "utility/resource_monitor.h"
 #include "view/screen/screen.h"
 
@@ -13,199 +13,226 @@ TextArea::TextArea(RectType frame,
       m_tft{tft::Tft::getTFT_eSPI()},
       m_fgColour{TFT_LIGHTGREY},
       m_bgColour{TFT_BLACK},
-      m_contentSz{0},
-      m_oldContentSz{0},
+      m_cursorCoordinates{Coordinates{getCoordinates()}},
       m_wrap{true} {
-#if 0
-    auto size = getSize();
-    ESP_LOGD(TAG,"Creating a sprite of size: %d and %d\n", size.m_width,
-                  size.m_height);
-    ESP_LOGD(TAG,"The sprite is %u bytes\n", sizeof(m_sprite));
-    // ResourceMonitor::printRemainingHeapSizeInfo();
-    m_sprite.setColorDepth(4);
-    m_sprite.createSprite(size.m_width, size.m_height);
-    //  if the sprite fails draw directly on the screen
-    assert(m_sprite.getPointer() && "no enough memory for the sprite");
-    if (!m_sprite.getPointer()) {
-        ESP_LOGD(TAG,"Sprite creation failed!");
-        //        assert(false && "No enough memory for the sprite");
-    } else {
-        ESP_LOGD(TAG,"Sprite created successfully.");
-    }
-    m_sprite.setTextColor(m_fgColour, m_bgColour);
-    m_sprite.setTextFont(m_font);
-    m_sprite.setTextSize(1);
-
-    /*
-    for (int i = 0; i < 500; i++) {
-        m_sprite.printf("line %d\n", i);
-    }
-    */
-    auto coordinates = getCoordinates();
-    m_charWidth = m_sprite.textWidth("A");
-    m_charHeight = m_sprite.fontHeight();
-    m_frames.push_back(TextFrame{""});
-
-    setContent(content);
-#endif
     auto frameSz = getSize();
-// create a sprite for the current line
-#if 0
-    auto frameSz = getSize();
-    m_sprite.setTextFont(m_font);
-    m_sprite.setTextSize(1);
-    m_sprite.setColorDepth(4);
-    m_charWidth = m_sprite.textWidth("A");
-    m_charHeight = m_sprite.fontHeight();
-    m_sprite.createSprite(frameSz.m_width, m_charHeight);
-#endif
-
     m_tft->setTextDatum(TL_DATUM);
     m_tft->setTextColor(m_fgColour, m_bgColour);
-    m_tft->setFreeFont(&RobotoMono_Regular9pt7b);
-    m_charWidth = m_tft->textWidth("A");
-    m_charHeight = m_tft->fontHeight();
-    ESP_LOGD(TAG, "char width: %u, char height: %u", m_charWidth, m_charHeight);
-    m_maxChars =
-        (frameSz.m_width * frameSz.m_height) / (m_charWidth * m_charHeight);
 
-    ESP_LOGD(TAG, "max char per frame: %u\n", m_maxChars);
-    m_maxNumOfColumns = frameSz.m_width / m_charWidth;
-    ESP_LOGD(TAG, "max num of chars per column: %u\n", m_maxNumOfColumns);
-    // reserve space before hand to avoid dynamic reallocations as new
-    // characters are added to the text
-    m_content.resize(m_maxChars, ' ');
-    m_oldContent.resize(m_maxChars, ' ');
+    ESP_LOGD(TAG, "State of the memory before loading the font:");
+    ResourceMonitor::printRemainingHeapSizeInfo();
+    m_tft->loadFont(NotoSansMono_15pt);
+    m_tft->setTextWrap(false, false);
+
+    ESP_LOGD(TAG, "State of the memory after loading the font:");
+    ResourceMonitor::printRemainingHeapSizeInfo();
+
+    m_charHeight = m_tft->fontHeight();
+    ESP_LOGD(TAG, "char height: %u", m_charHeight);
 
     setContent(content);
     ESP_LOGD(TAG, "Text created");
 }
 
-TextArea::~TextArea() {
-    ESP_LOGD(TAG, "Deleting the sprite");
+size_t TextArea::setContent(std::string const& content) {
+    ESP_LOGD(TAG, "Before setting the content:");
+    ResourceMonitor::printRemainingHeapSizeInfo();
+
+    m_cursorCoordinates = getCoordinates();
+    m_content.clear();
+
+    ESP_LOGD(TAG, "After cleaning the current content:");
+    ResourceMonitor::printRemainingHeapSizeInfo();
+
+    size_t charactersWritten = appendContent(content);
+    ESP_LOGD(TAG, "After setting the content:");
+    ResourceMonitor::printRemainingHeapSizeInfo();
+
+    return charactersWritten;
 }
 
-void TextArea::setContent(std::string const& content) {
-    m_contentSz = 0;
-    appendContent(content);
-}
+size_t TextArea::appendContent(std::string const& content) {
+    if (content.empty())
+        return 0;
 
-void TextArea::appendContent(std::string const& content) {
-    if (!m_wrap && m_contentSz == m_maxChars) {
-        ESP_LOGD(TAG, "Text already  full, no space for '%s'\n",
-                 content.c_str());
-        m_onExceedingText(content);
-        return;
+    auto frameSz = getSize();
+    auto frameCoordinates = getCoordinates();
+    if (!m_wrap &&
+        m_cursorCoordinates.m_y >= frameCoordinates.m_y + frameSz.m_height) {
+        ESP_LOGD(TAG,
+                 "Text already full, no space for '%s'. The cursorY is at %u, "
+                 "but the maximum y is %u",
+                 content.c_str(), m_cursorCoordinates.m_y,
+                 frameCoordinates.m_y + frameSz.m_height);
+        return 0;
     }
 
     ESP_LOGD(TAG, "Appending content '%s'\n", content.c_str());
-    for (size_t i = 0; i < content.size(); i++) {
-        char c = content[i];
-        m_content[m_contentSz] = c;
-        if (c == '\n') {
-            uint16_t col = getCol(m_contentSz);
-            m_contentSz += m_maxNumOfColumns - col;
-        } else {
-            bool beginningOfNewLine = m_contentSz % m_maxNumOfColumns == 0;
-            bool indenting = beginningOfNewLine && c == ' ';
-            if (!indenting)
-                m_contentSz += 1;
+
+    auto cursorCoordinates = m_cursorCoordinates;
+    byte inc = 0;
+
+    for (uint32_t i = 0; i < content.size(); i += inc) {
+        std::string glyph = getUTF8Sequence(content, i);
+        assert(glyph.size() > 0 &&
+               "the sequence must contain only valid utf-8 encoded strings");
+
+        inc = glyph.size();
+
+        if (overflowOnX(glyph, cursorCoordinates)) {
+            ESP_LOGD(TAG,
+                     "Overflowing along the x axis for cursor's coordinates: "
+                     "(%d,%d)",
+                     cursorCoordinates.m_x, cursorCoordinates.m_y);
+            if (glyph == " " || glyph == "\n")
+                continue;
+            // to know when drawing the string to break the line
+            m_content.push_back("\n");
+            cursorCoordinates.m_x = frameCoordinates.m_x;
+            cursorCoordinates.m_y += m_tft->fontHeight();
         }
 
-        if (m_contentSz == m_maxChars) {
+        if (overFlowOnY(glyph, cursorCoordinates)) {
+            if (glyph == " " || glyph == "\n")
+                continue;
+            ESP_LOGD(TAG,
+                     "Overflowing along the y axis for the cursor at (%d,%d)",
+                     cursorCoordinates.m_x, cursorCoordinates.m_y);
             if (m_wrap) {
-                m_contentSz = 0;
+                ESP_LOGD(TAG,
+                         "Wrapping the text: cursor back at the initial "
+                         "coordinates");
+                cursorCoordinates = getCoordinates();
+                m_content.clear();
             } else {
-                m_onExceedingText(content.substr(i + 1));
-                return;
+                ESP_LOGD(TAG, "Not wrapping text: truncate it");
+                return i;
             }
         }
+
+        // if it is not an indentation, skip it
+        if (glyph == " " && beginningOfTheLine(cursorCoordinates) &&
+            cursorCoordinates.m_y != getCoordinates().m_y)
+            continue;
+
+        m_content.push_back(glyph);
+        if (glyph == "\n") {
+            cursorCoordinates = Coordinates{
+                frameCoordinates.m_x, cursorCoordinates.m_y + m_charHeight};
+        } else {
+            ESP_LOGD(TAG, "'%s' of width %u would be printed at (%u,%u)",
+                     glyph.c_str(), m_tft->textWidth(glyph.c_str()),
+                     cursorCoordinates.m_x, cursorCoordinates.m_y);
+            cursorCoordinates.m_x += m_tft->textWidth(glyph.c_str()) + 1;
+        }
     }
+
+    m_cursorCoordinates = cursorCoordinates;
+    return content.size();
 }
 
-void TextArea::hideChar(uint32_t row, uint32_t col, char c) {
-    printChar(row, col, c, m_bgColour, m_bgColour);
+void TextArea::hideGlyph(std::string const& glyph) {
+    ESP_LOGD(TAG, "Hiding glyph: '%s' at (%d,%d)", glyph.c_str(),
+             m_tft->getCursorX(), m_tft->getCursorY());
+    printGlyph(glyph, m_bgColour, m_bgColour);
 }
 
-void TextArea::printChar(uint32_t row,
-                         uint32_t col,
-                         char c,
-                         uint16_t fg,
-                         uint16_t bg) {
+void TextArea::printGlyph(std::string const& glyph, uint16_t fg, uint16_t bg) {
     m_tft->setTextColor(fg, bg);
-    auto [x, y] = getCoordinates();
-    m_tft->setCursor(x + col * m_charWidth, y + row * m_charHeight);
-    m_tft->print(c);
+    m_tft->print(glyph.c_str());
 }
 
-void TextArea::hide(std::string const& data, uint32_t beg, uint32_t end) {
-    if (beg == end)
-        return;
-    auto frameSz = getSize();
-    uint16_t maxNumOfColumns = frameSz.m_width / m_charWidth;
-    for (uint32_t i = beg; i < end; i++) {
-        // new line is not printed
-        if (data[i] != '\n') {
-            uint16_t row = getRow(i);
-            uint16_t col = getCol(i);
-            hideChar(row, col, data[i]);
-            ESP_LOGD(TAG, "hide char %c at (%u, %u)\n", data[i], row, col);
+void TextArea::hide(std::vector<std::string> const& content, uint32_t beg) {
+    auto frameCoordinates = getCoordinates();
+    for (uint32_t i = beg; i < content.size(); i++) {
+        hideGlyph(content[i]);
+
+        if (content[i] == "\n") {
+            m_tft->setCursor(frameCoordinates.m_x, m_tft->getCursorY());
         }
     }
 }
 
 void TextArea::drawOnScreen() {
-    ESP_LOGD(TAG, "Screen size: %u\n", m_contentSz);
-    ESP_LOGD(TAG, "Content to print:\n");
-    for (int i = 0; i < m_contentSz; i++) {
-        ESP_LOGD(TAG, "%c", m_content[i]);
-    }
-    ESP_LOGD(TAG, "\nOld content:\n");
-    for (int i = 0; i < m_oldContentSz; i++) {
-        ESP_LOGD(TAG, "%c", m_oldContent[i]);
-    }
-    ESP_LOGD(TAG, );
-
-    assert(m_contentSz < m_maxChars);
-
+    bool invalidated{false};
+    auto frameCoordinates = getCoordinates();
     auto frameSz = getSize();
+    m_tft->setCursor(frameCoordinates.m_x, frameCoordinates.m_y);
 
-    uint32_t i = 0;
-    while (i < m_contentSz) {
-        ESP_LOGD(TAG, "i = %u\n", i);
-        char curChar = m_content[i];
-        if (i < m_oldContentSz) {
-            char oldChar = m_oldContent[i];
-            if (curChar != oldChar) {
-                uint16_t numCharsToHide = 1;
-                if (curChar == '\n') {
-                    uint16_t col = getCol(i);
-                    numCharsToHide = std::min(
-                        m_oldContentSz - i,
-                        static_cast<uint32_t>(m_maxNumOfColumns - col - 1));
-                }
-                hide(m_oldContent, i, i + numCharsToHide);
+    for (uint32_t i = 0; i < m_content.size(); i++) {
+        std::string glyph = m_content[i];
+
+        if (i < m_oldContent.size() && glyph != m_oldContent[i]) {
+            if (!invalidated) {
+                int16_t x = m_tft->getCursorX();
+                int16_t y = m_tft->getCursorY();
+                hide(m_oldContent, i);
+                m_oldContent.erase(m_oldContent.begin() + i,
+                                   m_oldContent.end());
+                invalidated = true;
+                // restore the cursor's coordinates changed when hiding the old
+                // printed content
+                m_tft->setCursor(x, y);
             }
         }
 
-        uint16_t col = getCol(i);
-        uint16_t row = getRow(i);
-        if (curChar == '\n') {
-            i += m_maxNumOfColumns - col;
-        } else {
-            ESP_LOGD(TAG, "Print char %c at (%u, %u)\n", curChar, row, col);
-            printChar(row, col, curChar, m_fgColour, m_bgColour);
-            m_oldContent[i] = curChar;
-            i += 1;
+        ESP_LOGD(TAG, "Drawing '%s' at (%d,%d)", glyph.c_str(),
+                 m_tft->getCursorX(), m_tft->getCursorY());
+
+        printGlyph(glyph, m_fgColour, m_bgColour);
+
+        if (m_oldContent.size() < m_content.size())
+            m_oldContent.push_back(glyph);
+
+        if (glyph == "\n") {
+            // the library automatically sets the cursor on a new line but at
+            // the first column of the screen, which may not be what we want:
+            // move it at the first column of the frame
+            m_tft->setCursor(frameCoordinates.m_x, m_tft->getCursorY());
         }
     }
 
-    // the oldContent might be longer, hence hide all remaining characters
-    if (m_oldContentSz > m_contentSz) {
-        ESP_LOGD(TAG, "Hiding the remaining characters");
-        hide(m_oldContent, m_contentSz, m_oldContentSz);
+    if (m_oldContent.size() > m_content.size()) {
+        hide(m_oldContent, m_content.size());
     }
-    m_oldContentSz = m_contentSz;
+}
+
+std::pair<size_t, byte> TextArea::sizeContent(std::string const& content) {
+    size_t totWidth{0};
+    byte inc{0};
+    for (size_t i = 0; i < content.size(); i++) {
+        byte inc = getUTF8SequenceLength(content[i]);
+        assert(inc > 0);
+        totWidth += m_tft->textWidth(content.substr(i, inc).c_str());
+    }
+    return {totWidth, m_charHeight};
+}
+
+std::string TextArea::getUTF8Sequence(std::string const& str, size_t idx) {
+    unsigned char fstByte = str[idx];
+    byte length = getUTF8SequenceLength(fstByte);
+    assert(length != 0 && "invalid utf-8 string");
+    return str.substr(idx, length);
+}
+
+byte TextArea::getUTF8SequenceLength(unsigned char firstByte) {
+    if (firstByte <= 0x7F)
+        return 1;  // ASCII
+    if ((firstByte & 0xE0) == 0xC0)
+        return 2;  // 2-byte sequence
+    if ((firstByte & 0xF0) == 0xE0)
+        return 3;  // 3-byte sequence
+    if ((firstByte & 0xF8) == 0xF0)
+        return 4;  // 4-byte sequence
+    return 0;      // Invalid
+}
+
+void TextArea::clearFromScreen() {
+    if (m_content.empty())
+        return;
+    auto [x, y] = getCoordinates();
+    m_tft->setCursor(x, y);
+    hide(m_content, 0);
 }
 
 }  // namespace view

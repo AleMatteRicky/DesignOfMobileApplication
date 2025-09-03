@@ -14,58 +14,65 @@ public:
     TextArea() : TextArea(RectType{Coordinates{0, 0}, Size{0, 0}}, nullptr) {}
     */
 
-    ~TextArea() override;
+    size_t setContent(std::string const& content) override;
 
-    void setContent(std::string const& content) override;
+    size_t appendContent(std::string const& content) override;
 
-    void appendContent(std::string const& content) override;
+    void wrapTextVertically(bool wrap) override { m_wrap = wrap; }
 
-    void wrapTextVertically() override { m_wrap = true; }
+    bool isEmpty() override { return m_content.empty(); }
 
-    void doNotWrapText(
-        std::function<void(std::string const&)> onExceedingText) override {
-        m_wrap = false;
-        m_onExceedingText = onExceedingText;
-    }
+    void clearFromScreen() override;
 
 protected:
     void drawOnScreen() override;
 
+public:
+    static std::string getUTF8Sequence(std::string const& str, size_t idx);
+
+    static byte getUTF8SequenceLength(unsigned char firstByte);
+
+    std::pair<size_t, byte> sizeContent(std::string const&);
+
 private:
-    void hideChar(uint32_t, uint32_t, char);
-    void printChar(uint32_t row,
-                   uint32_t col,
-                   char c,
-                   uint16_t fg,
-                   uint16_t bg);
-    void hide(std::string const&, uint32_t, uint32_t);
+    void hideGlyph(std::string const& glyph);
+    void printGlyph(std::string const& glyph, uint16_t fg, uint16_t bg);
+    void hide(std::vector<std::string> const& content, uint32_t beg);
+    bool overflowOnX(std::string const& glyph, Coordinates cursorCoordinates) {
+        auto frameSz = getSize();
+        auto frameCoordinates = getCoordinates();
+        return cursorCoordinates.m_x + m_tft->textWidth(glyph.c_str()) >
+               frameCoordinates.m_x + frameSz.m_width;
+    }
 
-    uint16_t getRow(uint32_t idx) { return idx / m_maxNumOfColumns; }
+    bool overFlowOnY(std::string const& glyph, Coordinates cursorCoordinates) {
+        auto frameSz = getSize();
+        auto frameCoordinates = getCoordinates();
+        return cursorCoordinates.m_y + m_tft->fontHeight() >
+               frameCoordinates.m_y + frameSz.m_height;
+    }
 
-    uint16_t getCol(uint32_t idx) { return idx % m_maxNumOfColumns; }
+    bool beginningOfTheLine(Coordinates cursorCoordinates) {
+        auto frameCoordinates = getCoordinates();
+        return cursorCoordinates.m_x == frameCoordinates.m_x;
+    }
 
 private:
     inline static char const TAG[] = "Text";
 
 private:
-    std::string m_content;
-    // the characters that can be printed on the screen are in the range [0,
-    // m_contentSz)
-    uint32_t m_contentSz;
-
-    std::string m_oldContent;
-    uint32_t m_oldContentSz;
+    Coordinates m_cursorCoordinates;
+    std::vector<std::string> m_content;
+    size_t m_contentSz;
+    std::vector<std::string> m_oldContent;
+    size_t m_oldContentSz;
 
     bool m_wrap;
-    std::function<void(std::string const&)> m_onExceedingText;
 
     int const m_font;
     TFT_eSPI* m_tft;
     uint16_t const m_fgColour;
     uint16_t const m_bgColour;
-    int16_t m_charWidth;
     int16_t m_charHeight;
-    uint32_t m_maxChars;
-    uint32_t m_maxNumOfColumns;
 };
 }  // namespace view
