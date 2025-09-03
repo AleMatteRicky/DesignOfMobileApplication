@@ -38,15 +38,12 @@ import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
-
-//todo check if user uninstall language when the application is opened
-//todo fix behaviour when language is undefined
+import java.util.concurrent.atomic.AtomicInteger
 
 class TranslationViewModel(
     private val systemLanguage: String,
@@ -157,14 +154,13 @@ class TranslationViewModel(
             )
         }
         if (_uiState.value.recognizedText.isNotEmpty()) {
-            if(_uiState.value.targetLanguage.isNullOrBlank()){
+            if (_uiState.value.targetLanguage.isNullOrBlank()) {
                 _uiState.update {
                     _uiState.value.copy(
                         translatedText = "",
                     )
                 }
-            }
-            else {
+            } else {
                 translate()
             }
         }
@@ -266,9 +262,9 @@ class TranslationViewModel(
 
         if (isSourceModelNotAvailable && !_uiState.value.isDownloadingSourceLanguageModel) {
             viewModelScope.launch {
-                _uiState.update { _uiState.value.copy(isDownloadingSourceLanguageModel = true)}
+                _uiState.update { _uiState.value.copy(isDownloadingSourceLanguageModel = true) }
                 downloadSourceOrTargetLanguageModel(isSource = true)
-                _uiState.update { _uiState.value.copy(isDownloadingSourceLanguageModel = false)}
+                _uiState.update { _uiState.value.copy(isDownloadingSourceLanguageModel = false) }
                 if (!isTargetModelNotAvailable) {
                     translate()
                 }
@@ -314,10 +310,6 @@ class TranslationViewModel(
                         insertionIndex
                     )
                 }
-//                uiState = uiState.copy(
-//                    downloadedLanguageTags = uiState.downloadedLanguageTags + languageTag,
-//                    notDownloadedLanguageTags = uiState.notDownloadedLanguageTags - languageTag
-//                )
             } catch (_: Exception) {
                 Log.e("Download Failed", "Failure")
                 errorMessage.value = "Download failed"
@@ -349,13 +341,12 @@ class TranslationViewModel(
         _uiState.update { _uiState.value.copy(selectingLanguageRole = languageRole) }
     }
 
+    /*
     private suspend fun identifySourceLanguage(): Boolean { //True if the identification is successful, False otherwise
         val languageIdentification = LanguageIdentification.getClient()
         val tag = languageIdentification.identifyLanguage(_uiState.value.recognizedText).await()
         if (tag != "und") {
             //uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
-            //todo tag could be not supported by mlkit translate
-            //todo
             return true
         } else {
             if (_uiState.value.sourceLanguage != null) {
@@ -365,6 +356,7 @@ class TranslationViewModel(
             return false
         }
     }
+     */
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun initializeSpeechRecognizer() {
@@ -404,15 +396,20 @@ class TranslationViewModel(
                 60000L
             )
         }
-
     }
 
-    private fun adaptLanguageTag(languageTag: String): String { //ex: from "it" to "it-IT"
+    //Speech recognizer require a format "aa-AA" where aa is the languageTag and AA is the regional version,
+    // if the speech recognizer does not recognize the regional language AA it proceeds with the default one
+    private fun adaptLanguageTag(languageTag: String): String { //from short BCP-47 to BCP-47 with regional variant ex: from "it" to "it-IT"
+
         return languageTag + "-" + languageTag.uppercase()
     }
 
     private fun createRecognitionListener(): RecognitionListener {
         return object : RecognitionListener {
+
+            var isListening = true
+
             override fun onReadyForSpeech(params: Bundle?) {
                 Log.d("SpeechRecognition", "Ready for speech. Parameters: $params")
             }
@@ -449,29 +446,35 @@ class TranslationViewModel(
                     else -> "Unknown speech recognition error"
                 }
                 stopRecording()
-                Log.e("SpeechRecognition", "Error: $errorMessage (Code: $error)")
+                Log.e("SpeechRecognition Error", "Error: $errorMessage (Code: $error)")
             }
 
             override fun onResults(results: Bundle?) {
+
+                isListening = false
                 val data: ArrayList<String>? =
                     results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                _uiState.update {
-                    _uiState.value.copy(
-                        recognizedText = data.toString().removePrefix("[").removeSuffix("]"),
-                    )
-                }
-                viewModelScope.launch {
-                    //identifySourceLanguage()
-                    if (_uiState.value.targetLanguage != null) {
-                        translate()
-                    } else {
-                        Log.d("send final result", _uiState.value.recognizedText)
-                        sendBluetoothMessage(_uiState.value.recognizedText)
+                val newRecognizedText = data.toString().removePrefix("[").removeSuffix("]")
+
+                if(newRecognizedText != "") {
+                    _uiState.update {
+                        _uiState.value.copy(
+                            recognizedText = newRecognizedText,
+                        )
+                    }
+                    viewModelScope.launch {
+                        if (_uiState.value.targetLanguage != null) {
+                            translate()
+                        } else {
+                            Log.d("send final result", _uiState.value.recognizedText)
+                            sendBluetoothMessage(_uiState.value.recognizedText)
+                        }
+                    }
+                    if (_uiState.value.recognizedText.isNotEmpty()) {
+                        _uiState.update { _uiState.value.copy(isResultReady = true) }
                     }
                 }
-                if (_uiState.value.recognizedText.isNotEmpty()) {
-                    _uiState.update { _uiState.value.copy(isResultReady = true) }
-                }
+
                 stopRecording()
                 Log.d("SpeechRecognizer", "Speech recognition results received: $data")
             }
@@ -479,24 +482,27 @@ class TranslationViewModel(
             override fun onPartialResults(partialResults: Bundle?) {
                 val data: ArrayList<String>? =
                     partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                _uiState.update {
-                    _uiState.value.copy(
-                        recognizedText = data.toString().removePrefix("[").removeSuffix("]")
-                    )
-                }
-                Log.d(TAG, "Speech recognition partial results received: $data")
+                val newRecognizedText = data.toString().removePrefix("[").removeSuffix("]")
 
-                if (_uiState.value.recognizedText != "") {
-                    viewModelScope.launch {
-                        //identifySourceLanguage()
-                        if (_uiState.value.targetLanguage != null) {
-                            translate()
-                        } else {
-                            Log.d("send", _uiState.value.recognizedText)
-                            sendBluetoothMessage(_uiState.value.recognizedText) //the method checks if the device is connected before sending anything
-                        }
+                Log.d("Speech Recognition Partial", "Speech recognition partial results received: $newRecognizedText")
+
+                if(newRecognizedText != "" && isListening) {
+                    _uiState.update {
+                        _uiState.value.copy(
+                            recognizedText = newRecognizedText
+                        )
                     }
+                    if (_uiState.value.recognizedText != "") {
+                        viewModelScope.launch {
+                            if (_uiState.value.targetLanguage != null) {
+                                translate()
+                            } else {
+                                Log.d("send", _uiState.value.recognizedText)
+                                sendBluetoothMessage(_uiState.value.recognizedText) //the method checks if the device is connected before sending anything
+                            }
+                        }
 
+                    }
                 }
             }
 
