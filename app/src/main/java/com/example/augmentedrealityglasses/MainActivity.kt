@@ -57,7 +57,6 @@ import com.example.augmentedrealityglasses.settings.SettingsScreen
 import com.example.augmentedrealityglasses.settings.SettingsViewModel
 import com.example.augmentedrealityglasses.settings.ThemeMode
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
-import com.example.augmentedrealityglasses.translation.permission.PermissionsForTranslation
 import com.example.augmentedrealityglasses.translation.ui.TranslationHomeScreen
 import com.example.augmentedrealityglasses.translation.ui.TranslationLanguageSelectionScreen
 import com.example.augmentedrealityglasses.translation.ui.TranslationResultScreen
@@ -415,7 +414,19 @@ class MainActivity : ComponentActivity() {
                                     factory = TranslationViewModel.Factory
                                 )
 
-                                PermissionsForTranslation(isMicrophoneAvailable = isMicrophoneAvailable()) {
+                                val permissionsForRecording: Map<String, Boolean> =
+                                    if (isMicrophoneAvailable()) {
+                                        mapOf(Pair(Manifest.permission.RECORD_AUDIO, true))
+                                    } else {
+                                        mapOf()
+                                    }
+                                //TODO: add screen for "microphone not available" case
+                                PermissionsBox(
+                                    message = "To enable speech-to-text transcription and translation, please grant microphone permission.",
+                                    permissionsRequired = permissionsForRecording,
+                                    iconId = Icon.MICROPHONE.getID(),
+                                    onSatisfied = {}
+                                ) {
                                     TranslationHomeScreen(
                                         onScreenComposition = {
                                             sendChangeScreenBLEMessage("t")
