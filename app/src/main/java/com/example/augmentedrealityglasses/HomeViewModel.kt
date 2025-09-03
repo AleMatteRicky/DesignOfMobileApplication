@@ -107,7 +107,7 @@ class HomeViewModel(
         errorMessage = ""
     }
 
-    fun hideBluetoothUpdate(){
+    fun hideBluetoothUpdate() {
         bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
     }
 
@@ -133,6 +133,7 @@ class HomeViewModel(
     @SuppressLint("MissingPermission")
     fun connect(device: BluetoothDevice): Boolean {
         if (device.address != ESP32Proxy.ESP32MAC) {
+            showErrorMessage("Device not supported")
             return false
         }
 
