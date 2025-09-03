@@ -25,7 +25,6 @@ suspend fun <T> safeApiCall(
                 }
 
                 else -> {
-                    Log.d("safeApiCall", "Unknown error: ${throwable.message}")
                     APIResult.GenericError(null, "")
                 }
             }
