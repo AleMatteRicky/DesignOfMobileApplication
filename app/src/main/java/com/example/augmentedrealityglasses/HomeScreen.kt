@@ -310,7 +310,7 @@ fun DeviceStatusPanel(
                     color = Color.Transparent
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.eyeglasses), //FIXME: change icon
+                        painter = painterResource(id = Icon.SMART_GLASSES.getID()), //FIXME: change icon
                         contentDescription = null,
                         modifier = Modifier.size(58.dp)
                     )

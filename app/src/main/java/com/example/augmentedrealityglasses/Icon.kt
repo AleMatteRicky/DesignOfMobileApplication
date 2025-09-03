@@ -57,6 +57,13 @@ enum class Icon {
         }
     },
 
+    //<a href="https://www.flaticon.com/free-icons/safety-glasses" title="safety-glasses icons">Safety-glasses icons created by Luvdat - Flaticon</a>
+    SMART_GLASSES{
+        override fun getID(): Int {
+            return R.drawable.smart_glasses_black
+        }
+    },
+
     REFRESH{
         override fun getID(): Int {
             return R.drawable.refresh
