@@ -46,7 +46,6 @@ import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
 //todo check if user uninstall language when the application is opened
-//todo fix when offline multiple lines are repeated, offline recorder adds more partial results
 //todo fix behaviour when language is undefined
 
 class TranslationViewModel(
@@ -112,8 +111,6 @@ class TranslationViewModel(
         internetConnectionManager.stop()
     }
 
-    //TODO fix when mic is open but no audio is recorded
-
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
@@ -143,7 +140,7 @@ class TranslationViewModel(
 
     //todo add exception handling for all the synchronous methods
 
-    fun stopRecording() { //todo the recorder stops automatically after few seconds during which it does not receive audio input, change it
+    fun stopRecording() {
         recorder?.stopListening()
         recorder?.destroy()
         recordJob?.cancel()
@@ -265,12 +262,6 @@ class TranslationViewModel(
         }
     }
 
-    /*
-    todo improve the behaviour, when the user tries to translate for the first time,
-        the viewmodel needs to download the source language. if the download is interrupted the viewmodel
-        will start another one
-     */
-
     private fun downloadSourceAndTargetLanguageModel() {
 
         if (isSourceModelNotAvailable && !_uiState.value.isDownloadingSourceLanguageModel) {
@@ -349,7 +340,8 @@ class TranslationViewModel(
                 isTargetModelNotAvailable = false
             }
         } catch (e: Exception) {
-            Log.e("Download Failed", "Failure") //todo add message in app
+            errorMessage.value = "Download failed"
+            Log.e("Download Failed", "Failure")
         }
     }
 
@@ -382,10 +374,12 @@ class TranslationViewModel(
 
     }
 
+    //the recognizer could still recognize other languages non only the preferred one
+
     private fun createIntent(): Intent {
 
         val sourceLanguageTag =
-            adaptLanguageTag(_uiState.value.sourceLanguage!!)//todo add exception
+            adaptLanguageTag(_uiState.value.sourceLanguage!!) //already checked in the invocation
 
         return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
@@ -396,7 +390,7 @@ class TranslationViewModel(
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
                 sourceLanguageTag
-            ) //can recognize other languages
+            )
             putExtra(
                 RecognizerIntent.EXTRA_PARTIAL_RESULTS, true
             )

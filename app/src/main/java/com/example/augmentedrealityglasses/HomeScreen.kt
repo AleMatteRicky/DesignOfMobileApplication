@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -240,6 +241,10 @@ fun HomeScreen(
 
             }
         }
+    }
+
+    BackHandler(showFindDevicePanel){
+        showFindDevicePanel = false
     }
 }
 

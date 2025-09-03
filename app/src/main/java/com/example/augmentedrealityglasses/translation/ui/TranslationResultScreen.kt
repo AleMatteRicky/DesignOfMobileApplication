@@ -150,7 +150,6 @@ fun TranslationResultScreen(
                 viewModel.stopRecording()
             }
             onBack()
-
         }
     }
 }
