@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -123,7 +125,7 @@ fun FindDeviceScreen(
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (devicesOfferingTheService.isEmpty()) {
@@ -162,24 +164,36 @@ internal fun BluetoothDeviceItem(
     isSampleServer: Boolean = false,
     onConnect: (BluetoothDevice) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .padding(vertical = 8.dp)
-            .fillMaxWidth()
-            .clickable { onConnect(bluetoothDevice) },
-        horizontalArrangement = Arrangement.Center,
+    Card(
+        onClick = { onConnect(bluetoothDevice) },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 4.dp
+        ),
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            bluetoothDevice.name ?: "N/A",
-            style = if (isSampleServer) { //todo check what is sample server
-                TextStyle(fontWeight = FontWeight.Bold)
-            } else {
-                TextStyle(fontWeight = FontWeight.Normal)
-            }, fontSize = 16.sp
-        )
-        //Text(bluetoothDevice.address)
+        Row(
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                bluetoothDevice.name ?: "N/A",
+                style = if (isSampleServer) { //todo check what is sample server
+                    TextStyle(fontWeight = FontWeight.Bold)
+                } else {
+                    TextStyle(fontWeight = FontWeight.Normal)
+                }, fontSize = 16.sp
+            )
+            //Text(bluetoothDevice.address)
 
-        /*val state = when (bluetoothDevice.bondState) {
+            /*val state = when (bluetoothDevice.bondState) {
             BluetoothDevice.BOND_BONDED -> "Paired"
             BluetoothDevice.BOND_BONDING -> "Pairing"
             else -> "None"
@@ -187,6 +201,7 @@ internal fun BluetoothDeviceItem(
         Text(text = state)
          */
 
+        }
     }
 }
 
