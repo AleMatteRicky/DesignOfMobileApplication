@@ -479,6 +479,8 @@ class TranslationViewModel(
                 Log.d("SpeechRecognizer", "Speech recognition results received: $data")
             }
 
+            private var i = 0;
+
             override fun onPartialResults(partialResults: Bundle?) {
                 val data: ArrayList<String>? =
                     partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
@@ -498,11 +500,13 @@ class TranslationViewModel(
                                 translate()
                             } else {
                                 Log.d("send", _uiState.value.recognizedText)
-                                sendBluetoothMessage(_uiState.value.recognizedText) //the method checks if the device is connected before sending anything
+                                if(i % 5==0)
+                                    sendBluetoothMessage(_uiState.value.recognizedText) //the method checks if the device is connected before sending anything
                             }
                         }
 
                     }
+                    i += 1
                 }
             }
 
