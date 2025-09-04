@@ -29,6 +29,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +64,10 @@ fun SettingsScreen(
 
     //Access of the application to read phone notifications
     val hasNotifyAccess by rememberNotificationAccessState()
+
+    LaunchedEffect(Unit) {
+        viewModel.receiveBLEUpdates()
+    }
 
     UpdateWrapper(
         message = viewModel.errorMessage,

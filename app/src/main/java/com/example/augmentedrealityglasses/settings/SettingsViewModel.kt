@@ -200,4 +200,22 @@ class SettingsViewModel(
     fun hideBluetoothUpdate() {
         bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
     }
+
+    fun receiveBLEUpdates(){
+        viewModelScope.launch {
+            if (proxy.isConnected()) {
+                proxy.receiveUpdates()
+                    .collect { connectionState ->
+                        if (connectionState.connectionState is ConnectionState.Connected) {
+                            isExtDeviceConnected = true
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_CONNECTED
+                        } else {
+                            isExtDeviceConnected = false
+                            bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_DISCONNECTED
+                        }
+                    }
+            }
+            bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
+        }
+    }
 }
