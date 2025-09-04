@@ -281,6 +281,7 @@ class PeripheralImpl(
         // the discovery failed, nothing can be done: disconnect
         val wasTheDiscoveryASuccess = resultOfDiscovery != null
         if (!wasTheDiscoveryASuccess) {
+            Log.e(TAG, "Service discovering failed!!!")
             disconnect()
             services = mutableListOf()
         } else {
@@ -301,6 +302,8 @@ class PeripheralImpl(
             .firstOrNull()
         if (mtuEvent != null && mtuEvent.isValid) {
             _mtu = mtuEvent.mtu
+        } else {
+            Log.e(TAG, "Mtu failed")
         }
     }
 

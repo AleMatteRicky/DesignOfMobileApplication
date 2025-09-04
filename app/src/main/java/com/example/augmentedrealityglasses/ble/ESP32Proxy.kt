@@ -2,6 +2,7 @@ package com.example.augmentedrealityglasses.ble
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.util.Log
 import com.example.augmentedrealityglasses.ble.devicedata.CHARACTERISTIC_UUID_RX
 import com.example.augmentedrealityglasses.ble.devicedata.CHARACTERISTIC_UUID_TX
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceData
@@ -136,6 +137,12 @@ class ESP32Proxy(
             peripheral.requestMtu(500)
             peripheral.discoverServices()
         }
+
+        if(!peripheral.areServicesAvailable.value) {
+            Log.e(TAG, "Service not available, not sending data")
+            return
+        }
+
         peripheral.send(SERVICE_UUID, CHARACTERISTIC_UUID_TX, msg.toByteArray())
     }
 
