@@ -93,7 +93,7 @@ class WeatherViewModel(
     // Start listening for Bluetooth packets
     init {
         viewModelScope.launch {
-            if (proxy.isDeviceSet()) {
+            if (proxy.isConnected()) {
                 proxy.receiveUpdates()
                     .collect { connectionState ->
                         if (connectionState.connectionState is ConnectionState.Connected) {

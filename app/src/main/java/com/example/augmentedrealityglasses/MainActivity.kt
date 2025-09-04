@@ -613,7 +613,7 @@ class MainActivity : ComponentActivity() {
 
         val msg = jsonToSend.toString()
 
-        if (proxy.isDeviceSet()) {
+        if (proxy.isConnected()) {
             Log.d(TAG, "Change page command sent: $msg")
 
             lifecycleScope.launch {

@@ -45,6 +45,8 @@ import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 import java.util.concurrent.atomic.AtomicInteger
 
+//todo remove connection during translation
+
 class TranslationViewModel(
     private val systemLanguage: String,
     private val application: Application,
@@ -85,7 +87,7 @@ class TranslationViewModel(
 
     init {
         viewModelScope.launch {
-            if (bleManager.isDeviceSet()) {
+            if (bleManager.isConnected()) {
                 bleManager.receiveUpdates()
                     .collect { connectionState ->
                         if (connectionState.connectionState is ConnectionState.Connected) {
@@ -182,7 +184,7 @@ class TranslationViewModel(
         _uiState.update { _uiState.value.copy(recognizedText = "", translatedText = "") }
     }
 
-    fun translate() {
+    fun translate(sendTranslationToExternalDevice: Boolean = true) {
 
         translatorJob?.cancel()
 
@@ -202,7 +204,9 @@ class TranslationViewModel(
                                 }
                                 //send translated text to esp32
                                 Log.d(TAG, translatedText)
-                                sendBluetoothMessage(_uiState.value.translatedText)
+                                if(sendTranslationToExternalDevice) {
+                                    sendBluetoothMessage(_uiState.value.translatedText)
+                                }
                             }
                             ?.addOnFailureListener { exception ->
                                 Log.e("Translation failed", exception.toString())
@@ -485,6 +489,7 @@ class TranslationViewModel(
                 val data: ArrayList<String>? =
                     partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 val newRecognizedText = data.toString().removePrefix("[").removeSuffix("]")
+                val sendTranslationToExternalDevice = i % 5 == 0
 
                 Log.d("Speech Recognition Partial", "Speech recognition partial results received: $newRecognizedText")
 
@@ -497,10 +502,10 @@ class TranslationViewModel(
                     if (_uiState.value.recognizedText != "") {
                         viewModelScope.launch {
                             if (_uiState.value.targetLanguage != null) {
-                                translate()
+                                translate(sendTranslationToExternalDevice)
                             } else {
                                 Log.d("send", _uiState.value.recognizedText)
-                                if(i % 5==0)
+                                if(sendTranslationToExternalDevice)
                                     sendBluetoothMessage(_uiState.value.recognizedText) //the method checks if the device is connected before sending anything
                             }
                         }
