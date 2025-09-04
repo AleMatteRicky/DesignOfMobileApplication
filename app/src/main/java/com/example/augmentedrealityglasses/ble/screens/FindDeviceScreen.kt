@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,6 +49,7 @@ import com.example.augmentedrealityglasses.ble.characteristic.checkBluetoothConn
 @Composable
 fun FindDeviceScreen(
     viewModel: HomeViewModel,
+    showFindDevicePanel: MutableState<Boolean>,
     modifier: Modifier,
     navigateOnError: () -> Unit,
     navigateOnFeatures: () -> Unit
@@ -142,6 +143,7 @@ fun FindDeviceScreen(
                     bluetoothDevice = item,
                     onConnect = {
                         if (viewModel.connect(it)) {
+                            showFindDevicePanel.value = false
                             navigateOnFeatures()
                         } else {
                             //TODO

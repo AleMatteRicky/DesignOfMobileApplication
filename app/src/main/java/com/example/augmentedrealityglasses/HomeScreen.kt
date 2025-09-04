@@ -42,10 +42,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -82,7 +80,7 @@ fun HomeScreen(
         bluetoothManager.adapter
     }
 
-    var showFindDevicePanel by remember { mutableStateOf(false) }
+    var showFindDevicePanel = remember { mutableStateOf(false) }
 
 
     //FIXME: allow users to refresh data?
@@ -96,15 +94,15 @@ fun HomeScreen(
         onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }
     ) {
 
-        val modifier = if (showFindDevicePanel) Modifier
+        val modifier = if (showFindDevicePanel.value) Modifier
             .background(Color.Transparent)
             .fillMaxSize()
             .clickable(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) {
-                if (showFindDevicePanel) {
-                    showFindDevicePanel = false
+                if (showFindDevicePanel.value) {
+                    showFindDevicePanel.value = false
                 }
             } else Modifier.fillMaxSize()
 
@@ -113,7 +111,7 @@ fun HomeScreen(
         ) {
 
             Box(
-                modifier = if (showFindDevicePanel) {
+                modifier = if (showFindDevicePanel.value) {
                     Modifier
                         .fillMaxSize()
                         .blur(20.dp)
@@ -143,7 +141,7 @@ fun HomeScreen(
                 val boxHeight = screenHeightDp * 0.6f
                 val boxWidth = screenWidthDp * 0.9f
 
-                AnimatedContent(targetState = showFindDevicePanel) { targetState ->
+                AnimatedContent(targetState = showFindDevicePanel.value) { targetState ->
                     if (!targetState) {
 
                         Box(
@@ -161,8 +159,8 @@ fun HomeScreen(
 
                         ) {
                             AddDevicesButton(
-                                { showFindDevicePanel = true },
-                                modifier = Modifier, showFindDevicePanel
+                                { showFindDevicePanel.value = true },
+                                modifier = Modifier, showFindDevicePanel.value
                             )
                         }
                     } else {
@@ -221,6 +219,7 @@ fun HomeScreen(
                                 ) {
                                     FindDeviceScreen(
                                         viewModel,
+                                        showFindDevicePanel,
                                         Modifier.matchParentSize(),
                                         { },
                                         { })
@@ -235,8 +234,8 @@ fun HomeScreen(
         }
     }
 
-    BackHandler(showFindDevicePanel){
-        showFindDevicePanel = false
+    BackHandler(showFindDevicePanel.value) {
+        showFindDevicePanel.value = false
     }
 }
 
