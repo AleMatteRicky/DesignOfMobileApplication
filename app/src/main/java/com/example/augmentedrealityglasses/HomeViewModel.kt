@@ -143,8 +143,13 @@ class HomeViewModel(
         viewModelScope.launch {
             proxy.receiveUpdates()
                 .collect { connectionState ->
-                    isExtDeviceConnected =
-                        connectionState.connectionState is ConnectionState.Connected
+                    if (connectionState.connectionState is ConnectionState.Connected) {
+                        isExtDeviceConnected = true
+                        bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_CONNECTED
+                    } else {
+                        isExtDeviceConnected = false
+                        bluetoothUpdateStatus = BluetoothUpdateStatus.DEVICE_DISCONNECTED
+                    }
                 }
         }
 
