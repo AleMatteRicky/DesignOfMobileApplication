@@ -297,65 +297,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
-                            composable(
-                                ScreenName.FIND_DEVICE.name,
-                                enterTransition = {
-                                    fadeIn(
-                                        animationSpec = tween(
-                                            screenTransitionDuration
-                                        )
-                                    )
-                                },
-                                exitTransition = {
-                                    fadeOut(
-                                        animationSpec = tween(
-                                            screenTransitionDuration
-                                        )
-                                    )
-                                },
-                            ) { backStackEntry ->
-
-
-                                val bluetoothManager: BluetoothManager =
-                                    checkNotNull(
-                                        applicationContext.getSystemService(
-                                            BluetoothManager::class.java
-                                        )
-                                    )
-                                val adapter: BluetoothAdapter? = bluetoothManager.adapter
-
-                                // TODO: make the control at the beginning not making clickable the icon in case bluetooth is not supported, instead of checking it here
-                                require(adapter != null) {
-                                    "Bluetooth must be supported by this device"
-                                }
-
-                                val extras = MutableCreationExtras().apply {
-                                    set(HomeViewModel.ADAPTER_KEY, adapter)
-                                    set(APPLICATION_KEY, application)
-                                }
-
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry("HOME_GRAPH")
-                                }
-                                val viewModel = viewModel<HomeViewModel>(
-                                    viewModelStoreOwner = parentEntry,
-                                    factory = HomeViewModel.Factory,
-                                    extras = extras
-                                )
-
-                                FindDeviceScreen(
-                                    viewModel = viewModel,
-                                    modifier = Modifier,
-                                    navigateOnError = {
-                                        Log.d(TAG, "Error occurred during scanning")
-                                        navController.navigate(ScreenName.ERROR_SCREEN.name)
-                                    },
-                                    navigateOnFeatures = {
-                                        navController.navigate(ScreenName.HOME.name)
-                                    }
-                                )
-
-                            }
                         }
                         composable(
                             ScreenName.CONNECT_SCREEN.name,

@@ -20,9 +20,11 @@ class ChatNotificationListenerService : NotificationListenerService() {
     private val scope = CoroutineScope(Dispatchers.IO)
 
     private val supportedPackages = setOf(
-        "com.whatsapp",            // WhatsApp
-        "com.whatsapp.w4b",        // WhatsApp Business
-        "org.telegram.messenger",  // Telegram
+        "com.whatsapp",                // WhatsApp
+        "com.whatsapp.w4b",            // WhatsApp Business
+        "org.telegram.messenger",      // Telegram
+        "com.google.android.gm",       // Gmail
+        "com.microsoft.office.outlook" // Outlook
     )
 
     override fun onListenerConnected() {
@@ -45,11 +47,22 @@ class ChatNotificationListenerService : NotificationListenerService() {
         if ((n.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return
 
         val notification = sbn.notification ?: return
-        val parsed = parseChatNotification(notification) ?: return
+
+        val parsed = when (pkg) {
+            "com.whatsapp", "com.whatsapp.w4b", "org.telegram.messenger" ->
+                parseChatNotification(notification)
+
+            "com.google.android.gm", "com.microsoft.office.outlook" ->
+                parseEmailNotification(notification, pkg)
+
+            else -> null
+        } ?: return
 
         val appName = when (pkg) {
             "com.whatsapp", "com.whatsapp.w4b" -> NotificationSource.WHATSAPP
             "org.telegram.messenger" -> NotificationSource.TELEGRAM
+            "com.google.android.gm" -> NotificationSource.GMAIL
+            "com.microsoft.office.outlook" -> NotificationSource.OUTLOOK
             else -> return
         }
 
@@ -106,6 +119,49 @@ class ChatNotificationListenerService : NotificationListenerService() {
             }
         }
         return null
+    }
+
+    private fun parseEmailNotification(notification: Notification, pkg: String): ChatMessage? {
+        val extras = notification.extras ?: return null
+
+        val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
+        val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
+        val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString().orEmpty()
+
+        val lines = extras.getCharSequenceArray("android.textLines")
+            ?.mapNotNull { it?.toString() }
+            ?.filter { it.isNotBlank() }
+            .orEmpty()
+
+        var sender = title
+        var content = when {
+            bigText.isNotBlank() -> bigText
+            text.isNotBlank() -> text
+            lines.isNotEmpty() -> lines.last()
+            else -> ""
+        }
+
+        if (sender.isBlank() && lines.isNotEmpty()) {
+            sender = lines.first()
+        }
+
+        sender = sanitize(replaceEmojisWithPlaceholder(cleanBidi(sender)))
+        content = sanitize(replaceEmojisWithPlaceholder(cleanBidi(content)))
+
+        if (content.isBlank()) return null
+
+        if (pkg == "com.microsoft.office.outlook" && lines.size >= 2) {
+            sender = sanitize(replaceEmojisWithPlaceholder(cleanBidi(lines.first())))
+            if (bigText.isBlank() && text.isBlank()) {
+                content =
+                    sanitize(replaceEmojisWithPlaceholder(cleanBidi(lines.getOrNull(1) ?: content)))
+            }
+        }
+
+        return ChatMessage(
+            sender = sender.ifBlank { null },
+            text = content
+        )
     }
 
     /**

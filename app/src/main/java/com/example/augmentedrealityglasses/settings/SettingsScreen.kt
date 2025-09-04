@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -70,6 +74,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .background(Color(0xFFF5F6F7)) //FIXME: fix color
                 .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             Spacer(Modifier.height(16.dp))
 
@@ -130,9 +135,15 @@ fun AppearancePanel(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .toggleable(
+                        value = useSystemThemeMode,
+                        onValueChange = { onSystemToggle(it) }
+                    ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
+
             ) {
                 Column(Modifier.weight(1f)) {
                     Text("Use system setting", fontWeight = FontWeight.SemiBold)
@@ -144,14 +155,22 @@ fun AppearancePanel(
                 }
                 Checkbox(
                     checked = useSystemThemeMode,
-                    onCheckedChange = { onSystemToggle(it) }
+                    onCheckedChange = null
                 )
             }
 
             HorizontalDivider(color = Color(0xFFE8E8E8))
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .toggleable(
+                        enabled = !useSystemThemeMode,
+                        value = isDarkSelected,
+                        onValueChange = { checked ->
+                            if (checked) onSelectDark() else onSelectLight()
+                        }
+                    ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -169,9 +188,7 @@ fun AppearancePanel(
                 Switch(
                     enabled = !useSystemThemeMode,
                     checked = isDarkSelected,
-                    onCheckedChange = { checked ->
-                        if (checked) onSelectDark() else onSelectLight()
-                    }
+                    onCheckedChange = null
                 )
             }
         }
@@ -197,7 +214,9 @@ fun NotificationFiltersPanel(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp)
     ) {
         Column(
             modifier = Modifier
@@ -253,6 +272,30 @@ fun NotificationFiltersPanel(
                         else onDisableNotificationSource(NotificationSource.TELEGRAM)
                     }
                 )
+
+                HorizontalDivider(color = Color(0xFFE8E8E8))
+
+                AppToggleRow(
+                    title = "Gmail",
+                    subtitle = "Forward Gmail notifications to your device",
+                    checked = notificationEnabled[NotificationSource.GMAIL] ?: false,
+                    onCheckedChange = { checked ->
+                        if (checked) onEnableNotificationSource(NotificationSource.GMAIL)
+                        else onDisableNotificationSource(NotificationSource.GMAIL)
+                    }
+                )
+
+                HorizontalDivider(color = Color(0xFFE8E8E8))
+
+                AppToggleRow(
+                    title = "Outlook",
+                    subtitle = "Forward Outlook notifications to your device",
+                    checked = notificationEnabled[NotificationSource.OUTLOOK] ?: false,
+                    onCheckedChange = { checked ->
+                        if (checked) onEnableNotificationSource(NotificationSource.OUTLOOK)
+                        else onDisableNotificationSource(NotificationSource.OUTLOOK)
+                    }
+                )
             }
         }
     }
@@ -266,7 +309,10 @@ private fun AppToggleRow(
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -279,7 +325,6 @@ private fun AppToggleRow(
             )
         }
         Switch(
-            enabled = true,
             checked = checked,
             onCheckedChange = onCheckedChange
         )
@@ -319,7 +364,7 @@ fun NotificationAccessPanel() {
     ) {
         Text("Notification access required", fontWeight = FontWeight.SemiBold)
         Text(
-            "Enable notification access to forward WhatsApp and Telegram messages.",
+            "Enable notification access to forward applications messages.",
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
         )

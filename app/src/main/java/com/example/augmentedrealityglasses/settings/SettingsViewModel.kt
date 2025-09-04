@@ -77,7 +77,9 @@ class SettingsViewModel(
                 Pair(NotificationSource.WHATSAPP, false),
                 Pair(NotificationSource.TELEGRAM, false),
                 Pair(NotificationSource.CALL, false),
-                Pair(NotificationSource.SMS, false)
+                Pair(NotificationSource.SMS, false),
+                Pair(NotificationSource.GMAIL, false),
+                Pair(NotificationSource.OUTLOOK, false)
             )
         )
     )
