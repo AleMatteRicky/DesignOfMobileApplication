@@ -83,7 +83,14 @@ private val AppTypography = Typography(
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.sp,
         fontSize = 24.sp
-    )
+    ),
+
+    labelMedium = TextStyle(
+        fontFamily = WorkSans,
+        fontWeight = FontWeight.Medium,
+        letterSpacing = 0.sp,
+        fontSize = 14.sp
+    ),
 
 )
 
