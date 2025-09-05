@@ -39,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -205,19 +204,17 @@ fun PermissionsBox(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge.copy(
-                            color = titleColor,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.SemiBold
+                            color = titleColor
                         ),
 
                         )
-                    Spacer(Modifier.height(12.dp))
+
+                    Spacer(Modifier.height(20.dp))
 
                     Text(
                         text = message,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color = textColor,
-                            lineHeight = 22.sp
+                            color = textColor
                         ),
                         textAlign = TextAlign.Center
                     )
@@ -268,11 +265,12 @@ fun PermissionsBox(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Open app settings")
+                            Text(
+                                text = "Open app settings",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         }
                     }
-
-                    Spacer(Modifier.height(4.dp))
                 }
             }
         }
@@ -318,8 +316,8 @@ private fun PermissionStatusList(
                         .replace('_', ' ')
                         .lowercase()
                         .replaceFirstChar { it.titlecase() },
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 18.sp,
                         color = Color(0xFF111827)
                     ),
                     modifier = Modifier.weight(1f)

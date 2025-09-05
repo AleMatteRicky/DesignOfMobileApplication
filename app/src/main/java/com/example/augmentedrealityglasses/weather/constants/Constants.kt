@@ -23,16 +23,21 @@ object Constants {
 
     const val FORECASTS_TO_SEND_WITH_BLE = 4 //max value: 40
 
-    const val ERROR_GENERIC_CURRENT_WEATHER = "Generic error while fetching current weather information. Try again"
-    const val ERROR_NETWORK_CURRENT_WEATHER = "Network error while fetching current weather information. Try again"
+    const val ERROR_GENERIC_CURRENT_WEATHER =
+        "Generic error while fetching current weather information. Try again"
+    const val ERROR_NETWORK_CURRENT_WEATHER =
+        "Network error while fetching current weather information. Try again"
 
-    const val ERROR_GENERIC_FORECASTS = "Generic error while fetching weather forecasts information. Try again"
-    const val ERROR_NETWORK_FORECASTS = "Network error while fetching weather forecasts information. Try again"
+    const val ERROR_GENERIC_FORECASTS =
+        "Generic error while fetching weather forecasts information. Try again"
+    const val ERROR_NETWORK_FORECASTS =
+        "Network error while fetching weather forecasts information. Try again"
 
     const val ERROR_GENERIC_LOCATIONS = "Generic error while searching locations. Try again"
     const val ERROR_NETWORK_LOCATIONS = "Network error while searching locations. Try again"
 
-    const val ERROR_GEOLOCATION_NOT_AVAILABLE = "Position unavailable! Please try again"
+    const val ERROR_GEOLOCATION_NOT_AVAILABLE =
+        "Location unavailable. Turn on geolocation and try again"
     const val ERROR_GEOLOCATION_NO_PERMISSIONS = "No permissions granted"
-    const val ERROR_GEOLOCATION_GENERIC = "An error has occurred while retrieve the geolocation!"
+    const val ERROR_GEOLOCATION_GENERIC = "An error has occurred while retrieve the geolocation"
 }

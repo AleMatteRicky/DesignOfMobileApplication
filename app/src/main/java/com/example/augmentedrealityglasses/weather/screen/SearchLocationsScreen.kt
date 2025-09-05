@@ -22,6 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -102,13 +103,23 @@ fun SearchLocationsScreen(
                 )
             }
 
-            //FIXME: limit Text field width
             OutlinedTextField(
                 value = viewModel.query,
                 onValueChange = {
                     viewModel.updateQuery(it)
                 },
-                placeholder = { Text("Search other locations") },
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp
+                ),
+                placeholder = {
+                    Text(
+                        text = "Search other locations",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 16.sp
+                        ),
+                        color = Color.Gray
+                    )
+                },
                 singleLine = true,
                 leadingIcon = {
                     Icon(
@@ -134,12 +145,13 @@ fun SearchLocationsScreen(
                 item {
                     Text(
                         text = "No results found",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 16.sp
+                        ),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 32.dp),
+                            .fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         color = Color.Gray,
-                        fontSize = 16.sp
                     )
                 }
             } else {
@@ -184,7 +196,12 @@ fun LocationItem(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Text(text = locationName, fontSize = 16.sp)
+            Text(
+                text = locationName,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp
+                )
+            )
         }
     }
 }

@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,20 +44,18 @@ fun BLENotSupportedScreen() {
             Text(
                 text = "Bluetooth LE not supported",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
                     color = titleColor,
-                    fontSize = 22.sp
+                    fontSize = 20.sp
                 ),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(20.dp))
 
             Text(
-                text = "This device does not support Bluetooth Low Energy, required for scanning and connecting to the glasses.\nHowever, you can still use features such as translation and weather. These will run only on this device without sending data to the glasses.",
+                text = "This device does not support Bluetooth Low Energy, required for scanning and connecting to the glasses. However, you can still use features such as translation and weather. These will run only on this device without sending data to the glasses.",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = textColor,
-                    lineHeight = 22.sp
                 ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 12.dp)

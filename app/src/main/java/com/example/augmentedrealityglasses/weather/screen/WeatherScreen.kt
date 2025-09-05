@@ -43,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -263,7 +262,7 @@ fun LocationBar(locationName: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 20.dp),
+            .padding(top = 20.dp, bottom = 15.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -276,11 +275,9 @@ fun LocationBar(locationName: String) {
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                //FIXME: handle long texts
                 text = locationName,
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    fontSize = 20.sp,
                 )
             )
         }
@@ -299,21 +296,22 @@ fun CurrentWeatherBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(top = 20.dp),
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
             Text(
                 text = "${temperature}°",
-                fontSize = 45.sp,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 64.sp
+                ),
             )
             Text(
                 text = conditionName,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 24.sp,
+                )
             )
         }
 
@@ -325,13 +323,21 @@ fun CurrentWeatherBar(
                     modifier = Modifier
                         .size(14.dp)
                         .padding(end = 2.dp),
-                    tint = Color.Gray
+                    tint = Color.Gray //TODO: adjust color
                 )
-                Text(text = "${maxTemperature}°", fontSize = 14.sp, color = Color.Gray)
+                Text(
+                    text = "${maxTemperature}°",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.Gray
+                )
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                Text(text = "/", color = Color.Gray)
+                Text(
+                    text = "/",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.Gray
+                )
 
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -341,14 +347,18 @@ fun CurrentWeatherBar(
                     modifier = Modifier
                         .size(14.dp)
                         .padding(end = 2.dp),
-                    tint = Color.Gray
+                    tint = Color.Gray //TODO: adjust color
                 )
-                Text(text = "${minTemperature}°", fontSize = 14.sp, color = Color.Gray)
+                Text(
+                    text = "${minTemperature}°",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.Gray
+                )
             }
 
             Text(
                 text = "Feels Like: ${feelsLike}°",
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.labelLarge,
                 color = Color.Gray,
                 modifier = Modifier.padding(top = 10.dp)
             )
@@ -383,7 +393,7 @@ fun LocationManagerBar(
             // Fake TextField (just UI, no input)
             Surface(
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.LightGray),
+                border = BorderStroke(1.dp, Color.Black),
                 modifier = Modifier
                     .height(56.dp)
                     .weight(1f)
@@ -399,11 +409,13 @@ fun LocationManagerBar(
                     Icon(
                         painter = painterResource(id = R.drawable.search),
                         contentDescription = null,
-                        tint = Color.Gray
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Search other locations",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 16.sp
+                        ),
                         color = Color.Gray
                     )
                 }
@@ -447,9 +459,9 @@ fun DailyForecastsPanel(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Daily forecasts (updated every 3 hours)",
+                text = "Daily forecasts",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
+                    fontSize = 15.sp
                 ),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -500,8 +512,8 @@ fun DailyForecastItem(
     ) {
         Text(
             text = if (isCurrent) "Now" else timeFmt.format(dateTime),
-            style = MaterialTheme.typography.bodySmall.copy(
-                fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 14.sp
             )
         )
         Image(
@@ -513,8 +525,7 @@ fun DailyForecastItem(
         Text(
             text = "${temperature}°",
             style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
+                fontSize = 23.sp,
             )
         )
     }
@@ -546,7 +557,7 @@ fun MultipleDaysForecastsPanel(
             Text(
                 text = "Next days forecasts",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
+                    fontSize = 15.sp
                 ),
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -607,7 +618,8 @@ fun MultipleDaysForecastsItem(
     ) {
         Text(
             text = if (isCurrentDay) "Today" else dayNameFmt.format(date),
-            style = MaterialTheme.typography.bodyMedium.copy(
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 14.sp,
                 color = contentColor
             ),
             modifier = Modifier.weight(1f)
@@ -633,11 +645,23 @@ fun MultipleDaysForecastsItem(
                         .padding(end = 2.dp),
                     tint = contentColor
                 )
-                Text(text = "${tempMax}°", fontSize = 14.sp, color = contentColor)
+                Text(
+                    text = "${tempMax}°",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 14.sp
+                    ),
+                    color = contentColor
+                )
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                Text(text = "/", color = contentColor)
+                Text(
+                    text = "/",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 14.sp
+                    ),
+                    color = contentColor
+                )
 
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -649,7 +673,13 @@ fun MultipleDaysForecastsItem(
                         .padding(end = 2.dp),
                     tint = contentColor
                 )
-                Text(text = "${tempMin}°", fontSize = 14.sp, color = contentColor)
+                Text(
+                    text = "${tempMin}°",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 14.sp
+                    ),
+                    color = contentColor
+                )
             }
         }
     }
@@ -736,10 +766,7 @@ private fun StatBox(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Medium
-                )
+                style = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(Modifier.height(8.dp))
@@ -774,16 +801,14 @@ private fun StatValue(
     Row(verticalAlignment = Alignment.Bottom) {
         Text(
             text = value,
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 26.sp,
-                color = Color.Black
             )
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = unit,
-            style = MaterialTheme.typography.bodySmall.copy(
+            style = MaterialTheme.typography.bodyMedium.copy(
                 color = Color.Gray
             )
         )
@@ -815,10 +840,7 @@ private fun SunriseSunsetBox(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Medium
-                )
+                style = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(Modifier.height(8.dp))
@@ -829,7 +851,7 @@ private fun SunriseSunsetBox(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(horizontalAlignment = Alignment.Start) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(R.drawable.sunrise),
@@ -839,8 +861,8 @@ private fun SunriseSunsetBox(
                         Spacer(Modifier.width(10.dp))
                         Text(
                             text = timeFmt.format(sunrise),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 26.sp
                             )
                         )
                     }
@@ -862,8 +884,8 @@ private fun SunriseSunsetBox(
                         Spacer(Modifier.width(10.dp))
                         Text(
                             text = timeFmt.format(sunset),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 26.sp
                             )
                         )
                     }
@@ -876,5 +898,5 @@ private fun SunriseSunsetBox(
 @Composable
 fun rememberDayNameFormatter(pattern: String) =
     remember(pattern) {
-        SimpleDateFormat(pattern, Locale.ENGLISH) //TODO: handle language from settings
+        SimpleDateFormat(pattern, Locale.ENGLISH)
     }

@@ -24,10 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun BluetoothDisabledScreen(
@@ -66,21 +64,18 @@ fun BluetoothDisabledScreen(
             Text(
                 text = "Bluetooth disabled",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
                     color = titleColor,
-                    fontSize = 24.sp
                 ),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(15.dp))
 
             //TODO: refine text
             Text(
-                text = "It seems that bluetooth is disabled.",
+                text = "It seems that bluetooth is disabled. Turn on it in order to access the homepage.",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = textColor,
-                    lineHeight = 20.sp
                 ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp)
@@ -102,7 +97,10 @@ fun BluetoothDisabledScreen(
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Enable")
+                    Text(
+                        text = "Enable",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
