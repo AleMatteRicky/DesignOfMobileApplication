@@ -71,7 +71,21 @@ private val AppTypography = Typography(
         fontSize = 28.sp
     ),
 
+    titleMedium = TextStyle(
+        fontFamily = WorkSans,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 0.sp,
+        fontSize = 24.sp
+    ),
+
+    titleSmall = TextStyle(
+        fontFamily = WorkSans,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 0.sp,
+        fontSize = 24.sp
     )
+
+)
 
 @Composable
 fun AppTheme(
