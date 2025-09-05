@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 @Composable
@@ -80,7 +81,7 @@ fun UpdateWrapper(
                         Text(
                             text = text,
                             color = Color.White,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                         )
                     }
@@ -117,7 +118,7 @@ fun UpdateWrapper(
                         Text(
                             text = message,
                             color = Color.White,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                         )
                     }

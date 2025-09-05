@@ -89,8 +89,7 @@ fun FindDeviceScreen(
         ) {
             Text(
                 text = "Available Devices",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.bodyLarge
             )
 
             if (scanning) {
@@ -132,7 +131,7 @@ fun FindDeviceScreen(
                 item {
                     Text(
                         text = "No devices found",
-                        fontSize = 16.sp
+                        style = MaterialTheme.typography.bodyMedium
                     )
 
                 }
@@ -183,7 +182,7 @@ internal fun BluetoothDeviceItem(
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text(
+            Text( //todo check font
                 bluetoothDevice.name ?: "N/A",
                 style = if (isSampleServer) { //todo check what is sample server
                     TextStyle(fontWeight = FontWeight.Bold)

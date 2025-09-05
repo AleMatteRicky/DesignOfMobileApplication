@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
@@ -75,6 +77,7 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = item.label,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp),
                             color = if (selected) Color.Black else Color.Gray
                         )
                         Spacer(modifier = Modifier.height(2.dp))

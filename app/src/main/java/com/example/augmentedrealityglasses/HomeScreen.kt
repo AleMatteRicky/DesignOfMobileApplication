@@ -193,8 +193,7 @@ fun HomeScreen(
                             ) {
                                 Text(
                                     text = "Pair Device",
-                                    fontSize = 30.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleLarge,
                                     modifier = Modifier
                                         .skipToLookaheadSize()
                                         .align(Alignment.CenterHorizontally)
@@ -254,8 +253,7 @@ fun DevicesPanel(
     ) {
         Text(
             text = "Your Devices",
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            fontSize = 28.sp,
+            style = MaterialTheme.typography.titleLarge,
             modifier = Modifier
                 .padding(bottom = 8.dp)
                 .padding(horizontal = 16.dp)
@@ -324,8 +322,7 @@ fun DeviceStatusPanel(
                     if (connected) {
                         Text(
                             text = "Currently connected",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                            lineHeight = MaterialTheme.typography.titleLarge.lineHeight,
+                            style = MaterialTheme.typography.bodyLarge
                         )
 
                         Spacer(
@@ -342,7 +339,7 @@ fun DeviceStatusPanel(
                     } else {
                         Text(
                             text = "Device not connected",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Medium),
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
@@ -373,9 +370,7 @@ fun DevicesListPanel(
                     text = "Previously connected devices",
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 10.dp),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
+                    style = MaterialTheme.typography.bodyLarge,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     color = Color.Black
@@ -445,9 +440,7 @@ fun DeviceRow(
 
             Text(
                 text = deviceName,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
+                style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
