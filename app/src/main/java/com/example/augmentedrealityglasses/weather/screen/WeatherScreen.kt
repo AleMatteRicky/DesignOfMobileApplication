@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,7 +29,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -379,56 +379,45 @@ fun LocationManagerBar(
     onClickGeolocationIcon: () -> Unit,
     geolocationEnabled: Boolean
 ) {
-    Column(
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, Color.Black),
+        color = Color.White,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .height(56.dp)
+            .clickable { onClickSearchBar() }
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             // Fake TextField (just UI, no input)
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.Black),
-                modifier = Modifier
-                    .height(56.dp)
-                    .weight(1f)
-                    .clickable { onClickSearchBar() },
-                color = Color.White
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.search),
-                        contentDescription = null,
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Search other locations",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontSize = 16.sp
-                        ),
-                        color = Color.Gray
-                    )
-                }
-            }
-
+            Icon(
+                painter = painterResource(id = R.drawable.search),
+                contentDescription = null,
+            )
             Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Search other locations",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 16.sp
+                ),
+                color = Color.Gray,
+                modifier = Modifier.weight(1f)
+            )
 
-            IconButton(
-                onClick = onClickGeolocationIcon,
-                enabled = !geolocationEnabled,
+            Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(Color.Transparent)
+                    .fillMaxHeight()
+                    .width(48.dp)
+                    .clickable(
+                        enabled = !geolocationEnabled
+                    ) { onClickGeolocationIcon() },
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.geolocation),
