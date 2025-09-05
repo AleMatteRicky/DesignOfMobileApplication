@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.translation.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier

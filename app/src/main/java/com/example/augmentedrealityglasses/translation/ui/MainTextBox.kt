@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,13 +51,16 @@ fun MainTextBox(viewModel: TranslationViewModel, modifier: Modifier) {
             if (contentText.isEmpty()) {
                 Text(
                     text = "Record text",
-                    color = Color(0xFF717070),
-                    style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 24.sp)
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.titleSmall
                 )
             } else {
                 Text(
                     text = contentText,
-                    fontSize = 24.sp
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
             }
         }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,8 +26,7 @@ fun ResultTextBox(
         Text(
             text = language,
             color = color,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 15.sp),
             modifier = Modifier.padding(bottom = 8.dp).clickable{ onNavigateToLanguageSelection() }
         )
 
@@ -34,8 +34,8 @@ fun ResultTextBox(
             text = contentText,
             color = color,
             softWrap = true,
-            fontSize = 30.sp,
-            lineHeight = 38.sp,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            lineHeight = 33.sp,
             modifier = Modifier.fillMaxWidth()
         )
     }

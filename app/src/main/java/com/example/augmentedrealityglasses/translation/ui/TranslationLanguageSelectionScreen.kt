@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -64,9 +65,8 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
 
                 Text(
                     text = "Select " + (if (uiState.selectingLanguageRole == LanguageRole.TARGET) "target" else "source") + " language",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 22.sp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 16.dp)
                 )
 
 
@@ -81,8 +81,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                 item {
                     Text(
                         text = "Downloaded Languages",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
                     )
                 }
@@ -98,8 +97,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                 item {
                     Text(
                         text = "All Languages",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
                     )
                 }
