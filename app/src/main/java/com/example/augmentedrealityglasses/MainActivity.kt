@@ -51,7 +51,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
-import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
 import com.example.augmentedrealityglasses.settings.SettingsScreen
 import com.example.augmentedrealityglasses.settings.SettingsViewModel
@@ -370,7 +369,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     TranslationHomeScreen(
                                         onScreenComposition = {
-                                            sendChangeScreenBLEMessage("t")
+                                            sendOpenTranslationBLEMessage()
                                         },
                                         onNavigateToHome = {
                                             navController.navigate(
@@ -502,9 +501,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 ) {
                                     WeatherScreen(
-                                        onScreenComposition = {
-                                            sendChangeScreenBLEMessage("w")
-                                        },
+                                        onScreenComposition = {},
                                         onTextFieldClick = {
                                             navController.navigate(ScreenName.WEATHER_SEARCH_LOCATIONS.name)
                                         },
@@ -601,24 +598,27 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * This function creates a ble message that notifies to the external device the change of screen (weather/translate features)
+     * This function creates a ble message that notifies to the external device the change of screen (used only for translation feature)
      */
-    private fun sendChangeScreenBLEMessage(screenTag: String) {
+    private fun sendOpenTranslationBLEMessage() {
         val proxy = (application as App).container.proxy
 
+        //Main json object that is sent through ble connection
         val jsonToSend = JSONObject()
 
-        jsonToSend.put("command", "c")
-        jsonToSend.put("page", screenTag)
+        jsonToSend.put("command", "t")
+        jsonToSend.put("text", "") //Empty text, just to notify the screen change
 
         val msg = jsonToSend.toString()
 
-        if (proxy.isConnected()) {
-            Log.d(TAG, "Change page command sent: $msg")
+        Log.d(TAG, "BLE message:\n$msg")
 
+        if (proxy.isConnected()) {
             lifecycleScope.launch {
                 proxy.send(msg)
             }
+        } else {
+            Log.d(TAG, "External device not connected")
         }
     }
 }
