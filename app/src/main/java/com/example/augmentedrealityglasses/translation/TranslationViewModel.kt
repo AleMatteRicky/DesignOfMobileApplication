@@ -204,7 +204,7 @@ class TranslationViewModel(
                                 }
                                 //send translated text to esp32
                                 Log.d(TAG, translatedText)
-                                if(sendTranslationToExternalDevice) {
+                                if (sendTranslationToExternalDevice) {
                                     sendBluetoothMessage(_uiState.value.translatedText)
                                 }
                             }
@@ -460,7 +460,7 @@ class TranslationViewModel(
                     results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 val newRecognizedText = data.toString().removePrefix("[").removeSuffix("]")
 
-                if(newRecognizedText != "") {
+                if (newRecognizedText != "") {
                     _uiState.update {
                         _uiState.value.copy(
                             recognizedText = newRecognizedText,
@@ -491,9 +491,12 @@ class TranslationViewModel(
                 val newRecognizedText = data.toString().removePrefix("[").removeSuffix("]")
                 val sendTranslationToExternalDevice = i % 5 == 0
 
-                Log.d("Speech Recognition Partial", "Speech recognition partial results received: $newRecognizedText")
+                Log.d(
+                    "Speech Recognition Partial",
+                    "Speech recognition partial results received: $newRecognizedText"
+                )
 
-                if(newRecognizedText != "" && isListening) {
+                if (newRecognizedText != "" && isListening) {
                     _uiState.update {
                         _uiState.value.copy(
                             recognizedText = newRecognizedText
@@ -505,7 +508,7 @@ class TranslationViewModel(
                                 translate(sendTranslationToExternalDevice)
                             } else {
                                 Log.d("send", _uiState.value.recognizedText)
-                                if(sendTranslationToExternalDevice)
+                                if (sendTranslationToExternalDevice)
                                     sendBluetoothMessage(_uiState.value.recognizedText) //the method checks if the device is connected before sending anything
                             }
                         }
