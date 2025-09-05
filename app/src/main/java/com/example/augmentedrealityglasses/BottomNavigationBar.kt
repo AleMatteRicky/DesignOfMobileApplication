@@ -6,9 +6,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -22,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -52,59 +55,71 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
         )
     )
 
-    NavigationBar(
-        modifier = modifier,
-        containerColor = Color(0xFFFCF8F8) //FIXME: fix color
+    Column(
+        modifier = modifier.fillMaxWidth()
     ) {
-        val currentDestination =
-            navController.currentBackStackEntryAsState().value?.destination?.route
 
-        items.forEach { item ->
-            val selected = currentDestination == item.route
+        HorizontalDivider(
+            thickness = Dp.Hairline,
+            color = MaterialTheme.colorScheme.outlineVariant
+                .copy(alpha = 0.6f)
+        )
 
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        painter = item.icon,
-                        contentDescription = item.label,
-                        modifier = Modifier.size(24.dp), //default value for bottom bar icons
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Transparent,
-                ),
-                label = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = item.label,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp),
-                            color = if (selected) Color.Black else Color.Gray
+
+        NavigationBar(
+            modifier = modifier,
+            containerColor = Color(0xFFFCF8F8) //FIXME: fix color
+        ) {
+            val currentDestination =
+                navController.currentBackStackEntryAsState().value?.destination?.route
+
+            items.forEach { item ->
+                val selected = currentDestination == item.route
+
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            painter = item.icon,
+                            contentDescription = item.label,
+                            modifier = Modifier.size(24.dp), //default value for bottom bar icons
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Color.Transparent,
+                    ),
+                    label = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = item.label,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp),
+                                color = if (selected) Color.Black else Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
 
-                        //Animation of the black line under the text of the nav items
-                        val lineWidth by animateDpAsState(
-                            targetValue = if (selected) 24.dp else 0.dp,
-                            animationSpec = tween(durationMillis = 300), label = ""
-                        )
+                            //Animation of the black line under the text of the nav items
+                            val lineWidth by animateDpAsState(
+                                targetValue = if (selected) 24.dp else 0.dp,
+                                animationSpec = tween(durationMillis = 300), label = ""
+                            )
 
-                        Box(
-                            modifier = Modifier
-                                .height(2.dp)
-                                .width(lineWidth)
-                                .background(Color.Black)
-                        )
-                    }
-                },
-                selected = selected,
-                onClick = {
-                    if (currentDestination != item.route) {
-                        navController.navigate(item.route) {
-                            popUpTo(ScreenName.HOME.name)
+                            Box(
+                                modifier = Modifier
+                                    .height(2.dp)
+                                    .width(lineWidth)
+                                    .background(Color.Black)
+                            )
+                        }
+                    },
+                    selected = selected,
+                    onClick = {
+                        if (currentDestination != item.route) {
+                            navController.navigate(item.route) {
+                                popUpTo(ScreenName.HOME.name)
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }
