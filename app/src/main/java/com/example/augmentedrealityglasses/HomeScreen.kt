@@ -321,7 +321,7 @@ fun DeviceStatusPanel(
                 ) {
                     if (connected) {
                         Text(
-                            text = "Currently connected",
+                            text = "Connected",
                             style = MaterialTheme.typography.bodyLarge
                         )
 
@@ -338,7 +338,7 @@ fun DeviceStatusPanel(
                         )
                     } else {
                         Text(
-                            text = "Device not connected",
+                            text = "Not Connected",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -367,7 +367,7 @@ fun DevicesListPanel(
         ) {
             Column {
                 Text(
-                    text = "Previously connected devices",
+                    text = "Paired Devices",
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 10.dp),
                     style = MaterialTheme.typography.bodyLarge,

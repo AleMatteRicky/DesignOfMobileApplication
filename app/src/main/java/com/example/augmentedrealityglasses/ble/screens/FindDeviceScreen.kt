@@ -184,11 +184,7 @@ internal fun BluetoothDeviceItem(
         ) {
             Text( //todo check font
                 bluetoothDevice.name ?: "N/A",
-                style = if (isSampleServer) { //todo check what is sample server
-                    TextStyle(fontWeight = FontWeight.Bold)
-                } else {
-                    TextStyle(fontWeight = FontWeight.Normal)
-                }, fontSize = 16.sp
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 16.sp)
             )
             //Text(bluetoothDevice.address)
 
