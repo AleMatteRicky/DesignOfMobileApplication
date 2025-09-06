@@ -38,7 +38,7 @@ fun MainTextBox(viewModel: TranslationViewModel, modifier: Modifier) {
 //                shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp),
 //                clip = false
 //            )
-            .clip(RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp))
+            .clip(RoundedCornerShape(bottomStart = 22.dp, bottomEnd = 22.dp))
             .background(colorScheme.tertiaryContainer)
             .padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 16.dp)
     ) {

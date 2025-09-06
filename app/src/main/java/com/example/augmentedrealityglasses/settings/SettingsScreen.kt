@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.notifications.ChatNotificationListenerService
 
+//todo check interaction shadow border
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel
@@ -85,7 +86,7 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(24.dp))
 
             Text(
                 text = "Settings",
@@ -93,7 +94,7 @@ fun SettingsScreen(
                 color = theme.primary
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(24.dp))
 
             AppearancePanel(
                 useSystemThemeMode = useSystem,
@@ -103,7 +104,7 @@ fun SettingsScreen(
                 onSelectLight = { viewModel.onSelectLight() }
             )
 
-            Spacer(Modifier.height(25.dp))
+            Spacer(Modifier.height(24.dp))
 
             NotificationFiltersPanel(
                 hasNotificationAccess = hasNotifyAccess,
