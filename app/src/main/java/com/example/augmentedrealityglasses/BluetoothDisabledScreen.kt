@@ -22,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +30,8 @@ import androidx.compose.ui.unit.dp
 fun BluetoothDisabledScreen(
     onEnabled: () -> Unit
 ) {
+    val theme = MaterialTheme.colorScheme
+
     val result =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK) {
@@ -38,9 +39,8 @@ fun BluetoothDisabledScreen(
             }
         }
 
-    //TODO: adjust colors
-    val titleColor = Color(0xFF111827)
-    val textColor = Color(0xFF6B7280)
+    val titleColor = theme.primary
+    val textColor = theme.secondary
 
     Box(
         modifier = Modifier
@@ -56,27 +56,25 @@ fun BluetoothDisabledScreen(
             Icon(
                 painter = painterResource(id = R.drawable.bluetooth_disabled),
                 contentDescription = null,
-                modifier = Modifier.size(96.dp)
+                modifier = Modifier.size(96.dp),
+                tint = theme.primary
             )
 
             Spacer(Modifier.height(20.dp))
 
             Text(
                 text = "Bluetooth disabled",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    color = titleColor,
-                ),
+                style = MaterialTheme.typography.titleLarge,
+                color = titleColor,
                 textAlign = TextAlign.Center
             )
 
             Spacer(Modifier.height(15.dp))
 
-            //TODO: refine text
             Text(
-                text = "It seems that bluetooth is disabled. Turn on it in order to access the homepage.",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = textColor,
-                ),
+                text = "It seems that bluetooth is disabled. Turn on it in order to access the homepage and connect your device",
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
@@ -93,8 +91,8 @@ fun BluetoothDisabledScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
+                        containerColor = theme.onSurface,
+                        contentColor = theme.inversePrimary
                     )
                 ) {
                     Text(

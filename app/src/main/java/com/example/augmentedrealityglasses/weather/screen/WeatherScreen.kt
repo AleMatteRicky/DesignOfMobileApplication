@@ -1,6 +1,5 @@
 package com.example.augmentedrealityglasses.weather.screen
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -274,14 +273,14 @@ fun LocationBar(locationName: String) {
             Icon(
                 painter = painterResource(id = R.drawable.location),
                 contentDescription = null,
-                modifier = Modifier.size(30.dp),
+                modifier = Modifier.size(25.dp),
                 tint = theme.primary
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = locationName,
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontSize = 20.sp,
+                    fontSize = 25.sp,
                 ),
                 color = theme.primary
             )
@@ -401,7 +400,6 @@ fun LocationManagerBar(
 
     Surface(
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, Color.Black),
         color = theme.tertiaryContainer,
         modifier = Modifier
             .fillMaxWidth()

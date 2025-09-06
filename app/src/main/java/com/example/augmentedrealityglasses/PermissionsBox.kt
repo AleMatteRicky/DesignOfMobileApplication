@@ -173,6 +173,8 @@ fun PermissionsBox(
         }
     }
 
+    val theme = MaterialTheme.colorScheme
+
     if (satisfied) {
         // Show normal screen content
         content()
@@ -182,6 +184,7 @@ fun PermissionsBox(
             modifier = modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 28.dp)
+                .background(theme.background)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
@@ -190,32 +193,29 @@ fun PermissionsBox(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    //TODO: adjust colors
-                    val titleColor = Color(0xFF111827)
-                    val textColor = Color(0xFF6B7280)
+                    val titleColor = theme.primary
+                    val textColor = theme.secondary
 
                     Icon(
                         painter = painterResource(id = iconId),
                         contentDescription = null,
-                        modifier = Modifier.size(84.dp)
+                        modifier = Modifier.size(84.dp),
+                        tint = theme.primary
                     )
                     Spacer(Modifier.height(24.dp))
 
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = titleColor
-                        ),
-
-                        )
+                        style = MaterialTheme.typography.titleLarge,
+                        color = titleColor
+                    )
 
                     Spacer(Modifier.height(20.dp))
 
                     Text(
                         text = message,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = textColor
-                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = textColor,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -248,14 +248,15 @@ fun PermissionsBox(
                                 .height(56.dp),
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Black,
-                                contentColor = Color.White
+                                containerColor = theme.onSurface,
+                                contentColor = theme.inversePrimary
                             )
                         ) {
                             Text(grantLabel)
                         }
                     } else {
                         Button(
+                            modifier = Modifier.fillMaxWidth(),
                             onClick = {
                                 val intent = Intent(
                                     Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -263,7 +264,10 @@ fun PermissionsBox(
                                 ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 activity.startActivity(intent)
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = theme.onSurface,
+                                contentColor = theme.inversePrimary
+                            )
                         ) {
                             Text(
                                 text = "Open app settings",
@@ -283,10 +287,12 @@ private fun PermissionStatusList(
     grantedState: Map<String, Boolean>,
     onPermissionClick: (String) -> Unit
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Column(modifier = Modifier.fillMaxWidth()) {
         permissionsRequired.forEach { (perm, mandatory) ->
             val granted = grantedState[perm] == true
-            val lineColor = when {
+            val lineColor = when { //TODO: change colors?
                 granted -> Color.Green
                 mandatory -> Color.Red
                 else -> Color.Gray
@@ -310,16 +316,18 @@ private fun PermissionStatusList(
                         .size(10.dp)
                         .background(lineColor, RoundedCornerShape(50))
                 )
+
                 Spacer(Modifier.width(10.dp))
+
                 Text(
                     text = perm.substringAfterLast('.')
                         .replace('_', ' ')
                         .lowercase()
                         .replaceFirstChar { it.titlecase() },
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 18.sp,
-                        color = Color(0xFF111827)
+                        fontSize = 18.sp
                     ),
+                    color = theme.primary,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
@@ -328,9 +336,8 @@ private fun PermissionStatusList(
                         mandatory -> "Required"
                         else -> "Optional"
                     },
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF6B7280)
-                    )
+                    style = MaterialTheme.typography.bodySmall,
+                    color = theme.secondary
                 )
             }
         }

@@ -20,12 +20,15 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -65,6 +68,8 @@ fun SettingsScreen(
     //Access of the application to read phone notifications
     val hasNotifyAccess by rememberNotificationAccessState()
 
+    val theme = MaterialTheme.colorScheme
+
     LaunchedEffect(Unit) {
         viewModel.receiveBLEUpdates()
     }
@@ -77,7 +82,7 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F6F7)) //FIXME: fix color
+                .background(theme.background)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
@@ -86,7 +91,7 @@ fun SettingsScreen(
             Text(
                 text = "Settings",
                 style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground
+                color = theme.primary
             )
 
             Spacer(Modifier.height(20.dp))
@@ -119,12 +124,14 @@ fun AppearancePanel(
     onSelectDark: () -> Unit,
     onSelectLight: () -> Unit
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Text(
         text = "Appearance",
         style = MaterialTheme.typography.titleSmall.copy(
             fontSize = 22.sp
         ),
-        color = MaterialTheme.colorScheme.onBackground
+        color = theme.primary
     )
 
     Spacer(Modifier.height(10.dp))
@@ -132,7 +139,7 @@ fun AppearancePanel(
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -157,12 +164,13 @@ fun AppearancePanel(
                         text = "Use device setting",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 18.sp
-                        )
+                        ),
+                        color = theme.primary
                     )
                     Text(
                         "Follow the device theme",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = theme.secondary
                     )
                 }
                 Checkbox(
@@ -171,7 +179,7 @@ fun AppearancePanel(
                 )
             }
 
-            HorizontalDivider(color = Color(0xFFE8E8E8))
+            HorizontalDivider(color = Color.LightGray) //TODO: adjust color
 
             Row(
                 modifier = Modifier
@@ -191,20 +199,40 @@ fun AppearancePanel(
                         text = "Dark mode",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontSize = 18.sp
-                        )
+                        ),
+                        color = theme.primary
                     )
                     val subtitle = if (isDarkSelected) "Currently Dark"
                     else "Currently Light"
                     Text(
                         subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = theme.secondary
                     )
                 }
+
                 Switch(
                     enabled = !useSystemThemeMode,
                     checked = isDarkSelected,
-                    onCheckedChange = null
+                    onCheckedChange = null,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = theme.inverseSurface,
+                        checkedTrackColor = theme.inversePrimary,
+                        checkedBorderColor = theme.secondary,
+
+                        uncheckedThumbColor = theme.secondary,
+                        uncheckedTrackColor = theme.inverseSurface,
+                        uncheckedBorderColor = theme.secondary,
+
+
+                        disabledCheckedThumbColor = Color.LightGray,
+                        disabledCheckedTrackColor = theme.inversePrimary,
+                        disabledCheckedBorderColor = Color.LightGray,
+
+                        disabledUncheckedThumbColor = Color.LightGray,
+                        disabledUncheckedTrackColor = theme.inverseSurface,
+                        disabledUncheckedBorderColor = Color.LightGray,
+                    )
                 )
             }
         }
@@ -218,21 +246,22 @@ fun NotificationFiltersPanel(
     onEnableNotificationSource: (NotificationSource) -> Unit,
     onDisableNotificationSource: (NotificationSource) -> Unit
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Text(
         text = "Notification filters",
         style = MaterialTheme.typography.titleSmall.copy(
             fontSize = 22.sp
         ),
-        color = MaterialTheme.colorScheme.onBackground
+        color = theme.primary
     )
 
     Spacer(Modifier.height(5.dp))
 
     Text(
         text = "Choose which notifications to forward to your glasses",
-        style = MaterialTheme.typography.bodySmall.copy(
-            color = Color.Gray
-        )
+        style = MaterialTheme.typography.bodySmall,
+        color = theme.secondary
     )
 
     Spacer(Modifier.height(10.dp))
@@ -240,7 +269,7 @@ fun NotificationFiltersPanel(
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 10.dp)
@@ -260,7 +289,7 @@ fun NotificationFiltersPanel(
                 }
             )
 
-            HorizontalDivider(color = Color(0xFFE8E8E8))
+            HorizontalDivider(color = Color.LightGray) //TODO: adjust color?
 
             AppToggleRow(
                 title = "Sms",
@@ -271,7 +300,7 @@ fun NotificationFiltersPanel(
                 }
             )
 
-            HorizontalDivider(color = Color(0xFFE8E8E8))
+            HorizontalDivider(color = Color.LightGray) //TODO: adjust color or remove it?
 
             if (!hasNotificationAccess) {
                 NotificationAccessPanel()
@@ -285,7 +314,7 @@ fun NotificationFiltersPanel(
                     }
                 )
 
-                HorizontalDivider(color = Color(0xFFE8E8E8))
+                HorizontalDivider(color = Color.LightGray) //TODO: adjust color?
 
                 AppToggleRow(
                     title = "Telegram",
@@ -296,7 +325,7 @@ fun NotificationFiltersPanel(
                     }
                 )
 
-                HorizontalDivider(color = Color(0xFFE8E8E8))
+                HorizontalDivider(color = Color.LightGray) //TODO: adjust color?
 
                 AppToggleRow(
                     title = "Gmail",
@@ -307,7 +336,7 @@ fun NotificationFiltersPanel(
                     }
                 )
 
-                HorizontalDivider(color = Color(0xFFE8E8E8))
+                HorizontalDivider(color = Color.LightGray) //TODO: adjust color?
 
                 AppToggleRow(
                     title = "Outlook",
@@ -328,6 +357,8 @@ private fun AppToggleRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -341,12 +372,23 @@ private fun AppToggleRow(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 18.sp
-                )
+                ),
+                color = theme.primary
             )
         }
+
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = theme.inverseSurface,
+                checkedTrackColor = theme.primary,
+                checkedBorderColor = theme.secondary,
+
+                uncheckedThumbColor = theme.secondary,
+                uncheckedTrackColor = theme.inverseSurface,
+                uncheckedBorderColor = theme.secondary,
+            )
         )
     }
 }
@@ -375,10 +417,12 @@ fun rememberNotificationAccessState(): State<Boolean> {
 @Composable
 fun NotificationAccessPanel() {
     val context = LocalContext.current
+    val theme = MaterialTheme.colorScheme
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF7F7F7), RoundedCornerShape(12.dp))
+            .background(theme.background, RoundedCornerShape(12.dp)) //TODO: adjust color
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -386,15 +430,17 @@ fun NotificationAccessPanel() {
             text = "Notification access required",
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontSize = 18.sp
-            )
+            ),
+            color = theme.primary
         )
         Text(
             text = "Enable notification access to forward applications messages.",
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            color = Color.Gray //TODO: adjust color
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Button(
+                colors = ButtonDefaults.buttonColors(containerColor = theme.onPrimaryContainer),
                 onClick = {
                     context.startActivity(
                         Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
@@ -405,7 +451,8 @@ fun NotificationAccessPanel() {
                     text = "Open settings",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = 14.sp
-                    )
+                    ),
+                    color = theme.primary
                 )
             }
         }
