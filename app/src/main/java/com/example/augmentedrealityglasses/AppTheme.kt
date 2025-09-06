@@ -26,11 +26,11 @@ private val LightColors = lightColorScheme(
 private val DarkColors = darkColorScheme(
     primary = Color.hsl(0f, 0f, 0.95f),   // primary text color
     secondary = Color.hsl(0f, 0f, 0.70f), // secondary text color
-    inversePrimary = Color.hsl(0f, 0f, 95f), //used for selected text and icons
-    onBackground = Color.hsl(0f, 0f, 0f), // close to white used for background
+    inversePrimary = Color.hsl(0f, 0f, 0.95f), //used for selected text and icons
+    onBackground = Color.hsl(0f, 0f, 0f),
     onPrimaryContainer = Color.hsl(0f, 0f, 0.07f), // primary info panel
     onSurface = Color.hsl(0f, 0f, 0.15f), // used for selected or interactable components
-    //used for selected text and icons = Color.hsl(0f, 0f, 0f) //used for download track
+    inverseSurface = Color.hsl(0f, 0f, 0f) //used for download track
 )
 
 
