@@ -50,7 +50,7 @@ fun LanguageSelectionBox(
         Image(
             painter = painterResource(id = Icon.RIGHT_ARROW.getID()),
             contentDescription = "An arrow from the source language to the target language",
-            Modifier.align(Alignment.Center)
+            Modifier.align(Alignment.Center) //todo
         )
 
         SelectLanguageButton(

@@ -1,5 +1,7 @@
 package com.example.augmentedrealityglasses.translation.ui
 
+import android.R
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +31,8 @@ import androidx.compose.ui.window.Dialog
 @Composable
 fun DisplayModelMissing(onClickDownload: () -> Unit, resetVisibility: () -> Unit) {
     var showDialog by remember { mutableStateOf(true) }
+    val colorScheme = MaterialTheme.colorScheme
+
     if (showDialog) {
         Dialog(onDismissRequest = {
             resetVisibility()
@@ -36,10 +41,10 @@ fun DisplayModelMissing(onClickDownload: () -> Unit, resetVisibility: () -> Unit
             Surface(
                 shape = RoundedCornerShape(15.dp),
                 tonalElevation = 10.dp,
-                color = Color.White,
+                color = colorScheme.background,
                 modifier = Modifier
                     .padding(20.dp)
-                    .fillMaxWidth(0.7f)
+                    .fillMaxWidth(0.8f)
             ) {
                 Column(
                     modifier = Modifier
@@ -49,6 +54,8 @@ fun DisplayModelMissing(onClickDownload: () -> Unit, resetVisibility: () -> Unit
                 ) {
                     Text(
                         "This model is not available on the device, download it in order to translate in this language",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colorScheme.primary,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.height(8.dp)) //could be removed
@@ -59,7 +66,11 @@ fun DisplayModelMissing(onClickDownload: () -> Unit, resetVisibility: () -> Unit
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Download", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Download",
+                            color = colorScheme.inversePrimary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }

@@ -33,6 +33,7 @@ fun SelectLanguageButton(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     Button(
         onClick = {
@@ -41,14 +42,14 @@ fun SelectLanguageButton(
             }
         },
         enabled = enabled,
-        modifier = modifier
-            .shadow(
-                elevation = 4.dp,
-                shape = RoundedCornerShape(14.dp),
-                clip = false
-            ),
+        modifier = modifier,
+//            .shadow(
+//                elevation = 4.dp,
+//                shape = RoundedCornerShape(14.dp),
+//                clip = false
+//            ),
         shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.tertiaryContainer),
         contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
     ) {
         val buttonLanguage =
@@ -61,7 +62,7 @@ fun SelectLanguageButton(
         }
         Text(
             textContent,
-            color = Color.Black,
+            color = colorScheme.primary,
             softWrap = true,
             maxLines = 2,
             textAlign = TextAlign.Center,

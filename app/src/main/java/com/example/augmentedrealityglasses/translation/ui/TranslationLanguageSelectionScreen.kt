@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.translation.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -39,6 +40,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
     val uiState by viewModel.uiState.collectAsState()
     val downloadedLanguageTags by uiState.downloadedLanguageTags.collectAsState()
     val notDownloadedLanguageTags by uiState.notDownloadedLanguageTags.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     UpdateWrapper(
         message = message,
@@ -46,7 +48,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
         onErrorDismiss = { viewModel.hideErrorMessage() },
         onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }) {
 
-        Column(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().background(colorScheme.onBackground)) {
 
             Row(
                 Modifier
@@ -59,12 +61,13 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                     Icon(
                         painter = painterResource(com.example.augmentedrealityglasses.Icon.BACK_ARROW.getID()),
                         contentDescription = "Go back to translation home screen",
-                        tint = Color.Black
+                        tint = colorScheme.primary
                     )
                 }
 
                 Text(
                     text = "Select " + (if (uiState.selectingLanguageRole == LanguageRole.TARGET) "target" else "source") + " language",
+                    color = colorScheme.primary,
                     style = MaterialTheme.typography.titleMedium.copy(fontSize = 22.sp),
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 16.dp)
                 )
@@ -82,7 +85,8 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                     Text(
                         text = "Downloaded Languages",
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                        color = colorScheme.primary
                     )
                 }
 
@@ -98,7 +102,8 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
                     Text(
                         text = "All Languages",
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                        color = colorScheme.primary
                     )
                 }
 

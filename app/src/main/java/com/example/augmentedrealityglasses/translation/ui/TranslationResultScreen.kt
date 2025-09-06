@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,6 +43,7 @@ fun TranslationResultScreen(
     val recordButtonSize = 65.dp
     val uiState by viewModel.uiState.collectAsState()
     val message by viewModel.errorMessage.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     UpdateWrapper(
         message = message,
@@ -49,7 +51,11 @@ fun TranslationResultScreen(
         onErrorDismiss = { viewModel.hideErrorMessage() },
         onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }) {
 
-        Box(Modifier.fillMaxSize()) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(colorScheme.background)
+        ) {
 
             Row(
                 Modifier
@@ -62,7 +68,7 @@ fun TranslationResultScreen(
                     Icon(
                         painter = painterResource(com.example.augmentedrealityglasses.Icon.BACK_ARROW.getID()),
                         contentDescription = "Go back to translation home screen",
-                        tint = Color.Black
+                        tint = colorScheme.primary
                     )
                 }
             }
@@ -79,7 +85,7 @@ fun TranslationResultScreen(
                 ResultTextBox(
                     modifier = Modifier,
                     contentText = uiState.recognizedText,
-                    color = Color.Black,
+                    color = colorScheme.primary,
                     language = if (sourceLanguage != null) getFullLengthName(sourceLanguage) else "Select Source Language",
                     onNavigateToLanguageSelection = {
                         viewModel.setSelectingLanguageRole(LanguageRole.SOURCE)
@@ -99,7 +105,10 @@ fun TranslationResultScreen(
                         modifier = Modifier
                             .fillMaxWidth(0.6f)
                             .height(2.dp)
-                            .background(color = Color.Black, shape = RoundedCornerShape(2.dp))
+                            .background(
+                                color = colorScheme.primary,
+                                shape = RoundedCornerShape(2.dp)
+                            )
                     )
                 }
 

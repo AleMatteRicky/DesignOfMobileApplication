@@ -29,7 +29,7 @@ fun WaveSoundRippleEffect(modifier: Modifier, viewModel: TranslationViewModel) {
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium
-        ) // quasi real-time
+        )
     )
 
     Box(
@@ -37,6 +37,6 @@ fun WaveSoundRippleEffect(modifier: Modifier, viewModel: TranslationViewModel) {
             .scale(animatedScale)
             .clip(CircleShape)
             .size(65.dp)
-            .background(Color(0xFFDCDCE8))
+            .background(Color(0xFFDCDCE8)) //todo colorscheme?
     )
 }

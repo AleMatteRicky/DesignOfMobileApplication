@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
@@ -42,6 +42,7 @@ fun TranslationHomeScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val message by viewModel.errorMessage.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     UpdateWrapper(
         message = message,
@@ -52,7 +53,7 @@ fun TranslationHomeScreen(
             //todo check if it does support vertical scrolling
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFFAFAFA))
+                .background(colorScheme.background)
         ) {
             val recordButtonSize = 65.dp
             var newMaxHeight = recordButtonSize * 1.2f + 10.dp

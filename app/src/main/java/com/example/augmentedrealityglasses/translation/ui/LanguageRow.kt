@@ -39,6 +39,7 @@ fun LanguageRow(
     isDownloaded: Boolean
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     val downloadingLanguageTags =
         uiState.currentlyDownloadingLanguageTags.collectAsState()
@@ -69,7 +70,7 @@ fun LanguageRow(
         modifier
             .padding(horizontal = 10.dp)
             .background(
-                color = if (isSelected) Color.Black else Color(0xFFFAFAFA),
+                color = if (isSelected) colorScheme.onSurface else colorScheme.onBackground,
                 shape = RoundedCornerShape(25.dp)
             )
             .fillMaxWidth()
@@ -96,7 +97,7 @@ fun LanguageRow(
             ), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = if (languageTag != null) getFullLengthName(languageTag) else "-",
-            color = if (isSelected) Color.White else Color.Black,
+            color = if (isSelected) colorScheme.inversePrimary else colorScheme.primary,
             style = MaterialTheme.typography.bodyMedium
         )
 
@@ -119,15 +120,15 @@ fun LanguageRow(
                         Icon(
                             painter = painterResource(icon),
                             contentDescription = "Download language",
-                            tint = if (isSelected) Color.White else Color.Black
+                            tint = if (isSelected) colorScheme.inversePrimary else colorScheme.primary
                         )
                     }
                 } else {
                     CircularProgressIndicator(
                         modifier = Modifier.size(27.dp),
                         strokeWidth = 3.dp,
-                        color = Color.Black,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        color = colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.inverseOnSurface,
                     )
 
                 }
