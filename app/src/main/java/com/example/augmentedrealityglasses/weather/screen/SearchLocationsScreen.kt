@@ -13,13 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -90,19 +89,6 @@ fun SearchLocationsScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            IconButton(
-                onClick = { onBackClick() },
-                modifier = Modifier
-                    .size(32.dp)
-                    .padding(bottom = 8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.arrow_back),
-                    contentDescription = "Back"
-                )
-            }
-
             OutlinedTextField(
                 value = viewModel.query,
                 onValueChange = {
@@ -122,40 +108,65 @@ fun SearchLocationsScreen(
                 },
                 singleLine = true,
                 leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.search),
-                        contentDescription = null,
-                    )
+                    IconButton(
+                        onClick = {
+                            onBackClick()
+                        },
+                        modifier = Modifier.size(31.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.arrow_back),
+                            contentDescription = "Back",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                },
+                trailingIcon = {
+                    if (viewModel.query.isNotEmpty()) {
+                        IconButton(
+                            onClick = {
+                                viewModel.updateQuery("")
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.cancel),
+                                contentDescription = "Clear",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
                 },
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .height(56.dp)
+                    .fillMaxWidth()
                     .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
                     .widthIn(max = 280.dp) //Limit the text field width
                     .focusRequester(focusRequester) //Link the focus requester
             )
-
-            Spacer(modifier = Modifier.width(8.dp))
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(15.dp))
 
-        LazyColumn {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
             if (viewModel.showNoResults && viewModel.searchedLocations.isEmpty()) {
-                item {
-                    Text(
-                        text = "No results found",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 16.sp
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
-                        color = Color.Gray,
-                    )
-                }
+                Text(
+                    text = "No results found",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 16.sp
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray,
+                )
             } else {
-                items(viewModel.searchedLocations) { location ->
+                viewModel.searchedLocations.forEachIndexed { index, location ->
                     LocationItem(
                         locationName = location.getFullName(),
                         onClick = {
@@ -163,6 +174,15 @@ fun SearchLocationsScreen(
                             onBackClick()
                         }
                     )
+
+                    // Divider between items but not after the last element
+                    if (index < viewModel.searchedLocations.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            thickness = 0.6.dp,
+                            color = Color.LightGray
+                        )
+                    }
                 }
             }
         }
@@ -174,34 +194,24 @@ fun LocationItem(
     locationName: String,
     onClick: () -> Unit
 ) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .clickable(onClick = { onClick() })
+            .padding(horizontal = 16.dp, vertical = 15.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Default.Place,
-                contentDescription = null,
-                tint = Color.Gray
-            )
+        Icon(
+            imageVector = Icons.Default.Place,
+            contentDescription = null,
+            tint = Color.Gray
+        )
 
-            Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
-            Text(
-                text = locationName,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp
-                )
-            )
-        }
+        Text(
+            text = locationName,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp)
+        )
     }
 }
