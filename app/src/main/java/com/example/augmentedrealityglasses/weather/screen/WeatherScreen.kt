@@ -151,7 +151,7 @@ fun WeatherScreen(
                         }
                     }
 
-                    SwipeDownRefresh( //TODO: adapt to app theme?
+                    SwipeDownRefresh(
                         isRefreshing = viewModel.isRefreshing,
                         canRefresh = canRefresh,
                         onRefresh = {
@@ -717,8 +717,9 @@ fun AdditionalInfosGrid(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
+            //TODO: add attribution: https://www.flaticon.com/free-icon/gauge_4284060?related_id=4283902&origin=search
             StatBox(
-                title = "Pressure", //TODO: adjust icon (light/dark)
+                title = "Pressure",
                 iconRes = R.drawable.pressure,
                 content = {
                     StatValue(
@@ -726,7 +727,8 @@ fun AdditionalInfosGrid(
                         unit = "hPa"
                     )
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                iconSize = 47.dp
             )
 
             StatBox(
@@ -754,13 +756,15 @@ fun AdditionalInfosGrid(
                 modifier = Modifier.weight(1f)
             )
 
+            //TODO: add attribution: https://www.flaticon.com/free-icon/wind_2529971?term=wind&page=3&position=43&origin=search&related_id=2529971
             StatBox(
                 title = "Wind Speed",
                 iconRes = R.drawable.wind,
                 content = {
                     StatValue(value = windSpeed.toString(), unit = "km/h")
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                iconSize = 43.dp
             )
         }
     }
@@ -771,7 +775,8 @@ private fun StatBox(
     title: String,
     content: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    iconRes: Int? = null
+    iconRes: Int? = null,
+    iconSize: Dp = 34.dp
 ) {
     val theme = MaterialTheme.colorScheme
 
@@ -805,7 +810,7 @@ private fun StatBox(
                     Image(
                         painter = painterResource(iconRes),
                         contentDescription = null,
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(iconSize)
                     )
                 }
             }
