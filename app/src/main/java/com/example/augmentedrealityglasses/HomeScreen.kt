@@ -37,6 +37,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -477,11 +478,14 @@ fun SharedTransitionScope.AddDevicesButton(
 
     val colorScheme = MaterialTheme.colorScheme
 
-    FloatingActionButton(
+    IconButton(
         onClick = onClick,
-        shape = CircleShape,
-        containerColor = if (!showFindDevicePanel) colorScheme.onSurface else colorScheme.tertiaryContainer, //todo check else
-        modifier = modifier.size(65.dp)
+        modifier = modifier
+            .size(65.dp)
+            .background(
+                shape = CircleShape,
+                color = if (!showFindDevicePanel) colorScheme.onSurface else colorScheme.tertiaryContainer
+            )
     ) {
         Icon(
             imageVector = Icons.Default.Add,
