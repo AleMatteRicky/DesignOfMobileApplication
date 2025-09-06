@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +58,7 @@ fun FindDeviceScreen(
     checkBluetoothConnectPermission(LocalContext.current)
 
     val scanning by viewModel.isScanning.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     val devicesOfferingTheService by viewModel.scannedDevices.collectAsState()
 
@@ -76,6 +78,7 @@ fun FindDeviceScreen(
         Modifier
             .fillMaxSize()
             .clip(shape = RoundedCornerShape(22.dp))
+            .background(colorScheme.tertiaryContainer)
     ) {
         Row(
             Modifier
@@ -87,15 +90,16 @@ fun FindDeviceScreen(
         ) {
             Text(
                 text = "Available Devices",
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                color = colorScheme.primary
             )
 
             if (scanning) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(27.dp),
                     strokeWidth = 3.dp,
-                    color = Color.Black,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    color = colorScheme.primary,
+                    trackColor = colorScheme.inverseSurface
                 )
             } else {
                 Box(
@@ -109,9 +113,10 @@ fun FindDeviceScreen(
                             }
                         ), contentAlignment = Alignment.Center
                 ) {
-                    Image(
+                    androidx.compose.material3.Icon(
                         painter = painterResource(id = Icon.REFRESH.getID()),
                         contentDescription = "refresh scanning for new devices",
+                        tint = colorScheme.primary,
                         modifier = Modifier.size(27.dp)
                     )
                 }
@@ -129,6 +134,7 @@ fun FindDeviceScreen(
                 item {
                     Text(
                         text = "No devices found",
+                        color = colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium
                     )
 
@@ -161,12 +167,14 @@ internal fun BluetoothDeviceItem(
     isSampleServer: Boolean = false,
     onConnect: (BluetoothDevice) -> Unit,
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         onClick = { onConnect(bluetoothDevice) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White,
-            contentColor = MaterialTheme.colorScheme.onSurface
+            containerColor = colorScheme.tertiaryContainer,
+            contentColor = colorScheme.surfaceContainer
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp,
@@ -182,7 +190,8 @@ internal fun BluetoothDeviceItem(
         ) {
             Text( //todo check font
                 bluetoothDevice.name ?: "N/A",
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 16.sp)
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 16.sp),
+                color = colorScheme.primary
             )
             //Text(bluetoothDevice.address)
 

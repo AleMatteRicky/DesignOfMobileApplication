@@ -67,6 +67,7 @@ fun HomeScreen(
     onNavigateFindDevice: () -> Unit,
     navigationBarHeight: Dp
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val configuration = LocalConfiguration.current
     val screenHeightDp = configuration.screenHeightDp.dp
     val screenWidthDp = configuration.screenWidthDp.dp
@@ -192,6 +193,7 @@ fun HomeScreen(
                                 Text(
                                     text = "Pair Device",
                                     style = MaterialTheme.typography.titleLarge,
+                                    color = colorScheme.primary,
                                     modifier = Modifier
                                         .skipToLookaheadSize()
                                         .align(Alignment.CenterHorizontally)
@@ -206,12 +208,12 @@ fun HomeScreen(
                                         .height(boxHeight)
                                         .width(boxWidth)
                                         .clip(shape = RoundedCornerShape(22.dp))
-                                        .background(Color.White)
-                                        .border(
-                                            0.5.dp,
-                                            Color.Black,
-                                            shape = RoundedCornerShape(22.dp)
-                                        )
+                                        .background(colorScheme.tertiaryContainer)
+//                                        .border(
+//                                            0.5.dp,
+//                                            Color.Black,
+//                                            shape = RoundedCornerShape(22.dp)
+//                                        )
 
                                 ) {
                                     FindDeviceScreen(
@@ -244,6 +246,9 @@ fun DevicesPanel(
     onDeviceStatusPanelClick: () -> Unit,
     onDeviceClick: (BluetoothDevice) -> Unit
 ) {
+
+    val colorScheme = MaterialTheme.colorScheme
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -252,6 +257,7 @@ fun DevicesPanel(
         Text(
             text = "Your Devices",
             style = MaterialTheme.typography.titleLarge,
+            color = colorScheme.primary,
             modifier = Modifier
                 .padding(bottom = 8.dp)
                 .padding(horizontal = 16.dp)
@@ -276,22 +282,26 @@ fun DeviceStatusPanel(
     connected: Boolean,
     onClick: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Box(
-        modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp)
+        modifier = Modifier
+            .padding(horizontal = 13.dp, vertical = 10.dp)
+            .background(color = colorScheme.background)
     ) {
         Card(
             onClick = onClick,
             enabled = connected,
             shape = RoundedCornerShape(22.dp),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 8.dp,
-                disabledElevation = 1.dp
-            ),
+//            elevation = CardDefaults.cardElevation(
+//                defaultElevation = 8.dp,
+//                disabledElevation = 1.dp
+//            ),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                disabledContainerColor = Color.White,
-                disabledContentColor = MaterialTheme.colorScheme.onSurface
+                containerColor = colorScheme.primaryContainer,
+                contentColor = Color.Red,
+                disabledContainerColor = colorScheme.tertiaryContainer,
+                disabledContentColor = colorScheme.surfaceContainer
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -317,29 +327,34 @@ fun DeviceStatusPanel(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
+                    var primaryText: String
+                    var secondaryText: String
+
                     if (connected) {
-                        Text(
-                            text = "Connected",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(6.dp)
-                        )
-
-                        Text(
-                            text = "Click here to disconnect",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        primaryText = "Connected"
+                        secondaryText = "Click here to disconnect"
                     } else {
-                        Text(
-                            text = "Not Connected",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        primaryText = "Not Connected"
+                        secondaryText = "Select a device"
+
                     }
+                    Text(
+                        text = primaryText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = colorScheme.primary
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(6.dp)
+                    )
+
+                    Text(
+                        text = secondaryText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colorScheme.secondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
@@ -353,6 +368,8 @@ fun DevicesListPanel(
     modifier: Modifier = Modifier,
     onDeviceClick: (BluetoothDevice) -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Box(
         modifier = modifier.padding(13.dp)
     ) {
@@ -360,8 +377,8 @@ fun DevicesListPanel(
             modifier = Modifier
                 .fillMaxSize(),
             shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            colors = CardDefaults.cardColors(containerColor = colorScheme.tertiaryContainer),
+            //elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column {
                 Text(
@@ -371,10 +388,10 @@ fun DevicesListPanel(
                     style = MaterialTheme.typography.bodyLarge,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    color = Color.Black
+                    color = colorScheme.primary
                 )
 
-                HorizontalDivider(
+                HorizontalDivider( //todo
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 8.dp),
@@ -407,17 +424,19 @@ fun DeviceRow(
     deviceName: String,
     onDeviceClick: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         onClick = onDeviceClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White,
-            contentColor = MaterialTheme.colorScheme.onSurface
+            containerColor = colorScheme.tertiaryContainer,
+            contentColor = colorScheme.surfaceContainer
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 0.dp,
-            pressedElevation = 4.dp
-        ),
+//        elevation = CardDefaults.cardElevation(
+//            defaultElevation = 0.dp,
+//            pressedElevation = 4.dp
+//        ),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -431,7 +450,8 @@ fun DeviceRow(
             Icon(
                 painter = painterResource(id = R.drawable.bluetooth_connected), //FIXME: change icon
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
+                tint = colorScheme.primary
             )
 
             Spacer(Modifier.width(12.dp))
@@ -439,6 +459,7 @@ fun DeviceRow(
             Text(
                 text = deviceName,
                 style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -454,16 +475,18 @@ fun SharedTransitionScope.AddDevicesButton(
     showFindDevicePanel: Boolean
 ) {
 
+    val colorScheme = MaterialTheme.colorScheme
+
     FloatingActionButton(
         onClick = onClick,
         shape = CircleShape,
-        containerColor = if (!showFindDevicePanel) Color.Black else Color.White,
+        containerColor = if (!showFindDevicePanel) colorScheme.onSurface else colorScheme.tertiaryContainer, //todo check else
         modifier = modifier.size(65.dp)
     ) {
         Icon(
             imageVector = Icons.Default.Add,
             contentDescription = "Add device",
-            tint = Color.White,
+            tint = colorScheme.inversePrimary,
             modifier = Modifier
                 .size(32.dp)
                 .skipToLookaheadSize()
