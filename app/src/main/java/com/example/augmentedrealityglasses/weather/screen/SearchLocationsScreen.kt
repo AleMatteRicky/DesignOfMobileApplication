@@ -78,6 +78,8 @@ fun SearchLocationsScreen(
         viewModel.searchLocations(viewModel.query)
     }
 
+    val theme = MaterialTheme.colorScheme
+
     // ----  UI  ----
     Column(
         modifier = Modifier
@@ -95,7 +97,8 @@ fun SearchLocationsScreen(
                     viewModel.updateQuery(it)
                 },
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    color = theme.primary
                 ),
                 placeholder = {
                     Text(
@@ -103,7 +106,7 @@ fun SearchLocationsScreen(
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontSize = 16.sp
                         ),
-                        color = Color.Gray
+                        color = theme.secondary
                     )
                 },
                 singleLine = true,
@@ -117,7 +120,8 @@ fun SearchLocationsScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.arrow_back),
                             contentDescription = "Back",
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            tint = theme.primary
                         )
                     }
                 },
@@ -132,7 +136,8 @@ fun SearchLocationsScreen(
                             Icon(
                                 painter = painterResource(id = R.drawable.cancel),
                                 contentDescription = "Clear",
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                tint = theme.primary
                             )
                         }
                     }
@@ -141,7 +146,7 @@ fun SearchLocationsScreen(
                 modifier = Modifier
                     .height(56.dp)
                     .fillMaxWidth()
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)) //TODO: adjust color?
                     .widthIn(max = 280.dp) //Limit the text field width
                     .focusRequester(focusRequester) //Link the focus requester
             )
@@ -163,7 +168,7 @@ fun SearchLocationsScreen(
                     modifier = Modifier
                         .fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    color = Color.Gray,
+                    color = theme.secondary,
                 )
             } else {
                 viewModel.searchedLocations.forEachIndexed { index, location ->
@@ -180,7 +185,7 @@ fun SearchLocationsScreen(
                         HorizontalDivider(
                             modifier = Modifier.fillMaxWidth(),
                             thickness = 0.6.dp,
-                            color = Color.LightGray
+                            color = Color.LightGray //TODO: adjust color?
                         )
                     }
                 }
@@ -194,6 +199,8 @@ fun LocationItem(
     locationName: String,
     onClick: () -> Unit
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -204,14 +211,15 @@ fun LocationItem(
         Icon(
             imageVector = Icons.Default.Place,
             contentDescription = null,
-            tint = Color.Gray
+            tint = theme.secondary
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Text(
             text = locationName,
-            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp)
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+            color = theme.primary
         )
     }
 }

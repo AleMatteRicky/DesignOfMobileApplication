@@ -1,6 +1,7 @@
 package com.example.augmentedrealityglasses
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,10 +31,11 @@ fun UpdateWrapper(
 ) {
     val durationMillis: Long = 2000
     val durationBluetoothNotification: Long = 1200
+    val theme = MaterialTheme.colorScheme
 
     Box(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize().background(theme.background),
         ) {
         content()
 

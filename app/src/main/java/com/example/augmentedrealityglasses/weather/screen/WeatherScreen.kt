@@ -152,7 +152,7 @@ fun WeatherScreen(
                         }
                     }
 
-                    SwipeDownRefresh(
+                    SwipeDownRefresh( //TODO: adapt to app theme?
                         isRefreshing = viewModel.isRefreshing,
                         canRefresh = canRefresh,
                         onRefresh = {
@@ -192,8 +192,6 @@ fun WeatherScreen(
 
                             if (dailyForecasts.isNotEmpty()) {
                                 DailyForecastsPanel(dailyForecasts, dailyListState)
-
-
 
                                 MultipleDaysForecastsPanel(
                                     forecasts = daysConditions,
@@ -258,27 +256,34 @@ fun WeatherScreen(
 
 @Composable
 fun LocationBar(locationName: String) {
+    val theme = MaterialTheme.colorScheme
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 20.dp, bottom = 15.dp),
+            .padding(top = 20.dp, bottom = 15.dp)
+            .background(theme.background),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.background(theme.background)
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.location),
                 contentDescription = null,
                 modifier = Modifier.size(30.dp),
-                tint = Color.Gray
+                tint = theme.primary
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = locationName,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontSize = 20.sp,
-                )
+                ),
+                color = theme.primary
             )
         }
     }
@@ -293,42 +298,54 @@ fun CurrentWeatherBar(
     conditionName: String,
     iconId: Int
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .background(theme.background),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column {
+        Column(
+            modifier = Modifier.background(theme.background)
+        ) {
             Text(
                 text = "${temperature}°",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 64.sp
                 ),
+                color = theme.primary
             )
             Text(
                 text = conditionName,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 24.sp,
-                )
+                ),
+                color = theme.primary
             )
         }
 
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(
+            modifier = Modifier.background(theme.background)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.background(theme.background)
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.arrow_upward),
                     contentDescription = null,
                     modifier = Modifier
                         .size(14.dp)
                         .padding(end = 2.dp),
-                    tint = Color.Gray //TODO: adjust color
+                    tint = theme.secondary
                 )
                 Text(
                     text = "${maxTemperature}°",
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color.Gray
+                    color = theme.secondary
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -336,7 +353,7 @@ fun CurrentWeatherBar(
                 Text(
                     text = "/",
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color.Gray
+                    color = theme.secondary
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -347,20 +364,21 @@ fun CurrentWeatherBar(
                     modifier = Modifier
                         .size(14.dp)
                         .padding(end = 2.dp),
-                    tint = Color.Gray //TODO: adjust color
+                    tint = theme.secondary
                 )
                 Text(
                     text = "${minTemperature}°",
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color.Gray
+                    color = theme.secondary
                 )
             }
 
             Text(
                 text = "Feels Like: ${feelsLike}°",
                 style = MaterialTheme.typography.labelLarge,
-                color = Color.Gray,
-                modifier = Modifier.padding(top = 10.dp)
+                color = theme.secondary,
+                modifier = Modifier.padding(top = 5.dp),
+                maxLines = 1
             )
         }
 
@@ -379,10 +397,12 @@ fun LocationManagerBar(
     onClickGeolocationIcon: () -> Unit,
     geolocationEnabled: Boolean
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Surface(
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, Color.Black),
-        color = Color.White,
+        color = theme.tertiaryContainer,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -399,6 +419,7 @@ fun LocationManagerBar(
             Icon(
                 painter = painterResource(id = R.drawable.search),
                 contentDescription = null,
+                tint = theme.primary
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -406,7 +427,7 @@ fun LocationManagerBar(
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontSize = 16.sp
                 ),
-                color = Color.Gray,
+                color = theme.secondary,
                 modifier = Modifier.weight(1f)
             )
 
@@ -422,7 +443,7 @@ fun LocationManagerBar(
                 Icon(
                     painter = painterResource(id = R.drawable.geolocation),
                     contentDescription = null,
-                    tint = if (geolocationEnabled) Color.Gray else Color.Black
+                    tint = if (geolocationEnabled) theme.secondary else theme.primary
                 )
             }
         }
@@ -435,11 +456,12 @@ fun DailyForecastsPanel(
     forecasts: List<WeatherCondition>,
     listState: LazyListState
 ) {
+    val theme = MaterialTheme.colorScheme
 
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth()
@@ -452,6 +474,7 @@ fun DailyForecastsPanel(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 15.sp
                 ),
+                color = theme.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             HorizontalDivider(
@@ -459,7 +482,7 @@ fun DailyForecastsPanel(
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
                 thickness = 1.dp,
-                color = Color.LightGray
+                color = Color.LightGray //TODO: adjust color
             )
             LazyRow(
                 // Enables snapping to the start of each item during horizontal scroll.
@@ -492,6 +515,7 @@ fun DailyForecastItem(
     temperature: Int
 ) {
     val timeFmt = rememberTimeFormatter("HH:mm")
+    val theme = MaterialTheme.colorScheme
 
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -503,7 +527,8 @@ fun DailyForecastItem(
             text = if (isCurrent) "Now" else timeFmt.format(dateTime),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 14.sp
-            )
+            ),
+            color = theme.primary
         )
         Image(
             painter = painterResource(id = iconId),
@@ -515,7 +540,8 @@ fun DailyForecastItem(
             text = "${temperature}°",
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 23.sp,
-            )
+            ),
+            color = theme.primary
         )
     }
 }
@@ -532,10 +558,12 @@ fun MultipleDaysForecastsPanel(
     onItemClick: (Date) -> Unit,
     isSelectedDay: (Date) -> Boolean
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .padding(top = 8.dp)
@@ -548,6 +576,7 @@ fun MultipleDaysForecastsPanel(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 15.sp
                 ),
+                color = theme.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
@@ -556,9 +585,8 @@ fun MultipleDaysForecastsPanel(
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
                 thickness = 1.dp,
-                color = Color.LightGray
+                color = Color.LightGray //TODO: adjust color
             )
-
 
             forecasts.forEach { forecast ->
                 MultipleDaysForecastsItem(
@@ -585,8 +613,9 @@ fun MultipleDaysForecastsItem(
     tempMin: Int,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) Color.Black else Color.Transparent
-    val contentColor = if (isSelected) Color.White else Color.Black
+    val theme = MaterialTheme.colorScheme
+    val backgroundColor = if (isSelected) theme.onSurface else theme.onPrimaryContainer
+    val contentColor = if (isSelected) theme.inversePrimary else theme.primary
 
     //Disable item's click when already selected
     val clickableModifier = if (isSelected) {
@@ -609,8 +638,8 @@ fun MultipleDaysForecastsItem(
             text = if (isCurrentDay) "Today" else dayNameFmt.format(date),
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 14.sp,
-                color = contentColor
             ),
+            color = contentColor,
             modifier = Modifier.weight(1f)
         )
 
@@ -623,7 +652,6 @@ fun MultipleDaysForecastsItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        //FIXME: handle spacing when there are no min/max temperatures
         if (!isCurrentDay) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -692,10 +720,13 @@ fun AdditionalInfosGrid(
             modifier = Modifier.fillMaxWidth()
         ) {
             StatBox(
-                title = "Pressure",
+                title = "Pressure", //TODO: adjust icon (light/dark)
                 iconRes = R.drawable.pressure,
                 content = {
-                    StatValue(value = pressure.toString(), unit = "hPa")
+                    StatValue(
+                        value = pressure.toString(),
+                        unit = "hPa"
+                    )
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -704,7 +735,10 @@ fun AdditionalInfosGrid(
                 title = "Humidity",
                 iconRes = R.drawable.humidity,
                 content = {
-                    StatValue(value = humidity.toString(), unit = "%")
+                    StatValue(
+                        value = humidity.toString(),
+                        unit = "%"
+                    )
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -741,10 +775,12 @@ private fun StatBox(
     modifier: Modifier = Modifier,
     iconRes: Int? = null
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = modifier.aspectRatio(1f)
     ) {
         Column(
@@ -755,7 +791,8 @@ private fun StatBox(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = theme.primary
             )
 
             Spacer(Modifier.height(8.dp))
@@ -787,19 +824,21 @@ private fun StatValue(
     value: String,
     unit: String
 ) {
+    val theme = MaterialTheme.colorScheme
+
     Row(verticalAlignment = Alignment.Bottom) {
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 26.sp,
-            )
+            ),
+            color = theme.primary
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = unit,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = Color.Gray
-            )
+            style = MaterialTheme.typography.bodyMedium,
+            color = theme.secondary
         )
     }
 }
@@ -814,11 +853,12 @@ private fun SunriseSunsetBox(
     dividerWidth: Dp = 64.dp
 ) {
     val timeFmt = rememberTimeFormatter("HH:mm")
+    val theme = MaterialTheme.colorScheme
 
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = modifier.aspectRatio(1f)
     ) {
         Column(
@@ -829,7 +869,8 @@ private fun SunriseSunsetBox(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = theme.primary
             )
 
             Spacer(Modifier.height(8.dp))
@@ -852,7 +893,8 @@ private fun SunriseSunsetBox(
                             text = timeFmt.format(sunrise),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 26.sp
-                            )
+                            ),
+                            color = theme.primary
                         )
                     }
 
@@ -861,7 +903,7 @@ private fun SunriseSunsetBox(
                             .padding(vertical = 10.dp)
                             .width(dividerWidth),
                         thickness = 1.dp,
-                        color = Color.LightGray
+                        color = Color.LightGray //TODO: adjust color
                     )
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -875,7 +917,8 @@ private fun SunriseSunsetBox(
                             text = timeFmt.format(sunset),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 26.sp
-                            )
+                            ),
+                            color = theme.primary
                         )
                     }
                 }

@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,9 +31,9 @@ fun WeatherErrorScreen(
     title: String = "Something went wrong",
     retryLabel: String = "Retry",
 ) {
-    //TODO: adjust colors
-    val titleColor = Color(0xFF111827)
-    val textColor = Color(0xFF6B7280)
+    val theme = MaterialTheme.colorScheme
+    val titleColor = theme.primary
+    val textColor = theme.secondary
 
     Box(
         modifier = modifier
@@ -50,7 +49,8 @@ fun WeatherErrorScreen(
             Icon(
                 painter = painterResource(id = iconId),
                 contentDescription = null,
-                modifier = Modifier.size(96.dp)
+                modifier = Modifier.size(96.dp),
+                tint = theme.primary
             )
 
             Spacer(Modifier.height(24.dp))
@@ -58,9 +58,9 @@ fun WeatherErrorScreen(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = titleColor,
                     fontSize = 20.sp
                 ),
+                color = titleColor,
                 textAlign = TextAlign.Center
             )
 
@@ -68,9 +68,8 @@ fun WeatherErrorScreen(
 
             Text(
                 text = msg,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = textColor
-                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
@@ -85,8 +84,8 @@ fun WeatherErrorScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
+                        containerColor = theme.onSurface,
+                        contentColor = theme.inversePrimary
                     )
                 ) {
                     Text(
