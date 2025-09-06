@@ -16,19 +16,21 @@ import androidx.core.graphics.ColorUtils
 private val LightColors = lightColorScheme(
     primary = Color.hsl(0f, 0f, 0.05f),   // primary text color
     secondary = Color.hsl(0f, 0f, 0.30f), // secondary text color
+    inversePrimary = Color.hsl(0f, 0f, 1f), //used for selected text and icons
     onBackground = Color.hsl(0f, 0f, 0.93f), // close to white used for background
     onPrimaryContainer = Color.hsl(0f, 0f, 1f), // primary info panel
     onSurface = Color.hsl(0f, 0f, 0.05f), // used for selected or interactable components (could be used also black 0)
-    inversePrimary = Color.hsl(0f, 0f, 1f) //used for download track
+    inverseSurface = Color.hsl(0f, 0f, 1f) //used for download track
 )
 
 private val DarkColors = darkColorScheme(
     primary = Color.hsl(0f, 0f, 0.95f),   // primary text color
     secondary = Color.hsl(0f, 0f, 0.70f), // secondary text color
+    inversePrimary = Color.hsl(0f, 0f, 95f), //used for selected text and icons
     onBackground = Color.hsl(0f, 0f, 0f), // close to white used for background
     onPrimaryContainer = Color.hsl(0f, 0f, 0.07f), // primary info panel
     onSurface = Color.hsl(0f, 0f, 0.15f), // used for selected or interactable components
-    inversePrimary = Color.hsl(0f, 0f, 0f) //used for download track
+    //used for selected text and icons = Color.hsl(0f, 0f, 0f) //used for download track
 )
 
 
