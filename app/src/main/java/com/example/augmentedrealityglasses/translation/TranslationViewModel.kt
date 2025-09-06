@@ -3,6 +3,7 @@ package com.example.augmentedrealityglasses.translation
 import android.Manifest
 import android.app.Application
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -560,6 +561,10 @@ class TranslationViewModel(
 
     fun hideBluetoothUpdate() {
         bluetoothUpdateStatus = BluetoothUpdateStatus.NONE
+    }
+
+    fun isMicrophoneAvailable(): Boolean {
+        return application.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
     }
 
 }
