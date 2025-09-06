@@ -108,7 +108,7 @@ fun SelectLanguageButton(
 fun getFullLengthName(tag: String): String {
     val locale = Locale.forLanguageTag(tag)
 
-    return locale.displayName.replaceFirstChar { it.uppercase() }
+    return locale.getDisplayLanguage(Locale.ENGLISH).replaceFirstChar { it.uppercase() }
 }
 
 enum class LanguageRole {
