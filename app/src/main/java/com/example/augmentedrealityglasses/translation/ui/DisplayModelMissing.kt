@@ -41,7 +41,7 @@ fun DisplayModelMissing(onClickDownload: () -> Unit, resetVisibility: () -> Unit
             Surface(
                 shape = RoundedCornerShape(15.dp),
                 tonalElevation = 10.dp,
-                color = colorScheme.background,
+                color = colorScheme.onTertiary,
                 modifier = Modifier
                     .padding(20.dp)
                     .fillMaxWidth(0.8f)
@@ -61,14 +61,14 @@ fun DisplayModelMissing(onClickDownload: () -> Unit, resetVisibility: () -> Unit
                     Spacer(modifier = Modifier.height(8.dp)) //could be removed
                     Button(
                         onClickDownload, colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Black,
-                            contentColor = Color.White
+                            containerColor = colorScheme.primary,
+                            contentColor = colorScheme.primary
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             "Download",
-                            color = colorScheme.inversePrimary,
+                            color = colorScheme.inverseSurface,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

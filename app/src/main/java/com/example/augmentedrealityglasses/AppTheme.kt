@@ -21,7 +21,8 @@ private val LightColors = lightColorScheme(
     onPrimaryContainer = Color.hsl(0f, 0f, 1f), // primary info panel
     onSurface = Color.hsl(0f, 0f, 0.05f), // used for selected or interactable components (could be used also black 0)
     inverseSurface = Color.hsl(0f, 0f, 1f), //used for download track
-    tertiaryContainer = Color.hsl(0f, 0f, 1f) //used only for search bar (weather)
+    tertiaryContainer = Color.hsl(0f, 0f, 1f), //used only for search bar (weather)
+    onTertiary = Color.hsl(0f, 0f, 0.93f) //model missing
 )
 
 private val DarkColors = darkColorScheme(
@@ -33,7 +34,8 @@ private val DarkColors = darkColorScheme(
     onPrimaryContainer = Color.hsl(0f, 0f, 0.07f), // primary info panel
     onSurface = Color.hsl(0f, 0f, 0.15f), // used for selected or interactable components
     inverseSurface = Color.hsl(0f, 0f, 0f), //used for download track
-    tertiaryContainer = Color.hsl(0f, 0f, 0.15f) //used only for search bar (weather)
+    tertiaryContainer = Color.hsl(0f, 0f, 0.15f), //used only for search bar (weather)
+    onTertiary = Color.hsl(0f, 0f, 0.15f) //model missing
 )
 
 
