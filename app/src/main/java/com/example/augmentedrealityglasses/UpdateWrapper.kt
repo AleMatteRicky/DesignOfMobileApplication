@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,8 +36,9 @@ fun UpdateWrapper(
 
     Box(
         modifier = Modifier
-            .fillMaxSize().background(theme.background),
-        ) {
+            .fillMaxSize()
+            .background(theme.background),
+    ) {
         content()
 
         if (bluetoothUpdateStatus != BluetoothUpdateStatus.NONE) {
@@ -51,9 +53,9 @@ fun UpdateWrapper(
                 contentAlignment = Alignment.TopCenter
             ) {
                 Surface(
-                    color = Color.Black,
+                    color = theme.onSurface,
                     shape = RoundedCornerShape(8.dp),
-                    shadowElevation = 4.dp
+                    //shadowElevation = 4.dp
                 ) {
                     Row(
                         Modifier.padding(start = 16.dp),
@@ -71,18 +73,19 @@ fun UpdateWrapper(
                             text = "Device disconnected from Bluetooth."
                         }
 
-                        Image(
+                        Icon(
                             painter = painterResource(id = imageID),
+                            tint = theme.inversePrimary,
                             contentDescription = "Bluetooth connected icon",
-                            Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
 
-                            if (bluetoothUpdateStatus == BluetoothUpdateStatus.DEVICE_CONNECTED) Icon.BLUETOOTH_CONNECTED.getID()
-                            else Icon.BLUETOOTH_DISABLED.getID()
+                        if (bluetoothUpdateStatus == BluetoothUpdateStatus.DEVICE_CONNECTED) Icon.BLUETOOTH_CONNECTED.getID()
+                        else Icon.BLUETOOTH_DISABLED.getID()
 
                         Text(
                             text = text,
-                            color = Color.White,
+                            color = theme.inversePrimary,
                             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                         )
@@ -103,9 +106,9 @@ fun UpdateWrapper(
                 contentAlignment = Alignment.BottomCenter
             ) {
                 Surface(
-                    color = Color.Black,
+                    color = theme.onSurface,
                     shape = RoundedCornerShape(8.dp),
-                    shadowElevation = 4.dp
+                    //shadowElevation = 4.dp
                 ) {
                     Row(
                         Modifier.padding(start = 16.dp),
@@ -119,7 +122,7 @@ fun UpdateWrapper(
 
                         Text(
                             text = message,
-                            color = Color.White,
+                            color = theme.inversePrimary,
                             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                         )

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,10 +49,11 @@ fun LanguageSelectionBox(
             languageRole = LanguageRole.SOURCE
         )
 
-        Image(
+        Icon(
             painter = painterResource(id = Icon.RIGHT_ARROW.getID()),
             contentDescription = "An arrow from the source language to the target language",
-            Modifier.align(Alignment.Center) //todo
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.align(Alignment.Center) //todo
         )
 
         SelectLanguageButton(
