@@ -458,7 +458,7 @@ fun DailyForecastsPanel(
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = Modifier
             .padding(16.dp)
@@ -560,7 +560,7 @@ fun MultipleDaysForecastsPanel(
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -782,7 +782,7 @@ private fun StatBox(
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = modifier.aspectRatio(1f)
     ) {
@@ -860,7 +860,7 @@ private fun SunriseSunsetBox(
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = modifier.aspectRatio(1f)
     ) {
