@@ -6,12 +6,11 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.TextStyle
-import androidx.core.graphics.ColorUtils
 
 private val LightColors = lightColorScheme(
     primary = Color.hsl(0f, 0f, 0.05f),   // primary text color
@@ -20,7 +19,8 @@ private val LightColors = lightColorScheme(
     onBackground = Color.hsl(0f, 0f, 0.93f), // close to white used for background
     onPrimaryContainer = Color.hsl(0f, 0f, 1f), // primary info panel
     onSurface = Color.hsl(0f, 0f, 0.05f), // used for selected or interactable components (could be used also black 0)
-    inverseSurface = Color.hsl(0f, 0f, 1f) //used for download track
+    inverseSurface = Color.hsl(0f, 0f, 1f), //used for download track
+    tertiaryContainer = Color.hsl(0f, 0f, 1f) //used only for search bar (weather)
 )
 
 private val DarkColors = darkColorScheme(
@@ -30,7 +30,8 @@ private val DarkColors = darkColorScheme(
     onBackground = Color.hsl(0f, 0f, 0f),
     onPrimaryContainer = Color.hsl(0f, 0f, 0.07f), // primary info panel
     onSurface = Color.hsl(0f, 0f, 0.15f), // used for selected or interactable components
-    inverseSurface = Color.hsl(0f, 0f, 0f) //used for download track
+    inverseSurface = Color.hsl(0f, 0f, 0f), //used for download track
+    tertiaryContainer = Color.hsl(0f, 0f, 0.15f) //used only for search bar (weather)
 )
 
 
@@ -96,7 +97,7 @@ private val AppTypography = Typography(
         fontSize = 14.sp
     ),
 
-)
+    )
 
 @Composable
 fun AppTheme(
