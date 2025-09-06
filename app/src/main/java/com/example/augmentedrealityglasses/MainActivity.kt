@@ -2,6 +2,7 @@ package com.example.augmentedrealityglasses
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
@@ -15,6 +16,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -26,21 +28,33 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.MutableCreationExtras
@@ -95,9 +109,23 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.LIGHT -> false
             }
 
+            val screenTransitionDuration = 150
+
             AppTheme(
                 isDarkThemeSelected = isDarkThemeSelected
             ) {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+
+                val translationPermissionState =
+                    rememberPermissionGrantedState(Manifest.permission.RECORD_AUDIO)
+
+                SystemBarsFromTheme(
+                    isTranslationPermissionGranted = translationPermissionState.value,
+                    isOnTranslation = (currentRoute == ScreenName.TRANSLATION_HOME_SCREEN.name),
+                    animationDurationMs = screenTransitionDuration
+                )
+
                 Scaffold(
                     bottomBar = {
                         AnimatedVisibility(
@@ -110,8 +138,6 @@ class MainActivity : ComponentActivity() {
                             ),
                             exit = slideOutVertically { fullHeight -> fullHeight } + shrinkVertically() + fadeOut()
                         ) {
-                            val navBackStackEntry by navController.currentBackStackEntryAsState()
-                            val currentRoute = navBackStackEntry?.destination?.route
 
                             if (currentRoute !in listOf(
                                     ScreenName.TRANSLATION_RESULT_SCREEN.name,
@@ -130,8 +156,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-
-                    val screenTransitionDuration = 150
 
                     NavHost(
                         navController = navController,
@@ -617,4 +641,66 @@ class MainActivity : ComponentActivity() {
             Log.d(TAG, "External device not connected")
         }
     }
+}
+
+//TODO: fix UI lag on changing theme mode
+@Composable
+fun SystemBarsFromTheme(
+    isTranslationPermissionGranted: Boolean,
+    isOnTranslation: Boolean,
+    animationDurationMs: Int
+) {
+    val view = LocalView.current
+    val scheme = MaterialTheme.colorScheme
+    val targetColor =
+        if (isOnTranslation && isTranslationPermissionGranted) scheme.tertiaryContainer else scheme.background
+
+    val animatedColor by animateColorAsState(
+        targetValue = targetColor,
+        animationSpec = tween(animationDurationMs),
+        label = "statusBarColor"
+    )
+
+    val useDarkIcons = animatedColor.luminance() > 0.5f
+
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = animatedColor.toArgb()
+
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = useDarkIcons
+        }
+    }
+}
+
+/**
+ * Composable that saves the state of the permission (granted or not granted) with name specified by permission parameter
+ */
+@Composable
+fun rememberPermissionGrantedState(permission: String): State<Boolean> {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    fun check() = ContextCompat.checkSelfPermission(context, permission) ==
+            PackageManager.PERMISSION_GRANTED
+
+    val granted = remember { mutableStateOf(check()) }
+
+    LaunchedEffect(permission) {
+        granted.value = check()
+    }
+
+    //Update permission state on application resume
+    DisposableEffect(lifecycleOwner, permission) {
+        val obs = LifecycleEventObserver { _, e ->
+            if (e == Lifecycle.Event.ON_RESUME) granted.value = check()
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(obs)
+        }
+    }
+
+    return granted
 }
