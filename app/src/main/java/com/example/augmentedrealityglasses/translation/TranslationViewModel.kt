@@ -355,7 +355,7 @@ class TranslationViewModel(
             return true
         } else {
             if (_uiState.value.sourceLanguage != null) {
-                //uiState = uiState.copy(sourceLanguage = null) //todo add recommended language
+                //uiState = uiState.copy(sourceLanguage = null) //todo possible future improvement
             }
             Log.e("Undefined Language", "Exception")
             return false

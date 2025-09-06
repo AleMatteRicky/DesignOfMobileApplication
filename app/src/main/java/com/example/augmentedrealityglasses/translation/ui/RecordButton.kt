@@ -49,6 +49,10 @@ fun RecordButton(
     isButtonActive =
         !(notValidSourceLanguage || notValidInternetConnection || microphoneNotAvailable) //add missing permission check
 
+    if(notValidInternetConnection || notValidSourceLanguage){
+        viewModel.stopRecording()
+    }
+
     Box(modifier, contentAlignment = Alignment.Center) {
         var waveSoundRippleEffectVisible by remember { mutableStateOf(false) }
         WaveSoundRippleEffect(
