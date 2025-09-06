@@ -32,6 +32,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
 fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
+
+    val colorScheme = MaterialTheme.colorScheme
+
     val items = listOf(
         BottomNavItem(
             "Home",
@@ -56,19 +59,20 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
     )
 
     Column(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .background(colorScheme.background)
     ) {
 
         HorizontalDivider(
             thickness = Dp.Hairline,
-            color = MaterialTheme.colorScheme.outlineVariant
+            color = MaterialTheme.colorScheme.secondary //todo
                 .copy(alpha = 0.6f)
         )
 
 
         NavigationBar(
-            modifier = modifier,
-            containerColor = Color(0xFFFCF8F8) //FIXME: fix color
+            modifier = modifier, containerColor = colorScheme.background
         ) {
             val currentDestination =
                 navController.currentBackStackEntryAsState().value?.destination?.route
@@ -77,10 +81,11 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
                 val selected = currentDestination == item.route
 
                 NavigationBarItem(
-                    icon = {
+                    icon = { //todo fill
                         Icon(
                             painter = item.icon,
                             contentDescription = item.label,
+                            tint = if(selected) colorScheme.primary else colorScheme.secondary,
                             modifier = Modifier.size(24.dp), //default value for bottom bar icons
                         )
                     },
@@ -88,11 +93,13 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
                         indicatorColor = Color.Transparent,
                     ),
                     label = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Text(
                                 text = item.label,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.5.sp),
-                                color = if (selected) Color.Black else Color.Gray
+                                color = if (selected) colorScheme.primary else colorScheme.secondary
                             )
                             Spacer(modifier = Modifier.height(2.dp))
 
@@ -106,7 +113,7 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
                                 modifier = Modifier
                                     .height(2.dp)
                                     .width(lineWidth)
-                                    .background(Color.Black)
+                                    .background(colorScheme.primary)
                             )
                         }
                     },
