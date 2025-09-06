@@ -75,7 +75,6 @@ class MainActivity : ComponentActivity() {
         val app = application as App
         setContent {
 
-            //TODO: keep the screen stack empty
             val navController = rememberNavController()
             val configuration = LocalConfiguration.current
             val screenHeight = configuration.screenHeightDp.dp
@@ -146,7 +145,6 @@ class MainActivity : ComponentActivity() {
                             startDestination = ScreenName.HOME.name,
                             route = "HOME_GRAPH"
                         ) {
-                            //FIXME: create composable function for redundant code
                             composable(
                                 ScreenName.HOME.name,
                                 enterTransition = {
@@ -390,7 +388,7 @@ class MainActivity : ComponentActivity() {
                                         navigationBarVisible = navigationBarVisible,
                                         navigationBarHeight = navigationBarHeight
 
-                                    ) //todo update with system language from settings
+                                    )
                                 }
                             }
 
@@ -461,7 +459,6 @@ class MainActivity : ComponentActivity() {
 
                         }
 
-                        //TODO: prefetch data
                         navigation(
                             startDestination = ScreenName.WEATHER_HOME_SCREEN.name,
                             route = "WEATHER_GRAPH"
@@ -541,7 +538,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        //TODO
                         composable(
                             ScreenName.SETTINGS.name,
                             enterTransition = {
