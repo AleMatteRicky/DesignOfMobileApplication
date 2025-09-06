@@ -11,22 +11,24 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.TextStyle
+import androidx.core.graphics.ColorUtils
 
-//TODO: specify colors and use them in all screens
 private val LightColors = lightColorScheme(
-    primary = Color.Black,
-    // onPrimary = ...,
-    // surface = ...,
-    // onSurface = ...,
-    // outlineVariant = ...,
+    primary = Color.hsl(0f, 0f, 0.05f),   // primary text color
+    secondary = Color.hsl(0f, 0f, 0.30f), // secondary text color
+    onBackground = Color.hsl(0f, 0f, 0.93f), // close to white used for background
+    onPrimaryContainer = Color.hsl(0f, 0f, 1f), // primary info panel
+    onSurface = Color.hsl(0f, 0f, 0.05f), // used for selected or interactable components (could be used also black 0)
+    inversePrimary = Color.hsl(0f, 0f, 1f) //used for download track
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color.White,
-    // onPrimary = ...,
-    // surface = ...,
-    // onSurface = ...,
-    // outlineVariant = ...,
+    primary = Color.hsl(0f, 0f, 0.95f),   // primary text color
+    secondary = Color.hsl(0f, 0f, 0.70f), // secondary text color
+    onBackground = Color.hsl(0f, 0f, 0f), // close to white used for background
+    onPrimaryContainer = Color.hsl(0f, 0f, 0.07f), // primary info panel
+    onSurface = Color.hsl(0f, 0f, 0.15f), // used for selected or interactable components
+    inversePrimary = Color.hsl(0f, 0f, 0f) //used for download track
 )
 
 
@@ -47,7 +49,7 @@ private val AppTypography = Typography(
         fontFamily = WorkSans,
         fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
-        letterSpacing = 0.sp,
+        letterSpacing = 0.sp
     ),
 
     bodyMedium = TextStyle(
