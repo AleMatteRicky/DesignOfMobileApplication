@@ -247,7 +247,7 @@ fun WeatherScreen(
 
     } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            LoadingAnimation(modifier = Modifier.size(100.dp))
+            LoadingAnimation(modifier = Modifier.size(200.dp))
         }
 
     }
