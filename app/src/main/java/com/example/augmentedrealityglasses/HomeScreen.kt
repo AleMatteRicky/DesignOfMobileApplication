@@ -287,7 +287,7 @@ fun DeviceStatusPanel(
 
     Box(
         modifier = Modifier
-            .padding(horizontal = 13.dp, vertical = 10.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
             .background(color = colorScheme.background)
     ) {
         Card(
@@ -372,7 +372,7 @@ fun DevicesListPanel(
     val colorScheme = MaterialTheme.colorScheme
 
     Box(
-        modifier = modifier.padding(13.dp)
+        modifier = modifier.padding(16.dp)
     ) {
         Card(
             modifier = Modifier
