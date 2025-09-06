@@ -67,7 +67,7 @@ fun WeatherScreen(
 ) {
     //Main UI state
     val uiState by viewModel.weatherState.collectAsStateWithLifecycle()
-
+    val verticalPaddingBetweenPanels = 16.dp
     //Context
     val context = LocalContext.current
 
@@ -178,6 +178,8 @@ fun WeatherScreen(
                                 )
                             }
 
+                            Spacer(Modifier.height(32.dp))
+
                             LocationManagerBar(
                                 onClickSearchBar = { onTextFieldClick() },
                                 onClickGeolocationIcon = {
@@ -189,8 +191,12 @@ fun WeatherScreen(
                                 geolocationEnabled = uiState.geolocationEnabled
                             )
 
+                            Spacer(Modifier.height(32.dp))
+
                             if (dailyForecasts.isNotEmpty()) {
                                 DailyForecastsPanel(dailyForecasts, dailyListState)
+
+                                Spacer(Modifier.height(16.dp))
 
                                 MultipleDaysForecastsPanel(
                                     forecasts = daysConditions,
@@ -200,6 +206,8 @@ fun WeatherScreen(
                                     isSelectedDay = { uiState.selectedDay == it }
                                 )
                             }
+
+                            Spacer(Modifier.height(16.dp))
 
                             currentCondition?.let { condition ->
                                 AdditionalInfosGrid(
@@ -399,11 +407,11 @@ fun LocationManagerBar(
     val theme = MaterialTheme.colorScheme
 
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(22.dp),
         color = theme.tertiaryContainer,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp)
             .height(56.dp)
             .clickable { onClickSearchBar() }
     ) {
@@ -457,11 +465,11 @@ fun DailyForecastsPanel(
     val theme = MaterialTheme.colorScheme
 
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(22.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = Modifier
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
             .fillMaxWidth()
     ) {
         Column(
@@ -559,13 +567,11 @@ fun MultipleDaysForecastsPanel(
     val theme = MaterialTheme.colorScheme
 
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(22.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = Modifier
             .padding(horizontal = 16.dp)
-            .padding(top = 8.dp)
-            .padding(bottom = 8.dp)
             .fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -628,7 +634,7 @@ fun MultipleDaysForecastsItem(
         modifier = Modifier
             .fillMaxWidth()
             .then(clickableModifier)
-            .background(backgroundColor, shape = RoundedCornerShape(10.dp))
+            .background(backgroundColor, shape = RoundedCornerShape(22.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -653,7 +659,7 @@ fun MultipleDaysForecastsItem(
         if (!isCurrentDay) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    painter = painterResource(id = R.drawable.arrow_upward),
+                    painter = painterResource(id = R.drawable.arrow_upward_bold),
                     contentDescription = null,
                     modifier = Modifier
                         .size(14.dp)
@@ -681,7 +687,7 @@ fun MultipleDaysForecastsItem(
                 Spacer(modifier = Modifier.width(4.dp))
 
                 Icon(
-                    painter = painterResource(id = R.drawable.arrow_downward),
+                    painter = painterResource(id = R.drawable.arrow_downward_bold),
                     contentDescription = null,
                     modifier = Modifier
                         .size(14.dp)
@@ -711,10 +717,10 @@ fun AdditionalInfosGrid(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp)
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             //TODO: add attribution: https://www.flaticon.com/free-icon/gauge_4284060?related_id=4283902&origin=search
@@ -744,10 +750,10 @@ fun AdditionalInfosGrid(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             SunriseSunsetBox(
@@ -768,6 +774,8 @@ fun AdditionalInfosGrid(
             )
         }
     }
+
+    Spacer(Modifier.height(16.dp))
 }
 
 @Composable
@@ -781,7 +789,7 @@ private fun StatBox(
     val theme = MaterialTheme.colorScheme
 
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(22.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = modifier.aspectRatio(1f)
@@ -859,7 +867,7 @@ private fun SunriseSunsetBox(
     val theme = MaterialTheme.colorScheme
 
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(22.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
         modifier = modifier.aspectRatio(1f)

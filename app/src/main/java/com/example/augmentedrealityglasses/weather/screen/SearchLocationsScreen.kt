@@ -1,5 +1,6 @@
 package com.example.augmentedrealityglasses.weather.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,12 +19,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +48,7 @@ import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchLocationsScreen(
     viewModel: WeatherViewModel,
@@ -85,13 +90,23 @@ fun SearchLocationsScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .background(color = theme.background)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = theme.tertiaryContainer, shape = RoundedCornerShape(22.dp)),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            OutlinedTextField(
+            TextField(
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent
+                ),
                 value = viewModel.query,
                 onValueChange = {
                     viewModel.updateQuery(it)
@@ -146,7 +161,7 @@ fun SearchLocationsScreen(
                 modifier = Modifier
                     .height(56.dp)
                     .fillMaxWidth()
-                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)) //TODO: adjust color?
+                    //.border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)) //TODO: adjust color?
                     .widthIn(max = 280.dp) //Limit the text field width
                     .focusRequester(focusRequester) //Link the focus requester
             )
