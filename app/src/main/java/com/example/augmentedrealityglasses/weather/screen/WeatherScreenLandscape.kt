@@ -253,7 +253,7 @@ fun AdditionalInfosList(
         Column(modifier = Modifier.padding(16.dp)) {
 
             Text(
-                text = "Additional info",
+                text = "Details",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 15.sp
                 ),
