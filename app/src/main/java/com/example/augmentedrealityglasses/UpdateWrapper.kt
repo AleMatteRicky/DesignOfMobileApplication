@@ -14,9 +14,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,6 +37,29 @@ fun UpdateWrapper(
     val durationBluetoothNotification: Long = 1200
     val theme = MaterialTheme.colorScheme
 
+    var previousStatus by remember { mutableStateOf(BluetoothUpdateStatus.NONE) }
+    var bluetoothBannerText by remember { mutableStateOf<String?>(null) }
+    var bluetoothBannerIconId by remember { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(bluetoothUpdateStatus) {
+        val prev = previousStatus
+
+        if (prev != BluetoothUpdateStatus.NONE &&
+            bluetoothUpdateStatus != BluetoothUpdateStatus.NONE &&
+            prev != bluetoothUpdateStatus
+        ) {
+            if (bluetoothUpdateStatus == BluetoothUpdateStatus.DEVICE_CONNECTED) {
+                bluetoothBannerText = "Device connected via Bluetooth."
+                bluetoothBannerIconId = Icon.BLUETOOTH_CONNECTED.getID()
+            } else {
+                bluetoothBannerText = "Device disconnected from Bluetooth."
+                bluetoothBannerIconId = Icon.BLUETOOTH_DISABLED.getID()
+            }
+        }
+
+        previousStatus = bluetoothUpdateStatus
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -41,11 +67,14 @@ fun UpdateWrapper(
     ) {
         content()
 
-        if (bluetoothUpdateStatus != BluetoothUpdateStatus.NONE) {
-            LaunchedEffect(bluetoothUpdateStatus) {
+        if (bluetoothBannerText != null && bluetoothBannerIconId != null) {
+            LaunchedEffect(bluetoothBannerText) {
                 delay(durationBluetoothNotification)
+                bluetoothBannerText = null
+                bluetoothBannerIconId = null
                 onBluetoothUpdateDismiss()
             }
+
             Box(
                 modifier = Modifier
                     .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -62,29 +91,15 @@ fun UpdateWrapper(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
-                        val imageID: Int
-                        val text: String
-
-                        if (bluetoothUpdateStatus == BluetoothUpdateStatus.DEVICE_CONNECTED) {
-                            imageID = Icon.BLUETOOTH_CONNECTED.getID()
-                            text = "Device connected via Bluetooth."
-                        } else {
-                            imageID = Icon.BLUETOOTH_DISABLED.getID()
-                            text = "Device disconnected from Bluetooth."
-                        }
-
                         Icon(
-                            painter = painterResource(id = imageID),
+                            painter = painterResource(id = bluetoothBannerIconId!!),
                             tint = theme.inversePrimary,
                             contentDescription = "Bluetooth connected icon",
                             modifier = Modifier.size(20.dp),
                         )
 
-                        if (bluetoothUpdateStatus == BluetoothUpdateStatus.DEVICE_CONNECTED) Icon.BLUETOOTH_CONNECTED.getID()
-                        else Icon.BLUETOOTH_DISABLED.getID()
-
                         Text(
-                            text = text,
+                            text = bluetoothBannerText!!,
                             color = theme.inversePrimary,
                             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
