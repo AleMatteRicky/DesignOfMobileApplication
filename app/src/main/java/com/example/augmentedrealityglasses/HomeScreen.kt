@@ -11,7 +11,6 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SharedTransitionScope.ResizeMode
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -34,7 +33,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -210,12 +208,6 @@ fun HomeScreen(
                                         .width(boxWidth)
                                         .clip(shape = RoundedCornerShape(22.dp))
                                         .background(colorScheme.tertiaryContainer)
-//                                        .border(
-//                                            0.5.dp,
-//                                            Color.Black,
-//                                            shape = RoundedCornerShape(22.dp)
-//                                        )
-
                                 ) {
                                     FindDeviceScreen(
                                         viewModel,
@@ -294,13 +286,9 @@ fun DeviceStatusPanel(
             onClick = onClick,
             enabled = connected,
             shape = RoundedCornerShape(22.dp),
-//            elevation = CardDefaults.cardElevation(
-//                defaultElevation = 8.dp,
-//                disabledElevation = 1.dp
-//            ),
             colors = CardDefaults.cardColors(
-                containerColor = colorScheme.primaryContainer,
-                contentColor = Color.Red,
+                containerColor = colorScheme.tertiaryContainer,
+                contentColor = colorScheme.surfaceContainer,
                 disabledContainerColor = colorScheme.tertiaryContainer,
                 disabledContentColor = colorScheme.surfaceContainer
             ),
