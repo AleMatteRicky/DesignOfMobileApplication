@@ -15,6 +15,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -105,8 +106,8 @@ fun HomeScreen(
                 }
             } else Modifier.fillMaxSize()
 
-        Box(
-            modifier = modifier
+        BoxWithConstraints(
+            modifier = modifier.fillMaxSize()
         ) {
 
             Box(
@@ -143,11 +144,15 @@ fun HomeScreen(
                 AnimatedContent(targetState = showFindDevicePanel.value) { targetState ->
                     if (!targetState) {
 
+                        val offsetWithRecordButton = (65.dp * 1.1f - 65.dp) / 2
+                        val addButtonBoxYOffset =
+                            maxHeight - (65.dp * 1.2f + 10.dp) + offsetWithRecordButton
+
                         Box(
                             Modifier
                                 .offset(
                                     x = (screenWidthDp - 65.dp) / 2,
-                                    y = screenHeightDp - navigationBarHeight - 65.dp * 1.2f - 10.dp //todo fix with navBarHeight
+                                    y = addButtonBoxYOffset    //todo fix with navBarHeight
                                 )
                                 .sharedBounds(
                                     sharedContentState = sharedState,
@@ -376,7 +381,6 @@ fun DevicesListPanel(
                 .fillMaxSize(),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(containerColor = colorScheme.tertiaryContainer),
-            //elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column {
                 Text(
@@ -431,10 +435,6 @@ fun DeviceRow(
             containerColor = colorScheme.tertiaryContainer,
             contentColor = colorScheme.surfaceContainer
         ),
-//        elevation = CardDefaults.cardElevation(
-//            defaultElevation = 0.dp,
-//            pressedElevation = 4.dp
-//        ),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
