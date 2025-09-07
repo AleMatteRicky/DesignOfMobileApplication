@@ -652,24 +652,37 @@ fun SystemBarsFromTheme(
 ) {
     val view = LocalView.current
     val scheme = MaterialTheme.colorScheme
-    val targetColor =
+
+    //Status bar (above)
+    val targetStatusBarColor =
         if (isOnTranslation && isTranslationPermissionGranted) scheme.tertiaryContainer else scheme.background
 
-    val animatedColor by animateColorAsState(
-        targetValue = targetColor,
+    val animatedStatusBarColor by animateColorAsState(
+        targetValue = targetStatusBarColor,
         animationSpec = tween(animationDurationMs),
         label = "statusBarColor"
     )
+    val useDarkStatusIcons = animatedStatusBarColor.luminance() > 0.5f
 
-    val useDarkIcons = animatedColor.luminance() > 0.5f
+    //Navigation bar (below)
+    val navBarColor = scheme.background
+    val useDarkNavIcons = navBarColor.luminance() > 0.5f
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = animatedColor.toArgb()
+            window.statusBarColor = animatedStatusBarColor.toArgb()
 
             val controller = WindowCompat.getInsetsController(window, view)
-            controller.isAppearanceLightStatusBars = useDarkIcons
+            controller.isAppearanceLightStatusBars = useDarkStatusIcons
+
+
+            window.navigationBarColor = navBarColor.toArgb()
+            controller.isAppearanceLightNavigationBars = useDarkNavIcons
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                window.navigationBarDividerColor = navBarColor.toArgb()
+            }
         }
     }
 }
