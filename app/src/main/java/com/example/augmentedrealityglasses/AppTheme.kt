@@ -19,11 +19,17 @@ private val LightColors = lightColorScheme(
     onBackground = Color.hsl(0f, 0f, 0.93f), // close to white used for background
     background = Color.hsl(0f, 0f, 0.93f), //equal to onBackground
     onPrimaryContainer = Color.hsl(0f, 0f, 1f), // primary info panel
-    onSurface = Color.hsl(0f, 0f, 0.05f), // used for selected or interactable components (could be used also black 0)
+    onSurface = Color.hsl(
+        0f,
+        0f,
+        0.05f
+    ), // used for selected or interactable components (could be used also black 0)
     inverseSurface = Color.hsl(0f, 0f, 1f), //used for download track
     tertiaryContainer = Color.hsl(0f, 0f, 1f), //used only for search bar (weather)
     onTertiary = Color.hsl(0f, 0f, 0.93f), //model missing
-    surfaceContainer = Color.hsl(0f, 0f, 0.05f)//only used for glasses in home screen
+    surfaceContainer = Color.hsl(0f, 0f, 0.05f), //only used for glasses in home screen
+    surfaceTint = Color.hsl(0f, 0f, 0.05f),
+    surfaceBright = Color.hsl(0f, 0f, 0.93f), //used for notification access
 )
 
 private val DarkColors = darkColorScheme(
@@ -37,7 +43,9 @@ private val DarkColors = darkColorScheme(
     inverseSurface = Color.hsl(0f, 0f, 0f), //used for download track
     tertiaryContainer = Color.hsl(0f, 0f, 0.15f), //used only for search bar (weather)
     onTertiary = Color.hsl(0f, 0f, 0.15f), //model missing
-    surfaceContainer = Color.hsl(0f, 0f, 0f)//only used for glasses in home screen
+    surfaceContainer = Color.hsl(0f, 0f, 0f), //only used for glasses in home screen
+    surfaceTint = Color.hsl(0f, 0f, 0f),
+    surfaceBright = Color.hsl(0f, 0f, 0.07f), //used for notification access
 )
 
 

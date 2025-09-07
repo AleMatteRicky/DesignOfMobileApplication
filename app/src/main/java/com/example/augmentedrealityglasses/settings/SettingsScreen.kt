@@ -139,7 +139,7 @@ fun AppearancePanel(
     Card(
         shape = RoundedCornerShape(16.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
+        colors = CardDefaults.cardColors(containerColor = theme.tertiaryContainer),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -269,7 +269,7 @@ fun NotificationFiltersPanel(
     Card(
         shape = RoundedCornerShape(16.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
+        colors = CardDefaults.cardColors(containerColor = theme.tertiaryContainer),
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 10.dp)
@@ -422,7 +422,7 @@ fun NotificationAccessPanel() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(theme.background, RoundedCornerShape(12.dp)) //TODO: adjust color
+            .background(theme.surfaceBright, RoundedCornerShape(12.dp)) //TODO: adjust color
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -440,7 +440,7 @@ fun NotificationAccessPanel() {
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Button(
-                colors = ButtonDefaults.buttonColors(containerColor = theme.onPrimaryContainer),
+                colors = ButtonDefaults.buttonColors(containerColor = theme.tertiaryContainer),
                 onClick = {
                     context.startActivity(
                         Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")

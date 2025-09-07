@@ -467,7 +467,7 @@ fun DailyForecastsPanel(
     Card(
         shape = RoundedCornerShape(22.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
+        colors = CardDefaults.cardColors(containerColor = theme.tertiaryContainer),
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
@@ -569,7 +569,7 @@ fun MultipleDaysForecastsPanel(
     Card(
         shape = RoundedCornerShape(22.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
+        colors = CardDefaults.cardColors(containerColor = theme.tertiaryContainer),
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
@@ -618,7 +618,7 @@ fun MultipleDaysForecastsItem(
     onClick: () -> Unit
 ) {
     val theme = MaterialTheme.colorScheme
-    val backgroundColor = if (isSelected) theme.onSurface else theme.onPrimaryContainer
+    val backgroundColor = if (isSelected) theme.surfaceTint else theme.tertiaryContainer
     val contentColor = if (isSelected) theme.inversePrimary else theme.primary
 
     //Disable item's click when already selected
@@ -791,7 +791,7 @@ private fun StatBox(
     Card(
         shape = RoundedCornerShape(22.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
+        colors = CardDefaults.cardColors(containerColor = theme.tertiaryContainer),
         modifier = modifier.aspectRatio(1f)
     ) {
         Column(
@@ -871,7 +871,7 @@ private fun SunriseSunsetBox(
     Card(
         shape = RoundedCornerShape(22.dp),
         //elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = theme.onPrimaryContainer),
+        colors = CardDefaults.cardColors(containerColor = theme.tertiaryContainer),
         modifier = modifier.aspectRatio(1f)
     ) {
         Column(
