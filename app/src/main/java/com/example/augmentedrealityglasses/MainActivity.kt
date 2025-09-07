@@ -17,6 +17,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -33,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -41,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
@@ -111,6 +114,8 @@ class MainActivity : ComponentActivity() {
 
             val screenTransitionDuration = 150
 
+            val isChangeThemeClicked = remember { mutableStateOf(false) }
+
             AppTheme(
                 isDarkThemeSelected = isDarkThemeSelected
             ) {
@@ -123,7 +128,8 @@ class MainActivity : ComponentActivity() {
                 SystemBarsFromTheme(
                     isTranslationPermissionGranted = translationPermissionState.value,
                     isOnTranslation = (currentRoute == ScreenName.TRANSLATION_HOME_SCREEN.name),
-                    animationDurationMs = screenTransitionDuration
+                    animationDurationMs = screenTransitionDuration,
+                    isChangeThemeClicked = isChangeThemeClicked
                 )
 
                 Scaffold(
@@ -580,7 +586,8 @@ class MainActivity : ComponentActivity() {
                             },
                         ) {
                             SettingsScreen(
-                                viewModel = settingsViewModel
+                                viewModel = settingsViewModel,
+                                isChangeThemeClicked = isChangeThemeClicked
                             )
                         }
                     }
@@ -648,7 +655,8 @@ class MainActivity : ComponentActivity() {
 fun SystemBarsFromTheme(
     isTranslationPermissionGranted: Boolean,
     isOnTranslation: Boolean,
-    animationDurationMs: Int
+    isChangeThemeClicked: MutableState<Boolean>,
+    animationDurationMs: Int,
 ) {
     val view = LocalView.current
     val scheme = MaterialTheme.colorScheme
@@ -657,12 +665,22 @@ fun SystemBarsFromTheme(
     val targetStatusBarColor =
         if (isOnTranslation && isTranslationPermissionGranted) scheme.tertiaryContainer else scheme.background
 
-    val animatedStatusBarColor by animateColorAsState(
-        targetValue = targetStatusBarColor,
-        animationSpec = tween(animationDurationMs),
-        label = "statusBarColor"
-    )
-    val useDarkStatusIcons = animatedStatusBarColor.luminance() > 0.5f
+    val statusBarColor: Color
+
+    if(!isChangeThemeClicked.value) {
+        val animatedStatusBarColor by animateColorAsState(
+            targetValue = targetStatusBarColor,
+            animationSpec = tween(animationDurationMs),
+            label = "statusBarColor"
+        )
+        statusBarColor = animatedStatusBarColor
+    }
+    else{
+        statusBarColor = scheme.background
+        isChangeThemeClicked.value = false
+    }
+
+    val useDarkStatusIcons = statusBarColor.luminance() > 0.5f
 
     //Navigation bar (below)
     val navBarColor = scheme.background
@@ -671,7 +689,7 @@ fun SystemBarsFromTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = animatedStatusBarColor.toArgb()
+            window.statusBarColor = statusBarColor.toArgb()
 
             val controller = WindowCompat.getInsetsController(window, view)
             controller.isAppearanceLightStatusBars = useDarkStatusIcons

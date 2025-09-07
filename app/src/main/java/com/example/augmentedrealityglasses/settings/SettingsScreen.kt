@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,7 +53,8 @@ import com.example.augmentedrealityglasses.notifications.ChatNotificationListene
 //todo check interaction shadow border
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel
+    viewModel: SettingsViewModel,
+    isChangeThemeClicked: MutableState<Boolean>
 ) {
     //Main UI state
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -72,6 +74,7 @@ fun SettingsScreen(
 
     LaunchedEffect(Unit) {
         viewModel.receiveBLEUpdates()
+        //isChangeThemeClicked.value = true
     }
 
     UpdateWrapper(
@@ -101,7 +104,8 @@ fun SettingsScreen(
                 isDarkSelected = isDarkSelected,
                 onSystemToggle = { viewModel.onSystemToggle(it) },
                 onSelectDark = { viewModel.onSelectDark() },
-                onSelectLight = { viewModel.onSelectLight() }
+                onSelectLight = { viewModel.onSelectLight() },
+                isChangeThemeClicked = isChangeThemeClicked
             )
 
             Spacer(Modifier.height(24.dp))
@@ -124,7 +128,8 @@ fun AppearancePanel(
     isDarkSelected: Boolean,
     onSystemToggle: (Boolean) -> Unit,
     onSelectDark: () -> Unit,
-    onSelectLight: () -> Unit
+    onSelectLight: () -> Unit,
+    isChangeThemeClicked: MutableState<Boolean>
 ) {
     val theme = MaterialTheme.colorScheme
 
@@ -155,7 +160,10 @@ fun AppearancePanel(
                     .fillMaxWidth()
                     .toggleable(
                         value = useSystemThemeMode,
-                        onValueChange = { onSystemToggle(it) }
+                        onValueChange = {
+                            isChangeThemeClicked.value = true
+                            onSystemToggle(it)
+                        }
                     ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -190,6 +198,7 @@ fun AppearancePanel(
                         enabled = !useSystemThemeMode,
                         value = isDarkSelected,
                         onValueChange = { checked ->
+                            isChangeThemeClicked.value = true
                             if (checked) onSelectDark() else onSelectLight()
                         }
                     ),
