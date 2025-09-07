@@ -863,7 +863,7 @@ private fun SunriseSunsetBox(
     modifier: Modifier = Modifier,
     title: String = "Sunrise / Sunset",
     iconSize: Dp = 32.dp,
-    dividerWidth: Dp = 64.dp
+    dividerWidth: Dp = 90.dp
 ) {
     val timeFmt = rememberTimeFormatter("HH:mm")
     val theme = MaterialTheme.colorScheme
@@ -915,8 +915,8 @@ private fun SunriseSunsetBox(
 
                     HorizontalDivider(
                         modifier = Modifier
-                            .padding(vertical = 10.dp)
-                            .width(dividerWidth),
+                            .padding(vertical = 10.dp, horizontal = 15.dp)
+                            .fillMaxWidth(),
                         thickness = 1.dp,
                         color = Color.LightGray //TODO: adjust color
                     )
