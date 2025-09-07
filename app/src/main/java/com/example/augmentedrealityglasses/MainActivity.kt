@@ -68,7 +68,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
 import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
-import com.example.augmentedrealityglasses.settings.SettingsScreenRoot
+import com.example.augmentedrealityglasses.settings.SettingsScreen
 import com.example.augmentedrealityglasses.settings.SettingsViewModel
 import com.example.augmentedrealityglasses.settings.ThemeMode
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
@@ -584,7 +584,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             },
                         ) {
-                            SettingsScreenRoot(
+                            SettingsScreen(
                                 viewModel = settingsViewModel,
                                 isChangeThemeClicked = isChangeThemeClicked
                             )

@@ -52,7 +52,7 @@ import com.example.augmentedrealityglasses.notifications.ChatNotificationListene
 
 //todo check interaction shadow border
 @Composable
-fun SettingsScreenPortrait(
+fun SettingsScreen(
     viewModel: SettingsViewModel,
     isChangeThemeClicked: MutableState<Boolean>
 ) {
