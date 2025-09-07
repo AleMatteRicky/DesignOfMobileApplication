@@ -60,14 +60,13 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun WeatherScreen(
+fun WeatherScreenPortrait(
     viewModel: WeatherViewModel,
     onTextFieldClick: () -> Unit,
     onScreenComposition: () -> Unit
 ) {
     //Main UI state
     val uiState by viewModel.weatherState.collectAsStateWithLifecycle()
-    val verticalPaddingBetweenPanels = 16.dp
     //Context
     val context = LocalContext.current
 
@@ -303,14 +302,16 @@ fun CurrentWeatherBar(
     minTemperature: Int,
     feelsLike: Int,
     conditionName: String,
-    iconId: Int
+    iconId: Int,
+    padding: Dp = 16.dp,
+    secondaryDp: Int = 14
 ) {
     val theme = MaterialTheme.colorScheme
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = padding)
             .background(theme.background),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -345,13 +346,15 @@ fun CurrentWeatherBar(
                     painter = painterResource(id = R.drawable.arrow_upward),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(14.dp)
+                        .size(secondaryDp.dp)
                         .padding(end = 2.dp),
                     tint = theme.secondary
                 )
                 Text(
                     text = "${maxTemperature}°",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = secondaryDp.sp
+                    ),
                     color = theme.secondary
                 )
 
@@ -359,7 +362,9 @@ fun CurrentWeatherBar(
 
                 Text(
                     text = "/",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = secondaryDp.sp
+                    ),
                     color = theme.secondary
                 )
 
@@ -369,20 +374,24 @@ fun CurrentWeatherBar(
                     painter = painterResource(id = R.drawable.arrow_downward),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(14.dp)
+                        .size(secondaryDp.dp)
                         .padding(end = 2.dp),
                     tint = theme.secondary
                 )
                 Text(
                     text = "${minTemperature}°",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = secondaryDp.sp
+                    ),
                     color = theme.secondary
                 )
             }
 
             Text(
                 text = "Feels Like: ${feelsLike}°",
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontSize = secondaryDp.sp
+                ),
                 color = theme.secondary,
                 modifier = Modifier.padding(top = 5.dp),
                 maxLines = 1
@@ -402,7 +411,8 @@ fun CurrentWeatherBar(
 fun LocationManagerBar(
     onClickSearchBar: () -> Unit,
     onClickGeolocationIcon: () -> Unit,
-    geolocationEnabled: Boolean
+    geolocationEnabled: Boolean,
+    padding: Dp = 16.dp
 ) {
     val theme = MaterialTheme.colorScheme
 
@@ -411,7 +421,7 @@ fun LocationManagerBar(
         color = theme.tertiaryContainer,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = padding)
             .height(56.dp)
             .clickable { onClickSearchBar() }
     ) {
@@ -862,8 +872,7 @@ private fun SunriseSunsetBox(
     sunset: Date,
     modifier: Modifier = Modifier,
     title: String = "Sunrise / Sunset",
-    iconSize: Dp = 32.dp,
-    dividerWidth: Dp = 90.dp
+    iconSize: Dp = 32.dp
 ) {
     val timeFmt = rememberTimeFormatter("HH:mm")
     val theme = MaterialTheme.colorScheme

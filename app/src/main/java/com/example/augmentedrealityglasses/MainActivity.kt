@@ -17,7 +17,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -77,7 +76,7 @@ import com.example.augmentedrealityglasses.translation.ui.TranslationHomeScreen
 import com.example.augmentedrealityglasses.translation.ui.TranslationLanguageSelectionScreen
 import com.example.augmentedrealityglasses.translation.ui.TranslationResultScreen
 import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
-import com.example.augmentedrealityglasses.weather.screen.WeatherScreen
+import com.example.augmentedrealityglasses.weather.screen.WeatherScreenRoot
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -527,7 +526,7 @@ class MainActivity : ComponentActivity() {
                                         viewModel.hideErrorMessage()
                                     }
                                 ) {
-                                    WeatherScreen(
+                                    WeatherScreenRoot(
                                         onScreenComposition = {},
                                         onTextFieldClick = {
                                             navController.navigate(ScreenName.WEATHER_SEARCH_LOCATIONS.name)
@@ -667,15 +666,14 @@ fun SystemBarsFromTheme(
 
     val statusBarColor: Color
 
-    if(!isChangeThemeClicked.value) {
+    if (!isChangeThemeClicked.value) {
         val animatedStatusBarColor by animateColorAsState(
             targetValue = targetStatusBarColor,
             animationSpec = tween(animationDurationMs),
             label = "statusBarColor"
         )
         statusBarColor = animatedStatusBarColor
-    }
-    else{
+    } else {
         statusBarColor = scheme.background
         isChangeThemeClicked.value = false
     }
