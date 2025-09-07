@@ -26,6 +26,7 @@ private val LightColors = lightColorScheme(
     surfaceContainer = Color.hsl(0f, 0.01f, 0.05f), //only used for glasses in home screen
     surfaceTint = Color.hsl(0f, 0.01f, 0.05f),
     surfaceBright = Color.hsl(0f, 0.01f, 0.93f), //used for notification access
+    outline = Color.hsl(0f, 0.01f, 0.85f)
 )
 
 private val DarkColors = darkColorScheme(
@@ -41,7 +42,8 @@ private val DarkColors = darkColorScheme(
     onTertiary = Color.hsl(0f, 0.01f, 0.15f), //model missing
     surfaceContainer = Color.hsl(0f, 0.01f, 0.93f), //only used for glasses in home screen
     surfaceTint = Color.hsl(0f, 0.01f, 0f),
-    surfaceBright = Color.hsl(0f, 0.01f, 0.07f) //used for notification access
+    surfaceBright = Color.hsl(0f, 0.01f, 0.07f), //used for notification access
+    outline = Color.hsl(0f, 0.01f, 0.10f)
 )
 
 
