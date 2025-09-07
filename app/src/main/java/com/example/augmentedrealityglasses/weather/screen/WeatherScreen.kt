@@ -802,7 +802,9 @@ private fun StatBox(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 14.sp
+                ),
                 color = theme.primary
             )
 
@@ -880,7 +882,9 @@ private fun SunriseSunsetBox(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 14.sp
+                ),
                 color = theme.primary
             )
 
