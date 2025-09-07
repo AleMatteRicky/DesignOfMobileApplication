@@ -269,7 +269,7 @@ fun LocationBar(locationName: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 20.dp, bottom = 15.dp)
+            .padding(top = 24.dp, bottom = 15.dp)
             .background(theme.background),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

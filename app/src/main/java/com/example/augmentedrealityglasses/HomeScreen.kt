@@ -252,15 +252,18 @@ fun DevicesPanel(
             style = MaterialTheme.typography.titleLarge,
             color = colorScheme.primary,
             modifier = Modifier
-                .padding(bottom = 8.dp)
                 .padding(horizontal = 16.dp)
-                .padding(top = 20.dp)
+                .padding(top = 24.dp)
         )
+
+        Spacer(Modifier.height(24.dp))
 
         DeviceStatusPanel(
             connected = connected,
             onClick = onDeviceStatusPanelClick
         )
+
+        Spacer(Modifier.height(20.dp))
 
         DevicesListPanel(
             devices = devices,
@@ -279,7 +282,7 @@ fun DeviceStatusPanel(
 
     Box(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(horizontal = 16.dp)
             .background(color = colorScheme.background)
     ) {
         Card(
@@ -360,7 +363,7 @@ fun DevicesListPanel(
     val colorScheme = MaterialTheme.colorScheme
 
     Box(
-        modifier = modifier.padding(16.dp)
+        modifier = modifier.padding(horizontal = 16.dp)
     ) {
         Card(
             modifier = Modifier
