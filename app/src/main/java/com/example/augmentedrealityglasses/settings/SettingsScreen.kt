@@ -112,6 +112,8 @@ fun SettingsScreen(
                 onEnableNotificationSource = { viewModel.onEnableNotificationSource(it) },
                 onDisableNotificationSource = { viewModel.onDisableNotificationSource(it) }
             )
+
+            Spacer(Modifier.height(8.dp))
         }
     }
 }

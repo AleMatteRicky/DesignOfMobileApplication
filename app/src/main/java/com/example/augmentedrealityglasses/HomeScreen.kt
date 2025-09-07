@@ -385,7 +385,7 @@ fun DevicesListPanel(
                 Text(
                     text = "Paired Devices",
                     modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                     style = MaterialTheme.typography.bodyLarge,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
