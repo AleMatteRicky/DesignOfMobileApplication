@@ -3,6 +3,7 @@
 #include <memory>
 #include "input/input_manager.h"
 #include "page/page.h"
+#include "page/page_factory.h"
 #include "page/type.h"
 #include "view/screen/screen.h"
 #include "view/tft.h"
@@ -11,9 +12,9 @@
 namespace view {
 class Window : public View {
 public:
-    Window(std::unique_ptr<Page>&& firstPage);
+    Window(std::unique_ptr<PageFactory>&& pageFactory);
 
-    void setPage(std::unique_ptr<Page> page);
+    void setPage(PageType pageType);
 
     void onEvent(Press const& ev) override;
 
@@ -30,6 +31,14 @@ protected:
     }
 
 private:
-    byte const m_idxPage;
+    void detachCurrentPage();
+    void setPage(std::unique_ptr<Page>&& page);
+
+private:
+    inline static char const TAG[] = "Window";
+
+private:
+    std::unique_ptr<PageFactory> m_pageFactory;
+    Page* m_currentPage;
 };
 }  // namespace view

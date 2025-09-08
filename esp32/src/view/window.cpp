@@ -1,40 +1,31 @@
 #include "view/window.h"
+#include <ArduinoJson.h>
 #include "ble/remote_dispatcher.h"
-#include "controller/controller.h"
-#include "view/bin_pngs/32/missed-call.h"
-#include "view/bin_pngs/32/no-wifi.h"
-#include "view/bin_pngs/32/share.h"
-#include "view/bin_pngs/32/text.h"
+#include "controller/central_controller.h"
+#include "view/bin_pngs/24/connected.h"
+#include "view/bin_pngs/24/incoming_call.h"
+#include "view/bin_pngs/24/incoming_message.h"
+#include "view/bin_pngs/24/no_connection.h"
 #include "view/image/connection_state.h"
 #include "view/notifications/notification.h"
 
 namespace view {
 
-Window::Window(std::unique_ptr<Page>&& firstPage)
+Window::Window(std::unique_ptr<view::PageFactory>&& pageFactory)
     : View::View(RectType{Coordinates{0, 0}, Size{SCREEN_WIDTH, SCREEN_HEIGHT}},
                  nullptr,
                  "window"),
-      m_idxPage{4} {
+      m_pageFactory(std::move(pageFactory)),
+      m_currentPage(nullptr) {
     auto inputManager = InputManager::getInstance();
     inputManager->addObserver(Press::name, this);
-    inputManager->addObserver(DoubleClick::name, this);
 
-    Notification* callNotification = new Notification(
-        RectType{Coordinates{0, 32}, Size{32, 32}}, this,
-        BinaryImageInfo{32, 32, sizeof(missed_call), missed_call},
-        ble::CallNotification::name);
-
-    Notification* messageNotification =
-        new Notification(RectType{Coordinates{0, 64}, Size{32, 32}}, this,
-                         BinaryImageInfo{32, 32, sizeof(text), text},
-                         ble::MessageNotification::name);
-
-    callNotification->makeVisible(false);
-    messageNotification->makeVisible(false);
+    auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
+    remoteDispatcher->addObserver(ble::UpdateMessage::name, this);
 
     Image* connectionImage =
-        new Image(RectType{Coordinates{0, 0}, Size{32, 32}}, this,
-                  {BinaryImageInfo{32, 32, sizeof(share), share}});
+        new Image(RectType{Coordinates{8, 8}, Size{24, 24}}, this,
+                  {BIN_IMG(24, 24, connected_24)});
 
     auto controller = controller::CentralController::getInstance();
     bool isConnected = controller->isConnected();
@@ -54,9 +45,11 @@ Window::Window(std::unique_ptr<Page>&& firstPage)
             connectionImage->draw();
         });
 
-    Image* disconnectionImage =
-        new Image(RectType{Coordinates{0, 0}, Size{32, 32}}, this,
-                  {BinaryImageInfo{32, 32, sizeof(no_wifi), no_wifi}});
+    // disconnection and connection image overlap, and mutually excludes
+    // themselves based on the connection's state
+    Image* disconnectionImage = new Image(
+        RectType{connectionImage->getCoordinates(), connectionImage->getSize()},
+        this, {BIN_IMG(24, 24, no_connection_24)});
 
     disconnectionImage->makeVisible(!isConnected);
     disconnectionImage->setOnConnectionState(
@@ -73,12 +66,32 @@ Window::Window(std::unique_ptr<Page>&& firstPage)
             disconnectionImage->draw();
         });
 
-    auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
-
     remoteDispatcher->addObserver(ble::ConnectionState::name, connectionImage);
 
     remoteDispatcher->addObserver(ble::ConnectionState::name,
                                   disconnectionImage);
+
+    auto [xConnectionImg, yConnectionImg] = connectionImage->getCoordinates();
+    auto [connectionImgWidth, connectionImgHeight] = connectionImage->getSize();
+    auto offset = 8;
+
+    Notification* callNotification = new Notification(
+        RectType{Coordinates{xConnectionImg + connectionImgWidth + offset,
+                             yConnectionImg},
+                 Size{24, 24}},
+        this, "Incoming call", BIN_IMG(24, 24, incoming_call_24),
+        ble::CallNotification::name);
+
+    Notification* messageNotification = new Notification(
+        RectType{
+            Coordinates{xConnectionImg + 2 * (connectionImgHeight + offset),
+                        yConnectionImg},
+            Size{24, 24}},
+        this, "Incoming message", BIN_IMG(24, 24, incoming_message),
+        ble::MessageNotification::name);
+
+    callNotification->makeVisible(false);
+    messageNotification->makeVisible(false);
 
     remoteDispatcher->addObserver(ble::CallNotification::name,
                                   callNotification);
@@ -86,18 +99,27 @@ Window::Window(std::unique_ptr<Page>&& firstPage)
     remoteDispatcher->addObserver(ble::MessageNotification::name,
                                   messageNotification);
 
-    appendSubView(std::move(firstPage));
+    auto firstPage = m_pageFactory->createPage(PageType::HOME);
+
+    setPage(std::move(firstPage));
 }
 
-void Window::setPage(std::unique_ptr<Page> page) {
-    // destroy the current page and add the new one
-    Serial.printf("The window had %d direct subviews\n", getNumSubViews());
+void Window::setPage(PageType pageType) {
+    setPage(m_pageFactory->createPage(pageType));
+}
 
-    // detach only the page, notifications need to have the same liveness of the
-    // window
-    detach(getSubViewAtIndex(m_idxPage));
+void Window::detachCurrentPage() {
+    if (m_currentPage)
+        detach(*m_currentPage);
+}
 
-    View::appendSubView(std::move(page));
+void Window::setPage(std::unique_ptr<Page>&& page) {
+    ESP_LOGD(TAG, "Changing page");
+    detachCurrentPage();
+
+    m_currentPage = page.get();
+
+    appendSubView(std::move(page));
 
     printTree();
     draw();
@@ -132,6 +154,6 @@ void Window::onEvent(ble::UpdateMessage const& event) {
     if (currentPage != pageReferredByTheMessage) {
         setPage(m_pageFactory->createPage(pageReferredByTheMessage));
         m_currentPage->onEvent(event);
-}
+    }
 }
 }  // namespace view
