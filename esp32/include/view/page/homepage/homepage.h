@@ -5,8 +5,6 @@
 #include <SPI.h>
 #include <TFT_eSPI.h>
 
-#include "model/model.h"
-#include "view/image/connection_state.h"
 #include "view/image/image.h"
 #include "view/page/page.h"
 #include "view/roll/roll.h"
@@ -22,6 +20,8 @@ public:
     };
 
     void drawOnScreen() override;
+
+    PageType getType() override { return HOME; }
 
 private:
     Homepage()

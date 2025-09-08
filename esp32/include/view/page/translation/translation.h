@@ -5,12 +5,10 @@
 #include <SPI.h>
 #include <TFT_eSPI.h>
 
-#include "model/model.h"
-#include "view/image/connection_state.h"
 #include "view/image/image.h"
 #include "view/page/page.h"
 #include "view/screen/screen.h"
-#include "view/text/text.h"
+#include "view/text/text_area.h"
 #include "view/window.h"
 
 namespace view {
@@ -23,8 +21,7 @@ public:
 
     void onEvent(ble::UpdateMessage const&) override;
 
-    void onEvent(SwipeAntiClockwise const&) override;
-    void onEvent(SwipeClockwise const&) override;
+    PageType getType() override { return PageType::TRANSLATION; }
 
 protected:
     void drawOnScreen() override;
@@ -32,10 +29,12 @@ protected:
 private:
     TranslationPage();
 
-    inline static std::string const commandName = "t";  // TODO: check this
+    inline static std::string const commandName = "t";
+
+    inline static char const TAG[] = "TranslationPage";
 
 private:
-    Text* m_text;
+    TextArea* m_text;
 };
 
 }  // namespace view

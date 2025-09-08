@@ -2,7 +2,7 @@
 
 #include "view/page/page.h"
 #include "view/screen/screen.h"
-#include "view/text/text.h"
+#include "view/text/text_area.h"
 #include "view/window.h"
 
 namespace view {
@@ -21,9 +21,14 @@ public:
 
     void onEvent(Click const&) override;
 
+    PageType getType() override { return CONNECTION; }
+
+private:
+    inline static char const TAG[] = "ConnectionPage";
+
 private:
     ConnectionPage();
-    Text* m_text;
+    TextArea* m_text;
 };
 
 }  // namespace view
