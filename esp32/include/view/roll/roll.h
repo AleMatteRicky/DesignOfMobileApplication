@@ -23,8 +23,10 @@ public:
     }
 
     void onEvent(Click const& ev) override {
+        ESP_LOGD(TAG, "Roll has received a click event");
         // inform about the click only the View that is currently selected
         View& v = getSubViewAtIndex(m_idxImageAtTheCenter);
+        ESP_LOGD(TAG, "Click event forwarded to the view at %p\n", &v);
         v.onEvent(ev);
     }
 
@@ -46,6 +48,9 @@ private:
     }
 
     std::pair<byte, bool> drawRoll(bool, byte);
+
+private:
+    inline static char const TAG[] = "Roll";
 
 private:
     int16_t m_idxImageAtTheCenter = 0;
