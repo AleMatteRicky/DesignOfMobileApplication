@@ -1,8 +1,12 @@
 #include "view/page/page_factory_impl.h"
+#include "view/page/connectionpage/connectionpage.h"
+#include "view/page/homepage/homepage.h"
+#include "view/page/message_notification/message_notification_page.h"
+#include "view/page/translation/translation.h"
+#include "view/page/weather/weather.h"
 
 namespace view {
 std::unique_ptr<Page> PageFactoryImpl::createPage(PageType type) {
-    // TODO: add here the remaining cases
     switch (type) {
         case PageType::HOME:
             ESP_LOGD(TAG, "Creating the home page");
