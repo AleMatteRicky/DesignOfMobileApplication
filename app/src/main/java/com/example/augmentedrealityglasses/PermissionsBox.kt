@@ -3,13 +3,14 @@ package com.example.augmentedrealityglasses
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -39,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -76,6 +77,8 @@ fun PermissionsBox(
     val context = LocalContext.current
     val activity = context as Activity
     val lifecycleOwner = LocalLifecycleOwner.current
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Track granted state for each permission
     val grantedState = remember {
@@ -185,98 +188,214 @@ fun PermissionsBox(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 28.dp)
+                .padding(horizontal = 12.dp, vertical = 12.dp)
                 .background(theme.background)
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            if (!isLandscape) {
+                Column(modifier = Modifier.fillMaxSize()) {
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
 
-                    val titleColor = theme.primary
-                    val textColor = theme.secondary
+                        val titleColor = theme.primary
+                        val textColor = theme.secondary
 
-                    Icon(
-                        painter = painterResource(id = iconId),
-                        contentDescription = null,
-                        modifier = Modifier.size(84.dp),
-                        tint = theme.primary
-                    )
-                    Spacer(Modifier.height(24.dp))
+                        Icon(
+                            painter = painterResource(id = iconId),
+                            contentDescription = null,
+                            modifier = Modifier.size(84.dp),
+                            tint = theme.primary
+                        )
+                        Spacer(Modifier.height(24.dp))
 
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = titleColor
-                    )
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = titleColor
+                        )
 
-                    Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(20.dp))
 
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = textColor,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                        Text(
+                            text = message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = textColor,
+                            textAlign = TextAlign.Center
+                        )
+                    }
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                    contentAlignment = Alignment.Center
-                ) {
-                    PermissionStatusList(
-                        permissionsRequired = permissionsRequired,
-                        grantedState = grantedState,
-                        onPermissionClick = {
-                            launcher.launch(arrayOf(it))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState()),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        PermissionStatusList(
+                            permissionsRequired = permissionsRequired,
+                            grantedState = grantedState,
+                            onPermissionClick = {
+                                launcher.launch(arrayOf(it))
+                            }
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+
+                        if (!hasPermanentlyDenied) {
+                            Button(
+                                onClick = {
+                                    launcher.launch(permissionsRequired.keys.toTypedArray())
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(22.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = theme.onSurface,
+                                    contentColor = theme.inversePrimary
+                                )
+                            ) {
+                                Text(
+                                    text = grantLabel,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        } else {
+                            Button(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = {
+                                    val intent = Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        Uri.fromParts("package", activity.packageName, null)
+                                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    activity.startActivity(intent)
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = theme.onSurface,
+                                    contentColor = theme.inversePrimary
+                                )
+                            ) {
+                                Text(
+                                    text = "Open app settings",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
-                    )
+                    }
                 }
+            } else {
+                Column(modifier = Modifier.fillMaxSize()) {
 
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)) {
-
-                    if (!hasPermanentlyDenied) {
-                        Button(
-                            onClick = {
-                                launcher.launch(permissionsRequired.keys.toTypedArray())
-                            },
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    ) {
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(22.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = theme.onSurface,
-                                contentColor = theme.inversePrimary
-                            )
+                                .weight(0.50f)
+                                .fillMaxSize()
+                                .padding(end = 20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Text(grantLabel)
-                        }
-                    } else {
-                        Button(
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = {
-                                val intent = Intent(
-                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                    Uri.fromParts("package", activity.packageName, null)
-                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                activity.startActivity(intent)
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = theme.onSurface,
-                                contentColor = theme.inversePrimary
+                            Icon(
+                                painter = painterResource(id = iconId),
+                                contentDescription = null,
+                                modifier = Modifier.size(84.dp),
+                                tint = theme.primary
                             )
-                        ) {
+
+                            Spacer(Modifier.height(12.dp))
+
                             Text(
-                                text = "Open app settings",
-                                style = MaterialTheme.typography.bodyMedium
+                                text = title,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = theme.primary
                             )
+
+                            Spacer(Modifier.height(16.dp))
+
+                            Text(
+                                text = message,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = theme.secondary,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(0.50f)
+                                .fillMaxSize()
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState()),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                PermissionStatusList(
+                                    permissionsRequired = permissionsRequired,
+                                    grantedState = grantedState,
+                                    onPermissionClick = { launcher.launch(arrayOf(it)) }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (!hasPermanentlyDenied) {
+                            Button(
+                                onClick = { launcher.launch(permissionsRequired.keys.toTypedArray()) },
+                                modifier = Modifier
+                                    .height(56.dp)
+                                    .fillMaxWidth(0.45f),
+                                shape = RoundedCornerShape(22.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = theme.onSurface,
+                                    contentColor = theme.inversePrimary
+                                )
+                            ) {
+                                Text(
+                                    text = grantLabel,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        } else {
+                            Button(
+                                onClick = {
+                                    val intent = Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        Uri.fromParts("package", activity.packageName, null)
+                                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    activity.startActivity(intent)
+                                },
+                                modifier = Modifier.height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = theme.onSurface,
+                                    contentColor = theme.inversePrimary
+                                )
+                            ) {
+                                Text(
+                                    text = "Open app settings",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
                     }
                 }
