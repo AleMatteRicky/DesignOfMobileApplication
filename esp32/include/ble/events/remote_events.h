@@ -6,26 +6,26 @@
 namespace ble {
 
 struct BondingState {
-    inline static std::string const name = "bonding_state";
+    inline static char const name[] = "bonding_state";
     enum { BONDED, NOTBONDED, BONDING } phase;
     uint32_t passkey;
 };
 
 struct ConnectionState {
-    inline static std::string const name = "connection_state";
+    inline static char const name[] = "connection_state";
     enum { CONNECTED, DISCONNECTED } phase;
 };
 
 struct UpdateMessage {
-    inline static std::string const name = "message_from_remote";
+    inline static char const name[] = "message_from_remote";
     std::string const msg;
 };
 
 struct MessageNotification {
-    inline static std::string const name = "message_notification";
+    inline static char const name[] = "message_notification";
 };
 
 struct CallNotification {
-    inline static std::string const name = "call_notification";
+    inline static char const name[] = "call_notification";
 };
 }
