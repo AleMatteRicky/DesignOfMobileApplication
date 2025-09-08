@@ -13,8 +13,9 @@ TextArea::TextArea(RectType frame,
       m_tft{tft::Tft::getTFT_eSPI()},
       m_fgColour{TFT_LIGHTGREY},
       m_bgColour{TFT_BLACK},
-      m_cursorCoordinates{Coordinates{getCoordinates()}},
-      m_oldCursorCoordinates{Coordinates::none},
+      m_cursorCoordinatesAfterAddingTheLastCharacter{
+          Coordinates{getCoordinates()}},
+      m_cursorCoordinatesFirstCharacterPrinted{getCoordinates()},
       m_wrap{true},
       m_center{false} {
     auto frameSz = getSize();
@@ -63,7 +64,7 @@ TextArea::TextArea(RectType frame,
 TextArea::~TextArea() {}
 
 size_t TextArea::setContent(std::string const& content) {
-    m_cursorCoordinates = getCoordinates();
+    m_cursorCoordinatesAfterAddingTheLastCharacter = getCoordinates();
 
     m_currentFrame.reset();
 
@@ -79,12 +80,13 @@ size_t TextArea::appendContent(std::string const& content) {
 
     auto frameSz = getSize();
     auto frameCoordinates = getCoordinates();
-    if (!m_wrap &&
-        m_cursorCoordinates.m_y >= frameCoordinates.m_y + frameSz.m_height) {
+    if (!m_wrap && m_cursorCoordinatesAfterAddingTheLastCharacter.m_y >=
+                       frameCoordinates.m_y + frameSz.m_height) {
         ESP_LOGD(TAG,
                  "Text already full, no space for '%s'. The cursorY is at %u, "
                  "but the maximum y is %u",
-                 content.c_str(), m_cursorCoordinates.m_y,
+                 content.c_str(),
+                 m_cursorCoordinatesAfterAddingTheLastCharacter.m_y,
                  frameCoordinates.m_y + frameSz.m_height);
         return 0;
     }
@@ -107,7 +109,7 @@ size_t TextArea::appendContent(std::string const& content) {
     // when appending text, the previous line needs to be restored
     restoreLine(line);
 
-    auto cursorCoordinates = m_cursorCoordinates;
+    auto cursorCoordinates = m_cursorCoordinatesAfterAddingTheLastCharacter;
     byte inc = 0;
     for (uint32_t i = 0; i < content.size(); i += inc) {
         std::string glyph = getUTF8Sequence(content, i);
@@ -174,34 +176,34 @@ size_t TextArea::appendContent(std::string const& content) {
         }
     }
 
-    m_cursorCoordinates = cursorCoordinates;
+    m_cursorCoordinatesAfterAddingTheLastCharacter = cursorCoordinates;
     strcpy(m_curLine.get(), line);
     return content.size();
 }
 
 void TextArea::drawOnScreen() {
     ESP_LOGD(TAG, "Is centered? %d", m_center);
-    ESP_LOGD(TAG, "Cursor at (%d, %d)", m_cursorCoordinates.m_x,
-             m_cursorCoordinates.m_y);
-    ESP_LOGD(TAG, "Old cursor at (%d, %d)", m_oldCursorCoordinates.m_x,
-             m_oldCursorCoordinates.m_y);
+    ESP_LOGD(TAG, "Cursor last char at (%d, %d)",
+             m_cursorCoordinatesAfterAddingTheLastCharacter.m_x,
+             m_cursorCoordinatesAfterAddingTheLastCharacter.m_y);
+    ESP_LOGD(TAG, "Last cursor used for printing at (%d, %d)",
+             m_cursorCoordinatesFirstCharacterPrinted.m_x,
+             m_cursorCoordinatesFirstCharacterPrinted.m_y);
 
-    // if the old cursor contains data that means the current content will be
-    // drawned at a different position than the old content, hence we need to
-    // clean the screen even if the two contents may have a common prefix
-    if (m_oldCursorCoordinates != Coordinates::none) {
-        auto oldCenter = center(m_oldCursorCoordinates);
-        m_tft->setCursor(oldCenter.m_x, oldCenter.m_y);
+    // if the two coordinates don't match, that means the cursor was changed
+    // dynamically and therefore the old content must be wiped out, otherwise
+    // the cancellation wouldn't work
+    if (m_cursorCoordinatesFirstCharacterPrinted != getCoordinates()) {
+        /*
+        auto oldCenter = center(m_cursorCoordinatesFirstCharacterPrinted);
+        */
+        m_tft->setCursor(m_cursorCoordinatesFirstCharacterPrinted.m_x,
+                         m_cursorCoordinatesFirstCharacterPrinted.m_y);
         hide(m_oldFrame, 0);
     }
 
-    Coordinates cursorCoordinates;
-
-    if (m_center) {
-        cursorCoordinates = center(m_cursorCoordinates);
-    } else {
-        cursorCoordinates = getCoordinates();
-    }
+    Coordinates const cursorCoordinates =
+        m_center ? center() : getCoordinates();
 
     ESP_LOGD(TAG, "cursor coordinates: (%d, %d)", cursorCoordinates.m_x,
              cursorCoordinates.m_y);
@@ -245,11 +247,18 @@ void TextArea::drawOnScreen() {
     auto curFrameSz = m_currentFrame.size();
     if (m_oldFrame.size() > curFrameSz)
         hide(m_oldFrame, curFrameSz);
+
+    m_cursorCoordinatesFirstCharacterPrinted = cursorCoordinates;
+
+    /*
     if (m_center)
-        m_oldCursorCoordinates = m_cursorCoordinates;
+        // TODO: fix, use getCoordinates() instead
+        m_cursorCoordinatesFirstCharacterPrinted =
+            m_cursorCoordinatesAfterAddingTheLastCharacter;
     else
         // needed when the text is switched from centered to not centered
-        m_oldCursorCoordinates = Coordinates::none;
+        m_cursorCoordinatesFirstCharacterPrinted = Coordinates::none;
+    */
 }
 
 void TextArea::hideGlyph(char const* glyph) {
@@ -276,15 +285,24 @@ void TextArea::hide(Frame const& textFrame, uint32_t beg) {
     m_oldFrame.eraseFrom(beg);
 }
 
-std::pair<size_t, byte> TextArea::sizeContent(std::string const& content) {
-    size_t totWidth{0};
-    byte inc{0};
-    for (size_t i = 0; i < content.size(); i++) {
-        byte inc = getUTF8SequenceLength(content[i]);
-        assert(inc > 0);
-        totWidth += m_tft->textWidth(content.substr(i, inc).c_str());
-    }
-    return {totWidth, m_charHeight};
+std::pair<int16_t, int16_t> TextArea::sizeContent() {
+    auto frameCoordinates = getCoordinates();
+    auto frameSz = getSize();
+    int16_t textWidth =
+        m_cursorCoordinatesAfterAddingTheLastCharacter.m_y >
+                frameCoordinates.m_y
+            ? frameSz.m_width
+            : m_cursorCoordinatesAfterAddingTheLastCharacter.m_x -
+                  frameCoordinates.m_x;
+
+    ESP_LOGD(TAG, "Text width: %d", textWidth);
+
+    int16_t textHeight = m_cursorCoordinatesAfterAddingTheLastCharacter.m_y +
+                         m_charHeight - frameCoordinates.m_y;
+
+    ESP_LOGD(TAG, "Text height: %d", textHeight);
+
+    return {textWidth, textHeight};
 }
 
 std::string TextArea::getUTF8Sequence(std::string const& str, size_t idx) {
@@ -334,37 +352,34 @@ void TextArea::clearFromScreen() {
     if (m_currentFrame.size() == 0)
         return;
 
-    Coordinates cursor = m_oldCursorCoordinates == Coordinates::none
-                             ? getCoordinates()
-                             : m_oldCursorCoordinates;
-
+    /*
+    Coordinates cursor =
+        m_cursorCoordinatesFirstCharacterPrinted == Coordinates::none
+            ? getCoordinates()
+            : m_cursorCoordinatesFirstCharacterPrinted;
     ESP_LOGD(TAG, "Clearing from (%d, %d)", cursor.m_x, cursor.m_y);
-
     m_tft->setCursor(cursor.m_x, cursor.m_y);
+    */
+
+    ESP_LOGD(TAG, "Clearing from (%d, %d)",
+             m_cursorCoordinatesFirstCharacterPrinted.m_x,
+             m_cursorCoordinatesFirstCharacterPrinted.m_y);
+
+    m_tft->setCursor(m_cursorCoordinatesFirstCharacterPrinted.m_x,
+                     m_cursorCoordinatesFirstCharacterPrinted.m_y);
 
     // before: hide(m_currentFrame, 0);
     hide(m_oldFrame, 0);
 }
 
-Coordinates TextArea::center(Coordinates cursor) {
+Coordinates TextArea::center() {
+    auto cursor = m_cursorCoordinatesAfterAddingTheLastCharacter;
     auto [x, y] = m_reference.m_coordinates;
     auto [w, h] = m_reference.m_size;
     ESP_LOGD(TAG, "info: pos=(%u, %u), w = %u, h = %u, cursor=(%d,%d)", x, y, w,
              h, cursor.m_x, cursor.m_y);
 
-    int16_t textWidth;
-    auto frameCoordinates = getCoordinates();
-    auto frameSz = getSize();
-    if (cursor.m_y > frameCoordinates.m_y)
-        textWidth = frameSz.m_width;
-    else
-        textWidth = cursor.m_x - frameCoordinates.m_x;
-
-    ESP_LOGD(TAG, "Computed text width: %d vs actual width: %d", textWidth,
-             m_tft->textWidth(m_curLine.get()));
-
-    int16_t textHeight = cursor.m_y + m_charHeight - frameCoordinates.m_y;
-    ESP_LOGD(TAG, "Text height: %d", textHeight);
+    auto [textWidth, textHeight] = sizeContent();
 
     uint16_t deltaX = (std::max(w - textWidth, 0)) / 2;
     uint16_t deltaY = (std::max(h - textHeight, 0)) / 2;

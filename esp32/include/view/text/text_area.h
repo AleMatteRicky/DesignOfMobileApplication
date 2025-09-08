@@ -66,7 +66,7 @@ public:
 
     static byte getUTF8SequenceLength(unsigned char firstByte);
 
-    std::pair<size_t, byte> sizeContent(std::string const&);
+    std::pair<int16_t, int16_t> sizeContent();
 
 private:
     class Frame {
@@ -147,7 +147,7 @@ private:
 
     // compute the coordinates of the center based on the text stored in this
     // TextArea
-    Coordinates center(Coordinates cursor);
+    Coordinates center();
 
     void restoreLine(char* line);
 
@@ -157,9 +157,14 @@ private:
     inline static bool isFontAlreadyLoaded = false;
 
 private:
-    Coordinates m_cursorCoordinates;
+    // saved cursor coordinates to know where starting inserting new characters,
+    // useful when content is appended as the cursor is not restored to the
+    // frame's coordinates
+    Coordinates m_cursorCoordinatesAfterAddingTheLastCharacter;
 
-    Coordinates m_oldCursorCoordinates;
+    // saved cursor coordinates of the last character printed, useful when
+    // clearing the screen to know where to set the cursor
+    Coordinates m_cursorCoordinatesFirstCharacterPrinted;
 
     // line saved, useful when appending text to restore the last line
     std::unique_ptr<char[]> m_curLine;
