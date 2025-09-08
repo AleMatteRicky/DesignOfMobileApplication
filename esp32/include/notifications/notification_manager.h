@@ -5,6 +5,7 @@
 #include <variant>
 #include "esp_log.h"
 #include "utility/blocking_queue.h"
+#include "utility/resource_monitor.h"
 #include "view/main_event_queue.h"
 
 template <typename T>
@@ -16,10 +17,8 @@ struct ObserverBase {
 template <typename... Args>
 struct Observer : ObserverBase<Args>... {
     using ObserverBase<Args>::onEvent...;  // bring all 'onEvent()' into scope
+    virtual char const* getName() = 0;
 };
-
-template <typename... Args>
-using ObserverType = Observer<Args...>;
 
 template <typename... Args>
 using NotificationType = std::variant<Args...>;
@@ -114,22 +113,15 @@ public:
                                        "removed for the event %s\n",
                                        &observer, eventName);
                                }
-                                           return o == &observer;
-                                       }),
+                               return o == &observer;
+                           }),
 
-                        observers.end());
+            observers.end());
     }
 
-    void removeFromAllEvents(ObserverType<Args...> const& observer) override {
-        std::vector<std::string> allEvents;
-        allEvents.reserve(m_mapEventToObservers.size());
-
+    void removeFromAllEvents(Observer<Args...> const& observer) override {
         for (auto el : m_mapEventToObservers) {
-            allEvents.push_back(el.first);
-        }
-
-        for (auto const& en : allEvents) {
-            remove(en, observer);
+            remove(el.first.c_str(), observer);
         }
     }
 
@@ -146,9 +138,20 @@ public:
 
     void notify(char const* eventName,
                 NotificationType<Args...> notification) override {
-        auto const& observersToNotify = m_mapEventToObservers[eventName];
+        // use a copy because the list of observers may change under the
+        // function's nose as 'onEvent' could trigger observers un/subscription
+        auto const& observers = m_mapEventToObservers[eventName];
+        std::vector<Observer<Args...>*> observersToNotify(observers);
+        size_t numObserversNow = observersToNotify.size();
 
-        for (auto const& o : observersToNotify) {
+        for (size_t i = 0;
+             i < std::min(numObserversNow, observersToNotify.size()); i++) {
+            auto* o = observersToNotify[i];
+            // the observer was removed by 'onEvent'
+            if (o != observers[i])
+                continue;
+            ESP_LOGD(TAG, "Notifying observer '%s' for the event '%s'\n",
+                     o->getName(), eventName);
             std::visit([&o](auto&& n) { o->onEvent(n); }, notification);
         }
     }
