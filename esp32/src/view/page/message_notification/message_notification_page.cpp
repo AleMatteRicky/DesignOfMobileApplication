@@ -61,8 +61,10 @@ void MessageNotificationPage::setUpTitle(
 
     m_title->clearFromScreen();
 
+    m_title->setContent(title);
+
     auto [titleX, titleY] = m_title->getCoordinates();
-    auto [w, h] = m_title->sizeContent(title);
+    auto [w, h] = m_title->sizeContent();
 
     ESP_LOGD(TAG, "Title at (%d, %d), size is (%d, %d)", titleX, titleY, w, h);
 
@@ -70,12 +72,10 @@ void MessageNotificationPage::setUpTitle(
     m_title->move(Coordinates{horizontalSpaceFromTheBorder, 40});
 
     m_title->resize(Size{SCREEN_WIDTH - horizontalSpaceFromTheBorder, h});
-
-    m_title->setContent(title);
     m_title->makeVisible(true);
 }
 
-void MessageNotificationPage::removeFocusFromMesage(
+void MessageNotificationPage::removeFocusFromMessage(
     std::unique_ptr<ScrollableText> const& pMsg) {
     auto [titleX, titleY] = m_title->getCoordinates();
     auto [titleWidth, titleHeight] = m_title->getSize();
@@ -95,7 +95,7 @@ std::unique_ptr<ScrollableText> MessageNotificationPage::allocateNewMessage() {
     auto pMsg = std::make_unique<ScrollableText>(
         RectType{Coordinates{0, 0}, Size{0, 0}}, nullptr, "");
     pMsg->wrapTextVertically(false);
-    removeFocusFromMesage(pMsg);
+    removeFocusFromMessage(pMsg);
     return pMsg;
 }
 
@@ -165,7 +165,7 @@ void MessageNotificationPage::onEvent(Click const&) {
     if (m_isFocused) {
         ESP_LOGD(TAG, "Focusing changing from true -> false");
         pMsg->clearFromScreen();
-        removeFocusFromMesage(pMsg);
+        removeFocusFromMessage(pMsg);
         updateScreenWithNewMessages();
     } else {
         ESP_LOGD(TAG, "Focusing changing from false -> true");

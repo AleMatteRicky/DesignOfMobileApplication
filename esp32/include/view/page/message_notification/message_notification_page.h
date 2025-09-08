@@ -36,7 +36,7 @@ private:
 
     std::unique_ptr<ScrollableText> allocateNewMessage();
 
-    void removeFocusFromMesage(std::unique_ptr<ScrollableText> const& pMsg);
+    void removeFocusFromMessage(std::unique_ptr<ScrollableText> const& pMsg);
 
     std::string extractContent(std::string const& msg) {
         JsonDocument doc;
