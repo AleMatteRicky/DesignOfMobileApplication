@@ -15,8 +15,10 @@ class Image : public View {
 public:
     Image(RectType frame,
           View* superiorView,
-          std::vector<BinaryImageInfo> const& binImages)
-        : View::View(frame, superiorView, "Image"), m_binImages(binImages) {}
+          std::vector<BinaryImageInfo> const& binImages,
+          bool isVisible = true)
+        : View::View(frame, superiorView, "Image", isVisible),
+          m_binImages(binImages) {}
 
     int pngDraw(PNGDRAW* pDraw);
 
@@ -60,13 +62,17 @@ protected:
     void drawOnScreen() override;
 
 private:
+    inline static char const TAG[] = "Image";
+
+private:
     byte m_idxCurImage = 0;
     std::vector<BinaryImageInfo> m_binImages;
     std::string m_name;
 
-    std::function<void(void)> m_onClickCb = [](){};
+    std::function<void(void)> m_onClickCb = []() {};
     std::function<void(ble::ConnectionState)> m_onConnectionState =
         [](ble::ConnectionState) {};
-    std::function<void(ble::UpdateMessage const&, int&)> m_onUpdateMessage = [](ble::UpdateMessage const&, int&){};
+    std::function<void(ble::UpdateMessage const&, int&)> m_onUpdateMessage =
+        [](ble::UpdateMessage const&, int&) {};
 };
 }  // namespace view
