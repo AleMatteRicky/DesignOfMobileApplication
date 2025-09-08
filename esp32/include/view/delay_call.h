@@ -12,16 +12,18 @@
 namespace view {
 
 struct Timeout {
-    static inline std::string const name = "timeout";
+    static inline std::string const name = "Timeout";
 };
 
 using TimerDispatcher = DistributedNotificationManager<Timeout>;
 
-class DelayedFunction : public ObserverType<Timeout> {
+class DelayedFunction : public Observer<Timeout> {
 public:
     DelayedFunction(std::function<void(void)> function)
         : m_function(function) {}
     void onEvent(Timeout const& t) { m_function(); }
+
+    char const* getName() override { return "DelayedFunction"; }
 
 private:
     std::function<void(void)> m_function;
@@ -44,7 +46,7 @@ public:
         m_isValid = true;
 
         m_delayFunction = std::make_unique<DelayedFunction>(function);
-        timerDispatcher->addObserver(m_name, m_delayFunction.get());
+        timerDispatcher->addObserver(m_name.c_str(), m_delayFunction.get());
 
         m_thread =
             std::thread([name = m_name, timeMs, timerDispatcher, &mtx = m_mtx,
@@ -55,7 +57,7 @@ public:
                 cv.wait_for(lock, std::chrono::milliseconds(timeMs),
                             [&isValid] { return !isValid; });
                 if (isValid)
-                    timerDispatcher->notify(name, Timeout());
+                    timerDispatcher->notify(name.c_str(), Timeout());
             });
     }
 
@@ -68,13 +70,16 @@ public:
         }
         m_cv.notify_one();
         auto timerDispatcher = TimerDispatcher::getInstance();
-        timerDispatcher->remove(m_name, *m_delayFunction);
+        timerDispatcher->remove(m_name.c_str(), *m_delayFunction);
         m_delayFunction = nullptr;
 
         // wait for the signal to arrive and the thread to complete
         if (m_thread.joinable())
             m_thread.join();
     }
+
+private:
+    static constexpr byte maxLenStr = 32;
 
 private:
     std::unique_ptr<DelayedFunction> m_delayFunction;
