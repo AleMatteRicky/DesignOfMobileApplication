@@ -1,6 +1,10 @@
 package com.example.augmentedrealityglasses.translation.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -17,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
@@ -31,9 +36,9 @@ fun SelectLanguageButton(
     onClick: () -> Unit,
     languageRole: LanguageRole
 ) {
-    var expanded by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Button(
         onClick = {
@@ -43,14 +48,12 @@ fun SelectLanguageButton(
         },
         enabled = enabled,
         modifier = modifier,
-//            .shadow(
-//                elevation = 4.dp,
-//                shape = RoundedCornerShape(14.dp),
-//                clip = false
-//            ),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(if (isLandscape) 10.dp else 16.dp),
         colors = ButtonDefaults.buttonColors(containerColor = colorScheme.tertiaryContainer),
-        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
+        contentPadding = PaddingValues(
+            horizontal = 16.dp,
+            vertical = if (isLandscape) 4.dp else 8.dp
+        )
     ) {
         val buttonLanguage =
             if (languageRole == LanguageRole.TARGET) uiState.targetLanguage else uiState.sourceLanguage
@@ -69,40 +72,6 @@ fun SelectLanguageButton(
             style = MaterialTheme.typography.bodyMedium
         )
 
-    }
-    //todo unused deleted
-
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = { expanded = false }
-    ) {
-
-        DropdownMenuItem(
-            text = { Text("-") },
-            onClick = {
-                viewModel.selectTargetLanguage(null)
-                expanded = false
-            }
-        )
-
-        val sortedTagList = TranslateLanguage.getAllLanguages().sortedBy { tag ->
-            getFullLengthName(tag)
-        }
-
-        for (languageTag in sortedTagList) {
-            DropdownMenuItem(
-                text = { Text(getFullLengthName(languageTag)) },
-                onClick = {
-                    if (languageRole == LanguageRole.TARGET) {
-                        viewModel.selectTargetLanguage(languageTag)
-                    } else {
-                        viewModel.selectSourceLanguage(languageTag)
-                    }
-
-                    expanded = false
-                }
-            )
-        }
     }
 }
 

@@ -2,8 +2,13 @@ package com.example.augmentedrealityglasses.translation.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,16 +37,17 @@ fun LanguageSelectionBox(
     modifier: Modifier,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier = modifier
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         SelectLanguageButton(
             enabled = enabled,
             viewModel = viewModel,
             modifier = Modifier
-                .align(Alignment.CenterStart)
-                .width(123.dp)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .weight(1f),
             onClick = {
                 viewModel.setSelectingLanguageRole(LanguageRole.SOURCE)
                 onClick()
@@ -49,20 +55,22 @@ fun LanguageSelectionBox(
             languageRole = LanguageRole.SOURCE
         )
 
+        Spacer(Modifier.width(16.dp))
+
         Icon(
             painter = painterResource(id = Icon.RIGHT_ARROW.getID()),
             contentDescription = "An arrow from the source language to the target language",
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.align(Alignment.Center) //todo
         )
+
+        Spacer(Modifier.width(16.dp))
 
         SelectLanguageButton(
             enabled = enabled,
             viewModel = viewModel,
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .width(123.dp)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .weight(1f),
             onClick = {
                 viewModel.setSelectingLanguageRole(LanguageRole.TARGET)
                 onClick()

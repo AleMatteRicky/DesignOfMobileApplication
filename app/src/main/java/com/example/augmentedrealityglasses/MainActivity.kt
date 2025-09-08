@@ -79,9 +79,9 @@ import com.example.augmentedrealityglasses.settings.SettingsScreen
 import com.example.augmentedrealityglasses.settings.SettingsViewModel
 import com.example.augmentedrealityglasses.settings.ThemeMode
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
-import com.example.augmentedrealityglasses.translation.ui.TranslationHomeScreen
-import com.example.augmentedrealityglasses.translation.ui.TranslationLanguageSelectionScreen
-import com.example.augmentedrealityglasses.translation.ui.TranslationResultScreen
+import com.example.augmentedrealityglasses.translation.ui.screen.TranslationHomeScreen
+import com.example.augmentedrealityglasses.translation.ui.screen.TranslationLanguageSelectionScreen
+import com.example.augmentedrealityglasses.translation.ui.screen.TranslationResultScreen
 import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreenRoot
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel

@@ -1,6 +1,7 @@
-package com.example.augmentedrealityglasses.translation.ui
+package com.example.augmentedrealityglasses.translation.ui.screen
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import androidx.compose.runtime.getValue
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -15,11 +16,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
+import com.example.augmentedrealityglasses.translation.ui.DisplayModelDownloading
+import com.example.augmentedrealityglasses.translation.ui.LanguageSelectionBox
+import com.example.augmentedrealityglasses.translation.ui.MainTextBox
+import com.example.augmentedrealityglasses.translation.ui.RecordButton
 
 
 @SuppressLint("MissingPermission", "UnusedBoxWithConstraintsScope") //todo remove second suppress
@@ -43,6 +49,7 @@ fun TranslationHomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val message by viewModel.errorMessage.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     UpdateWrapper(
         message = message,
@@ -50,7 +57,6 @@ fun TranslationHomeScreen(
         onErrorDismiss = { viewModel.hideErrorMessage() },
         onBluetoothUpdateDismiss = { viewModel.hideBluetoothUpdate() }) {
         BoxWithConstraints(
-            //todo check if it does support vertical scrolling
             modifier = Modifier
                 .fillMaxSize()
                 .background(colorScheme.background)
@@ -80,7 +86,7 @@ fun TranslationHomeScreen(
                         x = (maxWidth - languageSelectionBoxWidth) / 2,
                         y = maxHeight - newMaxHeight
                     )
-                    .height(languageSelectionBoxHeight)
+                    .height(if(isLandscape) languageSelectionBoxHeight + 15.dp else languageSelectionBoxHeight)
                     .width(languageSelectionBoxWidth), onClick = onNavigateToLanguageSelection
             )
 

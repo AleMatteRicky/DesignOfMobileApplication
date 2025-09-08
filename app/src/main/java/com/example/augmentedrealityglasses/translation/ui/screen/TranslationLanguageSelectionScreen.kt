@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses.translation.ui
+package com.example.augmentedrealityglasses.translation.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -18,14 +18,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.augmentedrealityglasses.Icon
 import com.example.augmentedrealityglasses.UpdateWrapper
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
+import com.example.augmentedrealityglasses.translation.ui.LanguageRole
+import com.example.augmentedrealityglasses.translation.ui.LanguageRow
 
 //todo check if with animation is solved, selecting a target downloaded language and then switching immediately to recording lead to show for an instant DisplayModelMissing
 //todo before starting to record verify that the source language is not null
@@ -59,7 +60,7 @@ fun TranslationLanguageSelectionScreen(viewModel: TranslationViewModel, onBack: 
             ) {
                 IconButton(onClick = { onBack() }) {
                     Icon(
-                        painter = painterResource(com.example.augmentedrealityglasses.Icon.BACK_ARROW.getID()),
+                        painter = painterResource(Icon.BACK_ARROW.getID()),
                         contentDescription = "Go back to translation home screen",
                         tint = colorScheme.primary
                     )
