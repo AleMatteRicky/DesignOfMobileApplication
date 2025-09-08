@@ -4,10 +4,7 @@
 #include "notifications/notification_manager.h"
 
 namespace view {
-class Responder : public Observer<Press,
-                                  Click,
-                                  SwipeClockwise,
-                                  SwipeAntiClockwise,
-                                  DoubleClick> {};
+class Responder
+    : public Observer<Press, Click, SwipeClockwise, SwipeAntiClockwise> {};
 
 }  // namespace view

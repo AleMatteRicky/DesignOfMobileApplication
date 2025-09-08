@@ -143,16 +143,9 @@ public:
             m_parentView->onEvent(ev);
     }
 
-    void onEvent(DoubleClick const& ev) override {
-        if (m_parentView)
-            m_parentView->onEvent(ev);
-    }
-
     void onEvent(ble::ConnectionState const&) override {}
 
     void onEvent(ble::BondingState const&) override {}
-
-    void onEvent(ble::ChangePage const&) override {}
 
     void onEvent(ble::UpdateMessage const&) override {}
 

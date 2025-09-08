@@ -1,5 +1,6 @@
 #include "view/view.h"
 #include "ble/remote_dispatcher.h"
+#include "utility/resource_monitor.h"
 
 namespace view {
 

@@ -17,7 +17,7 @@ public:
 
     void onEvent(Press const& ev) override;
 
-    void onEvent(DoubleClick const& ev) override;
+    void onEvent(ble::UpdateMessage const&) override;
 
 protected:
     void drawOnScreen() override {

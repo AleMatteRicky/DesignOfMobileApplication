@@ -109,10 +109,29 @@ void Window::onEvent(Press const&) {
     controller->changePage(PageType::HOME);
 }
 
-void Window::onEvent(DoubleClick const& ev) {
-    controller::CentralController* controller =
-        controller::CentralController::getInstance();
-    controller->changePage(PageType::CONNECTION);
-}
+void Window::onEvent(ble::UpdateMessage const& event) {
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, event.msg);
 
+    if (error)
+        return;
+
+    std::string command = doc["command"];
+    PageType pageReferredByTheMessage;
+
+    if (command == "t") {
+        pageReferredByTheMessage = PageType::TRANSLATION;
+    } else if (command == "w") {
+        pageReferredByTheMessage = PageType::WEATHER;
+    } else {
+        ESP_LOGD(TAG, "command not recognised, return");
+        return;
+    }
+
+    PageType currentPage = m_currentPage->getType();
+    if (currentPage != pageReferredByTheMessage) {
+        setPage(m_pageFactory->createPage(pageReferredByTheMessage));
+        m_currentPage->onEvent(event);
+}
+}
 }  // namespace view
