@@ -6,6 +6,7 @@
 #include "view/rectangular_type.h"
 #include "view/remote_responder.h"
 #include "view/responder.h"
+#include "view/screen/screen.h"
 #include "view/size.h"
 #include "view/tft.h"
 
@@ -38,7 +39,7 @@ public:
         }
     }
 
-    void clearFromScreen() {
+    virtual void clearFromScreen() {
         auto tft = tft::Tft::getTFT_eSPI();
         auto coordinates = getCoordinates();
         auto size = getSize();
@@ -96,10 +97,17 @@ public:
         return true;
     }
 
+    /**
+     * Resizes this view.
+     * @param newSize the new size for this view
+     * @return true iff the operation succeeded
+     */
     virtual bool resize(Size const& newSize) {
         m_frame.m_size = newSize;
         return true;
     }
+
+    bool isVisible() { return m_isVisible; }
 
     Coordinates getCenter() const {
         auto coordinates = m_frame.m_coordinates;
@@ -113,6 +121,8 @@ public:
 
         m_frame.m_coordinates.m_y = center.m_y - m_frame.m_size.m_height / 2;
     }
+
+    RectType getFrame() { return m_frame; }
 
     void makeVisible(bool isVisible) { m_isVisible = isVisible; }
 
