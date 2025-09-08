@@ -4,7 +4,7 @@
 
 namespace view {
 struct Size {
-    int16_t m_width;
-    int16_t m_height;
+    int m_width;
+    int m_height;
 };
 }
