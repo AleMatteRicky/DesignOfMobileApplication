@@ -6,7 +6,6 @@
 namespace view {
 class RemoteResponder : public Observer<ble::ConnectionState,
                                         ble::BondingState,
-                                        ble::ChangePage,
                                         ble::UpdateMessage,
                                         ble::MessageNotification,
                                         ble::CallNotification> {};
