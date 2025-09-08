@@ -268,7 +268,7 @@ fun LocationBar(locationName: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 24.dp, bottom = 15.dp)
+            .padding(top = 12.dp, bottom = 8.dp)
             .background(theme.background),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -439,7 +439,7 @@ fun LocationManagerBar(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Search other locations",
+                text = "Search locations",
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontSize = 16.sp
                 ),

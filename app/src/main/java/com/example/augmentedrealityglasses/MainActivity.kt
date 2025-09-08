@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -22,12 +23,18 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -133,199 +140,59 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     bottomBar = {
-                        AnimatedVisibility(
-
-                            visible = navigationBarVisible.value,
-                            enter = slideInVertically { 0 } + expandVertically(
-                                expandFrom = Alignment.Top
-                            ) + fadeIn(
-                                initialAlpha = 0.3f
-                            ),
-                            exit = slideOutVertically { fullHeight -> fullHeight } + shrinkVertically() + fadeOut()
-                        ) {
-
-                            if (currentRoute !in listOf(
-                                    ScreenName.TRANSLATION_RESULT_SCREEN.name,
-                                    ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
-                                    ScreenName.WEATHER_SEARCH_LOCATIONS.name,
-                                    ScreenName.FIND_DEVICE.name
-                                )
-                            ) { //Screens in which navBar should be never shown
-                                BottomNavigationBar(
-                                    navController,
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .height(navigationBarHeight)
-                                )
+                        if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                            AnimatedVisibility(
+                                visible = navigationBarVisible.value,
+                                enter = slideInVertically { 0 } + expandVertically(expandFrom = Alignment.Top) + fadeIn(
+                                    initialAlpha = 0.3f
+                                ),
+                                exit = slideOutVertically { fullHeight -> fullHeight } + shrinkVertically() + fadeOut()
+                            ) {
+                                if (currentRoute !in listOf(
+                                        ScreenName.TRANSLATION_RESULT_SCREEN.name,
+                                        ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
+                                        ScreenName.WEATHER_SEARCH_LOCATIONS.name,
+                                        ScreenName.FIND_DEVICE.name
+                                    )
+                                ) {
+                                    BottomNavigationBar(
+                                        navController,
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(navigationBarHeight)
+                                    )
+                                }
                             }
                         }
                     }
                 ) { innerPadding ->
-
-                    NavHost(
-                        navController = navController,
-                        startDestination = "HOME_GRAPH",
-                        enterTransition = { fadeIn(animationSpec = tween(screenTransitionDuration)) },
-                        exitTransition = { fadeOut(animationSpec = tween(screenTransitionDuration)) },
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-
-                        navigation(
-                            startDestination = ScreenName.HOME.name,
-                            route = "HOME_GRAPH"
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                            currentRoute !in listOf(
+                                ScreenName.TRANSLATION_RESULT_SCREEN.name,
+                                ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
+                                ScreenName.WEATHER_SEARCH_LOCATIONS.name,
+                                ScreenName.FIND_DEVICE.name
+                            )
                         ) {
-                            composable(
-                                ScreenName.HOME.name,
-                                enterTransition = {
-                                    fadeIn(
-                                        animationSpec = tween(
-                                            screenTransitionDuration
-                                        )
-                                    )
-                                },
-                                exitTransition = {
-                                    fadeOut(
-                                        animationSpec = tween(
-                                            screenTransitionDuration
-                                        )
-                                    )
-                                },
-                            ) { backStackEntry ->
-
-                                val bluetoothManager: BluetoothManager =
-                                    checkNotNull(
-                                        applicationContext.getSystemService(
-                                            BluetoothManager::class.java
-                                        )
-                                    )
-                                val adapter: BluetoothAdapter? = bluetoothManager.adapter
-
-                                // TODO: make the control at the beginning not making clickable the icon in case bluetooth is not supported, instead of checking it here
-                                require(adapter != null) {
-                                    "Bluetooth must be supported by this device"
-                                }
-
-                                val extras = MutableCreationExtras().apply {
-                                    set(HomeViewModel.ADAPTER_KEY, adapter)
-                                    set(APPLICATION_KEY, application)
-                                }
-
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry("HOME_GRAPH")
-                                }
-                                val viewModel = viewModel<HomeViewModel>(
-                                    viewModelStoreOwner = parentEntry,
-                                    factory = HomeViewModel.Factory,
-                                    extras = extras
+                            //TODO: adjust animation
+                            AnimatedVisibility(
+                                visible = navigationBarVisible.value,
+                                enter = slideInHorizontally { -it } + fadeIn(initialAlpha = 0.3f),
+                                exit = slideOutHorizontally { -it } + fadeOut()
+                            ) {
+                                SideNavigationBar(
+                                    navController,
+                                    Modifier
+                                        .fillMaxHeight()
+                                        .width(70.dp) //TODO: adjust size
                                 )
-
-                                // If we derive physical location from BT devices or if the device runs on Android 11 or below
-                                // we need location permissions otherwise we don't need to request them (see AndroidManifest).
-                                val locationPermission: Set<String> =
-                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                                        setOf(
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                                        )
-                                    } else {
-                                        emptySet()
-                                    }
-
-                                // For Android 12 and above we only need connect and scan
-                                val bluetoothPermissionSet: Set<String> =
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                        setOf(
-                                            Manifest.permission.BLUETOOTH_CONNECT,
-                                            Manifest.permission.BLUETOOTH_SCAN,
-                                        )
-                                    } else {
-                                        setOf(
-                                            Manifest.permission.BLUETOOTH,
-                                            Manifest.permission.BLUETOOTH_ADMIN,
-                                        )
-                                    }
-
-                                val homePermissions: Map<String, Boolean> = buildMap {
-                                    put(Manifest.permission.READ_PHONE_STATE, true)
-                                    put(Manifest.permission.READ_CALL_LOG, true)
-                                    put(Manifest.permission.READ_CONTACTS, false)
-
-                                    if (app.container.isDeviceSmsCapable) {
-                                        put(Manifest.permission.RECEIVE_SMS, true)
-                                    }
-
-                                    putAll((locationPermission + bluetoothPermissionSet).associateWith { true })
-                                }
-
-                                val bluetoothAdapter =
-                                    applicationContext.getSystemService<BluetoothManager>()?.adapter
-
-                                // Check to see if the BLE feature is available.
-                                val hasBLE =
-                                    packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
-
-                                //Check if the adapter is enabled
-                                var isBTEnabled by remember {
-                                    mutableStateOf(bluetoothAdapter?.isEnabled == true)
-                                }
-
-                                //Update in real time isBTEnabled flag
-                                DisposableEffect(Unit) {
-                                    val receiver = object : BroadcastReceiver() {
-                                        override fun onReceive(ctx: Context?, intent: Intent?) {
-                                            if (intent?.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
-                                                val state = intent.getIntExtra(
-                                                    BluetoothAdapter.EXTRA_STATE,
-                                                    BluetoothAdapter.ERROR
-                                                )
-                                                isBTEnabled = (state == BluetoothAdapter.STATE_ON)
-                                            }
-                                        }
-                                    }
-
-                                    val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        applicationContext.registerReceiver(
-                                            receiver,
-                                            filter,
-                                            Context.RECEIVER_NOT_EXPORTED
-                                        )
-                                    } else {
-                                        applicationContext.registerReceiver(receiver, filter)
-                                    }
-                                    onDispose { applicationContext.unregisterReceiver(receiver) }
-                                }
-
-                                //TODO: refine title and message
-                                PermissionsBox(
-                                    title = "Welcome",
-                                    message = "In order to communicate with the external device, you need to grant these permissions",
-                                    permissionsRequired = homePermissions,
-                                    onSatisfied = {}
-                                ) {
-                                    if (!hasBLE) {
-                                        BLENotSupportedScreen()
-                                    } else {
-                                        if (isBTEnabled) {
-                                            HomeScreen(
-                                                viewModel = viewModel,
-                                                onNavigateFindDevice = {
-                                                    navController.navigate(
-                                                        ScreenName.FIND_DEVICE.name
-                                                    )
-                                                }, navigationBarHeight = navigationBarHeight
-                                            )
-                                        } else {
-                                            BluetoothDisabledScreen {
-                                                isBTEnabled = true
-                                            }
-                                        }
-                                    }
-                                }
                             }
                         }
-                        composable(
-                            ScreenName.CONNECT_SCREEN.name,
+
+                        NavHost(
+                            navController = navController,
+                            startDestination = "HOME_GRAPH",
                             enterTransition = {
                                 fadeIn(
                                     animationSpec = tween(
@@ -340,163 +207,182 @@ class MainActivity : ComponentActivity() {
                                     )
                                 )
                             },
+                            modifier = Modifier.padding(innerPadding)
                         ) {
-                            ConnectScreen(
-                                viewModel = viewModel(factory = ConnectViewModel.Factory),
-                                onNavigateToFeature = { screen ->
-                                    navController.navigate(screen)
-                                },
-                                onNavigateAfterClosingTheConnection = {
-                                    navController.navigate(ScreenName.FIND_DEVICE.name) {
-                                        popUpTo(ScreenName.CONNECT_SCREEN.name) { inclusive = true }
-                                    }
-                                }
-                            )
-                        }
 
-                        navigation(
-                            startDestination = ScreenName.TRANSLATION_HOME_SCREEN.name,
-                            route = "TRANSLATION_GRAPH"
-                        ) {
-                            composable(
-                                ScreenName.TRANSLATION_HOME_SCREEN.name,
-                                enterTransition = {
-                                    fadeIn(
-                                        animationSpec = tween(screenTransitionDuration)
-                                    )
-                                },
-                                exitTransition = {
-                                    fadeOut(
-                                        animationSpec = tween(
-                                            screenTransitionDuration
-                                        )
-                                    )
-                                },
-                            ) { backStackEntry ->
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry("TRANSLATION_GRAPH")
-                                }
-                                val viewModel = viewModel<TranslationViewModel>(
-                                    viewModelStoreOwner = parentEntry,
-                                    factory = TranslationViewModel.Factory
-                                )
-
-                                val permissionsForRecording: Map<String, Boolean> =
-                                    if (isMicrophoneAvailable()) {
-                                        mapOf(Pair(Manifest.permission.RECORD_AUDIO, true))
-                                    } else {
-                                        mapOf()
-                                    }
-                                //TODO: add screen for "microphone not available" case
-                                PermissionsBox(
-                                    message = "To enable speech-to-text transcription and translation, please grant microphone permission.",
-                                    permissionsRequired = permissionsForRecording,
-                                    iconId = Icon.MICROPHONE.getID(),
-                                    onSatisfied = {}
-                                ) {
-                                    TranslationHomeScreen(
-                                        onScreenComposition = {
-                                            sendOpenTranslationBLEMessage()
-                                        },
-                                        onNavigateToHome = {
-                                            navController.navigate(
-                                                route = ScreenName.HOME.name
+                            navigation(
+                                startDestination = ScreenName.HOME.name,
+                                route = "HOME_GRAPH"
+                            ) {
+                                composable(
+                                    ScreenName.HOME.name,
+                                    enterTransition = {
+                                        fadeIn(
+                                            animationSpec = tween(
+                                                screenTransitionDuration
                                             )
-                                        },
-                                        onNavigateToResult = {
-                                            navController.navigate(ScreenName.TRANSLATION_RESULT_SCREEN.name)
-                                        },
-                                        onNavigateToLanguageSelection = {
-                                            navController.navigate(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)
-                                        },
-                                        onBack = {
-                                            navController.popBackStack()
-                                        },
-                                        viewModel = viewModel,
-                                        enabled = translationFeatureAvailable(),
-                                        navigationBarVisible = navigationBarVisible,
-                                        navigationBarHeight = navigationBarHeight
+                                        )
+                                    },
+                                    exitTransition = {
+                                        fadeOut(
+                                            animationSpec = tween(
+                                                screenTransitionDuration
+                                            )
+                                        )
+                                    },
+                                ) { backStackEntry ->
 
+                                    val bluetoothManager: BluetoothManager =
+                                        checkNotNull(
+                                            applicationContext.getSystemService(
+                                                BluetoothManager::class.java
+                                            )
+                                        )
+                                    val adapter: BluetoothAdapter? = bluetoothManager.adapter
+
+                                    // TODO: make the control at the beginning not making clickable the icon in case bluetooth is not supported, instead of checking it here
+                                    require(adapter != null) {
+                                        "Bluetooth must be supported by this device"
+                                    }
+
+                                    val extras = MutableCreationExtras().apply {
+                                        set(HomeViewModel.ADAPTER_KEY, adapter)
+                                        set(APPLICATION_KEY, application)
+                                    }
+
+                                    val parentEntry = remember(backStackEntry) {
+                                        navController.getBackStackEntry("HOME_GRAPH")
+                                    }
+                                    val viewModel = viewModel<HomeViewModel>(
+                                        viewModelStoreOwner = parentEntry,
+                                        factory = HomeViewModel.Factory,
+                                        extras = extras
                                     )
+
+                                    // If we derive physical location from BT devices or if the device runs on Android 11 or below
+                                    // we need location permissions otherwise we don't need to request them (see AndroidManifest).
+                                    val locationPermission: Set<String> =
+                                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                                            setOf(
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                            )
+                                        } else {
+                                            emptySet()
+                                        }
+
+                                    // For Android 12 and above we only need connect and scan
+                                    val bluetoothPermissionSet: Set<String> =
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            setOf(
+                                                Manifest.permission.BLUETOOTH_CONNECT,
+                                                Manifest.permission.BLUETOOTH_SCAN,
+                                            )
+                                        } else {
+                                            setOf(
+                                                Manifest.permission.BLUETOOTH,
+                                                Manifest.permission.BLUETOOTH_ADMIN,
+                                            )
+                                        }
+
+                                    val homePermissions: Map<String, Boolean> = buildMap {
+                                        put(Manifest.permission.READ_PHONE_STATE, true)
+                                        put(Manifest.permission.READ_CALL_LOG, true)
+                                        put(Manifest.permission.READ_CONTACTS, false)
+
+                                        if (app.container.isDeviceSmsCapable) {
+                                            put(Manifest.permission.RECEIVE_SMS, true)
+                                        }
+
+                                        putAll((locationPermission + bluetoothPermissionSet).associateWith { true })
+                                    }
+
+                                    val bluetoothAdapter =
+                                        applicationContext.getSystemService<BluetoothManager>()?.adapter
+
+                                    // Check to see if the BLE feature is available.
+                                    val hasBLE =
+                                        packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)
+
+                                    //Check if the adapter is enabled
+                                    var isBTEnabled by remember {
+                                        mutableStateOf(bluetoothAdapter?.isEnabled == true)
+                                    }
+
+                                    //Update in real time isBTEnabled flag
+                                    DisposableEffect(Unit) {
+                                        val receiver = object : BroadcastReceiver() {
+                                            override fun onReceive(
+                                                ctx: Context?,
+                                                intent: Intent?
+                                            ) {
+                                                if (intent?.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+                                                    val state = intent.getIntExtra(
+                                                        BluetoothAdapter.EXTRA_STATE,
+                                                        BluetoothAdapter.ERROR
+                                                    )
+                                                    isBTEnabled =
+                                                        (state == BluetoothAdapter.STATE_ON)
+                                                }
+                                            }
+                                        }
+
+                                        val filter =
+                                            IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                            applicationContext.registerReceiver(
+                                                receiver,
+                                                filter,
+                                                Context.RECEIVER_NOT_EXPORTED
+                                            )
+                                        } else {
+                                            applicationContext.registerReceiver(
+                                                receiver,
+                                                filter
+                                            )
+                                        }
+                                        onDispose {
+                                            applicationContext.unregisterReceiver(
+                                                receiver
+                                            )
+                                        }
+                                    }
+
+                                    //TODO: refine title and message
+                                    PermissionsBox(
+                                        title = "Welcome",
+                                        message = "In order to communicate with the external device, you need to grant these permissions",
+                                        permissionsRequired = homePermissions,
+                                        onSatisfied = {}
+                                    ) {
+                                        if (!hasBLE) {
+                                            BLENotSupportedScreen()
+                                        } else {
+                                            if (isBTEnabled) {
+                                                HomeScreen(
+                                                    viewModel = viewModel,
+                                                    onNavigateFindDevice = {
+                                                        navController.navigate(
+                                                            ScreenName.FIND_DEVICE.name
+                                                        )
+                                                    }, navigationBarHeight = navigationBarHeight
+                                                )
+                                            } else {
+                                                BluetoothDisabledScreen {
+                                                    isBTEnabled = true
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
-
                             composable(
-                                ScreenName.TRANSLATION_RESULT_SCREEN.name,
+                                ScreenName.CONNECT_SCREEN.name,
                                 enterTransition = {
                                     fadeIn(
-                                        animationSpec = tween(screenTransitionDuration)
-                                    )
-                                },
-                                exitTransition = {
-                                    fadeOut(
                                         animationSpec = tween(
                                             screenTransitionDuration
                                         )
-                                    )
-                                },
-                            ) { backStackEntry ->
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry("TRANSLATION_GRAPH")
-                                }
-                                val viewModel = viewModel<TranslationViewModel>(
-                                    viewModelStoreOwner = parentEntry,
-                                    factory = TranslationViewModel.Factory
-                                )
-
-                                TranslationResultScreen(
-                                    viewModel = viewModel,
-                                    onBack = {
-                                        viewModel.clearText()
-                                        navController.popBackStack()
-                                    }, onNavigateToLanguageSelection = {
-                                        navController.navigate(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)
-                                    }
-                                )
-                            }
-
-                            composable(
-                                ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
-                                enterTransition = {
-                                    fadeIn(
-                                        animationSpec = tween(screenTransitionDuration)
-                                    )
-                                },
-                                exitTransition = {
-                                    fadeOut(
-                                        animationSpec = tween(
-                                            screenTransitionDuration
-                                        )
-                                    )
-                                },
-                            ) { backStackEntry ->
-                                val parentEntry = remember(backStackEntry) {
-                                    navController.getBackStackEntry("TRANSLATION_GRAPH")
-                                }
-                                val viewModel = viewModel<TranslationViewModel>(
-                                    viewModelStoreOwner = parentEntry,
-                                    factory = TranslationViewModel.Factory
-                                )
-
-                                TranslationLanguageSelectionScreen(
-                                    viewModel = viewModel,
-                                    onBack = {
-                                        navController.popBackStack()
-                                    }
-                                )
-                            }
-
-                        }
-
-                        navigation(
-                            startDestination = ScreenName.WEATHER_HOME_SCREEN.name,
-                            route = "WEATHER_GRAPH"
-                        ) {
-                            composable(
-                                ScreenName.WEATHER_HOME_SCREEN.name,
-                                enterTransition = {
-                                    fadeIn(
-                                        animationSpec = tween(screenTransitionDuration)
                                     )
                                 },
                                 exitTransition = {
@@ -507,29 +393,234 @@ class MainActivity : ComponentActivity() {
                                     )
                                 },
                             ) {
-                                val parentEntry =
-                                    remember { navController.getBackStackEntry("WEATHER_GRAPH") }
-                                val viewModel = viewModel<WeatherViewModel>(
-                                    viewModelStoreOwner = parentEntry,
-                                    factory = WeatherViewModel.Factory
-                                )
-
-                                //TODO: refine title and message
-                                PermissionsBox(
-                                    permissionsRequired = mapOf(
-                                        Pair(Manifest.permission.ACCESS_COARSE_LOCATION, false),
-                                        Pair(Manifest.permission.ACCESS_FINE_LOCATION, false)
-                                    ),
-                                    iconId = R.drawable.location,
-                                    message = "We need your location to show live local weather. Choose Precise or Approximate location (only one). You can update this in Settings at any time.",
-                                    onSatisfied = {
-                                        viewModel.hideErrorMessage()
+                                ConnectScreen(
+                                    viewModel = viewModel(factory = ConnectViewModel.Factory),
+                                    onNavigateToFeature = { screen ->
+                                        navController.navigate(screen)
+                                    },
+                                    onNavigateAfterClosingTheConnection = {
+                                        navController.navigate(ScreenName.FIND_DEVICE.name) {
+                                            popUpTo(ScreenName.CONNECT_SCREEN.name) {
+                                                inclusive = true
+                                            }
+                                        }
                                     }
+                                )
+                            }
+
+                            navigation(
+                                startDestination = ScreenName.TRANSLATION_HOME_SCREEN.name,
+                                route = "TRANSLATION_GRAPH"
+                            ) {
+                                composable(
+                                    ScreenName.TRANSLATION_HOME_SCREEN.name,
+                                    enterTransition = {
+                                        fadeIn(
+                                            animationSpec = tween(screenTransitionDuration)
+                                        )
+                                    },
+                                    exitTransition = {
+                                        fadeOut(
+                                            animationSpec = tween(
+                                                screenTransitionDuration
+                                            )
+                                        )
+                                    },
+                                ) { backStackEntry ->
+                                    val parentEntry = remember(backStackEntry) {
+                                        navController.getBackStackEntry("TRANSLATION_GRAPH")
+                                    }
+                                    val viewModel = viewModel<TranslationViewModel>(
+                                        viewModelStoreOwner = parentEntry,
+                                        factory = TranslationViewModel.Factory
+                                    )
+
+                                    val permissionsForRecording: Map<String, Boolean> =
+                                        if (isMicrophoneAvailable()) {
+                                            mapOf(Pair(Manifest.permission.RECORD_AUDIO, true))
+                                        } else {
+                                            mapOf()
+                                        }
+                                    //TODO: add screen for "microphone not available" case
+                                    PermissionsBox(
+                                        message = "To enable speech-to-text transcription and translation, please grant microphone permission.",
+                                        permissionsRequired = permissionsForRecording,
+                                        iconId = Icon.MICROPHONE.getID(),
+                                        onSatisfied = {}
+                                    ) {
+                                        TranslationHomeScreen(
+                                            onScreenComposition = {
+                                                sendOpenTranslationBLEMessage()
+                                            },
+                                            onNavigateToHome = {
+                                                navController.navigate(
+                                                    route = ScreenName.HOME.name
+                                                )
+                                            },
+                                            onNavigateToResult = {
+                                                navController.navigate(ScreenName.TRANSLATION_RESULT_SCREEN.name)
+                                            },
+                                            onNavigateToLanguageSelection = {
+                                                navController.navigate(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)
+                                            },
+                                            onBack = {
+                                                navController.popBackStack()
+                                            },
+                                            viewModel = viewModel,
+                                            enabled = translationFeatureAvailable(),
+                                            navigationBarVisible = navigationBarVisible,
+                                            navigationBarHeight = navigationBarHeight
+
+                                        )
+                                    }
+                                }
+
+                                composable(
+                                    ScreenName.TRANSLATION_RESULT_SCREEN.name,
+                                    enterTransition = {
+                                        fadeIn(
+                                            animationSpec = tween(screenTransitionDuration)
+                                        )
+                                    },
+                                    exitTransition = {
+                                        fadeOut(
+                                            animationSpec = tween(
+                                                screenTransitionDuration
+                                            )
+                                        )
+                                    },
+                                ) { backStackEntry ->
+                                    val parentEntry = remember(backStackEntry) {
+                                        navController.getBackStackEntry("TRANSLATION_GRAPH")
+                                    }
+                                    val viewModel = viewModel<TranslationViewModel>(
+                                        viewModelStoreOwner = parentEntry,
+                                        factory = TranslationViewModel.Factory
+                                    )
+
+                                    TranslationResultScreen(
+                                        viewModel = viewModel,
+                                        onBack = {
+                                            viewModel.clearText()
+                                            navController.popBackStack()
+                                        }, onNavigateToLanguageSelection = {
+                                            navController.navigate(ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name)
+                                        }
+                                    )
+                                }
+
+                                composable(
+                                    ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
+                                    enterTransition = {
+                                        fadeIn(
+                                            animationSpec = tween(screenTransitionDuration)
+                                        )
+                                    },
+                                    exitTransition = {
+                                        fadeOut(
+                                            animationSpec = tween(
+                                                screenTransitionDuration
+                                            )
+                                        )
+                                    },
+                                ) { backStackEntry ->
+                                    val parentEntry = remember(backStackEntry) {
+                                        navController.getBackStackEntry("TRANSLATION_GRAPH")
+                                    }
+                                    val viewModel = viewModel<TranslationViewModel>(
+                                        viewModelStoreOwner = parentEntry,
+                                        factory = TranslationViewModel.Factory
+                                    )
+
+                                    TranslationLanguageSelectionScreen(
+                                        viewModel = viewModel,
+                                        onBack = {
+                                            navController.popBackStack()
+                                        }
+                                    )
+                                }
+
+                            }
+
+                            navigation(
+                                startDestination = ScreenName.WEATHER_HOME_SCREEN.name,
+                                route = "WEATHER_GRAPH"
+                            ) {
+                                composable(
+                                    ScreenName.WEATHER_HOME_SCREEN.name,
+                                    enterTransition = {
+                                        fadeIn(
+                                            animationSpec = tween(screenTransitionDuration)
+                                        )
+                                    },
+                                    exitTransition = {
+                                        fadeOut(
+                                            animationSpec = tween(
+                                                screenTransitionDuration
+                                            )
+                                        )
+                                    },
                                 ) {
-                                    WeatherScreenRoot(
-                                        onScreenComposition = {},
-                                        onTextFieldClick = {
-                                            navController.navigate(ScreenName.WEATHER_SEARCH_LOCATIONS.name)
+                                    val parentEntry =
+                                        remember { navController.getBackStackEntry("WEATHER_GRAPH") }
+                                    val viewModel = viewModel<WeatherViewModel>(
+                                        viewModelStoreOwner = parentEntry,
+                                        factory = WeatherViewModel.Factory
+                                    )
+
+                                    //TODO: refine title and message
+                                    PermissionsBox(
+                                        permissionsRequired = mapOf(
+                                            Pair(
+                                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                                false
+                                            ),
+                                            Pair(
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                                false
+                                            )
+                                        ),
+                                        iconId = R.drawable.location,
+                                        message = "We need your location to show live local weather. Choose Precise or Approximate location (only one). You can update this in Settings at any time.",
+                                        onSatisfied = {
+                                            viewModel.hideErrorMessage()
+                                        }
+                                    ) {
+                                        WeatherScreenRoot(
+                                            onScreenComposition = {},
+                                            onTextFieldClick = {
+                                                navController.navigate(ScreenName.WEATHER_SEARCH_LOCATIONS.name)
+                                            },
+                                            viewModel = viewModel
+                                        )
+                                    }
+                                }
+
+                                composable(
+                                    ScreenName.WEATHER_SEARCH_LOCATIONS.name,
+                                    enterTransition = {
+                                        fadeIn(
+                                            animationSpec = tween(screenTransitionDuration)
+                                        )
+                                    },
+                                    exitTransition = {
+                                        fadeOut(
+                                            animationSpec = tween(
+                                                screenTransitionDuration
+                                            )
+                                        )
+                                    },
+                                ) {
+                                    val parentEntry =
+                                        remember { navController.getBackStackEntry("WEATHER_GRAPH") }
+                                    val viewModel = viewModel<WeatherViewModel>(
+                                        viewModelStoreOwner = parentEntry,
+                                        factory = WeatherViewModel.Factory
+                                    )
+
+                                    SearchLocationsScreen(
+                                        onBackClick = {
+                                            navController.navigate(ScreenName.WEATHER_HOME_SCREEN.name)
                                         },
                                         viewModel = viewModel
                                     )
@@ -537,10 +628,12 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable(
-                                ScreenName.WEATHER_SEARCH_LOCATIONS.name,
+                                ScreenName.SETTINGS.name,
                                 enterTransition = {
                                     fadeIn(
-                                        animationSpec = tween(screenTransitionDuration)
+                                        animationSpec = tween(
+                                            screenTransitionDuration
+                                        )
                                     )
                                 },
                                 exitTransition = {
@@ -551,43 +644,11 @@ class MainActivity : ComponentActivity() {
                                     )
                                 },
                             ) {
-                                val parentEntry =
-                                    remember { navController.getBackStackEntry("WEATHER_GRAPH") }
-                                val viewModel = viewModel<WeatherViewModel>(
-                                    viewModelStoreOwner = parentEntry,
-                                    factory = WeatherViewModel.Factory
-                                )
-
-                                SearchLocationsScreen(
-                                    onBackClick = {
-                                        navController.navigate(ScreenName.WEATHER_HOME_SCREEN.name)
-                                    },
-                                    viewModel = viewModel
+                                SettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    isChangeThemeClicked = isChangeThemeClicked
                                 )
                             }
-                        }
-
-                        composable(
-                            ScreenName.SETTINGS.name,
-                            enterTransition = {
-                                fadeIn(
-                                    animationSpec = tween(
-                                        screenTransitionDuration
-                                    )
-                                )
-                            },
-                            exitTransition = {
-                                fadeOut(
-                                    animationSpec = tween(
-                                        screenTransitionDuration
-                                    )
-                                )
-                            },
-                        ) {
-                            SettingsScreen(
-                                viewModel = settingsViewModel,
-                                isChangeThemeClicked = isChangeThemeClicked
-                            )
                         }
                     }
                 }
