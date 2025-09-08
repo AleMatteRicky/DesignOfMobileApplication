@@ -133,6 +133,8 @@ public:
      */
     void applyRecursively(std::function<void(View&)> f);
 
+    char const* getName() override { return m_tag.c_str(); }
+
     void onEvent(Press const& ev) override {
         if (m_parentView)
             m_parentView->onEvent(ev);
