@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -139,7 +140,7 @@ fun HomeScreen(
 
                 val sharedState = rememberSharedContentState(key = "find_device_transition")
                 val boxHeight = screenHeightDp * 0.6f
-                val boxWidth = screenWidthDp * 0.9f
+                val boxWidth = maxWidth * 0.9f
 
                 AnimatedContent(targetState = showFindDevicePanel.value) { targetState ->
                     if (!targetState) {
@@ -151,8 +152,8 @@ fun HomeScreen(
                         Box(
                             Modifier
                                 .offset(
-                                    x = (screenWidthDp - 65.dp) / 2,
-                                    y = addButtonBoxYOffset    //todo fix with navBarHeight
+                                    x = (maxWidth - 65.dp) / 2,
+                                    y = addButtonBoxYOffset
                                 )
                                 .sharedBounds(
                                     sharedContentState = sharedState,
@@ -172,7 +173,7 @@ fun HomeScreen(
                         Box(
                             Modifier
                                 .offset(
-                                    x = (screenWidthDp - boxWidth) / 2,
+                                    x = (maxWidth - boxWidth) / 2,
                                     y = (screenHeightDp - boxHeight) / 2 - 50.dp
                                 )
                                 .background(Color.Transparent)
@@ -250,38 +251,75 @@ fun DevicesPanel(
     onDeviceStatusPanelClick: () -> Unit,
     onDeviceClick: (BluetoothDevice) -> Unit
 ) {
-
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val colorScheme = MaterialTheme.colorScheme
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(bottom = 100.dp) //Padding for AddDevicesButton
-    ) {
-        Text(
-            text = "Your Devices",
-            style = MaterialTheme.typography.titleLarge,
-            color = colorScheme.primary,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(top = 24.dp)
-        )
+    if (isLandscape) {
+        Row(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(bottom = 100.dp) //Padding for AddDevicesButton
+        ) {
+            Column {
+                Text(
+                    text = "Your Devices",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colorScheme.primary,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 12.dp)
+                )
 
-        Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(24.dp))
 
-        DeviceStatusPanel(
-            connected = connected,
-            onClick = onDeviceStatusPanelClick
-        )
+                Row {
+                    DeviceStatusPanel(
+                        connected = connected,
+                        onClick = onDeviceStatusPanelClick
+                    )
 
-        Spacer(Modifier.height(20.dp))
+                    DevicesListPanel(
+                        devices = devices,
+                        modifier = Modifier
+                            .fillMaxHeight(),
+                        onDeviceClick = onDeviceClick
+                    )
+                }
+            }
+        }
+    } else {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(bottom = 100.dp) //Padding for AddDevicesButton
+        ) {
+            Text(
+                text = "Your Devices",
+                style = MaterialTheme.typography.titleLarge,
+                color = colorScheme.primary,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 24.dp)
+            )
 
-        DevicesListPanel(
-            devices = devices,
-            modifier = Modifier.weight(1f),
-            onDeviceClick = onDeviceClick
-        )
+            Spacer(Modifier.height(24.dp))
+
+            DeviceStatusPanel(
+                connected = connected,
+                onClick = onDeviceStatusPanelClick
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            DevicesListPanel(
+                devices = devices,
+                modifier = Modifier.weight(1f),
+                onDeviceClick = onDeviceClick
+            )
+        }
     }
+
+
 }
 
 @Composable
@@ -290,12 +328,17 @@ fun DeviceStatusPanel(
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Box(
-        modifier = Modifier
+        modifier = if (isLandscape) Modifier
+            .padding(start = 16.dp)
+            .background(color = colorScheme.background)
+        else Modifier
             .padding(horizontal = 16.dp)
             .background(color = colorScheme.background)
     ) {
+
         Card(
             onClick = onClick,
             enabled = connected,
@@ -306,14 +349,10 @@ fun DeviceStatusPanel(
                 disabledContainerColor = colorScheme.tertiaryContainer,
                 disabledContentColor = colorScheme.surfaceContainer
             ),
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = if (isLandscape) Modifier else Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 18.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+
+            val content = @Composable {
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = Color.Transparent
@@ -321,14 +360,16 @@ fun DeviceStatusPanel(
                     Icon(
                         painter = painterResource(id = Icon.SMART_GLASSES.getID()), //FIXME: change icon
                         contentDescription = null,
-                        modifier = Modifier.size(58.dp)
+                        modifier = if (isLandscape) Modifier
+                            .size(58.dp)
+                            .align(Alignment.CenterHorizontally) else Modifier.size(58.dp)
                     )
                 }
 
-                Spacer(Modifier.width(14.dp))
+                Spacer(if (isLandscape) Modifier.height(8.dp) else Modifier.width(14.dp))
 
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = if (isLandscape) Modifier else Modifier.weight(1f)
                 ) {
                     var primaryText: String
                     var secondaryText: String
@@ -358,6 +399,24 @@ fun DeviceStatusPanel(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+                }
+            }
+
+            if (isLandscape) {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 18.dp, vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    content()
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 18.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    content()
                 }
             }
         }
