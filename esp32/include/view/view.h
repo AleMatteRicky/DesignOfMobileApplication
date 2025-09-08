@@ -59,7 +59,7 @@ public:
                          [&subView](auto const& pSubView) {
                              return &subView == pSubView.get();
                          }) != m_subViews.end()) {
-            Serial.printf(
+            ESP_LOGD(TAG,
                 "Calling appendSubView on %p with existing subView %p => "
                 "exiting\n",
                 this, &subView);
@@ -75,7 +75,8 @@ public:
 
     View& getSubViewAtIndex(byte idx) {
         if (idx >= m_subViews.size()) {
-            Serial.printf(
+            ESP_LOGD(
+                TAG,
                 "Object %s at %p is calling the getSubViewAtIndex WITHOUT "
                 "enough "
                 "subViews. Number of subviews: %ld, requested subView: %ld\n",
@@ -213,7 +214,7 @@ protected:
      * Detaches the provided view from the tree rooted in this View
      */
     std::unique_ptr<View> detach(View const& view) {
-        Serial.printf("Detaching view at %p\n", &view);
+        ESP_LOGD(TAG, "Detaching view at %p\n", &view);
         std::unique_ptr<View> reference;
         int16_t idx = -1;
         for (byte i = 0; i < m_subViews.size() && idx == -1; i++) {
@@ -223,7 +224,7 @@ protected:
             }
         }
 
-        Serial.printf("The view to detach is at %d\n", idx);
+        ESP_LOGD(TAG, "The view to detach is at %d\n", idx);
         assert(idx != -1);
         m_subViews.erase(m_subViews.begin() + idx);
         return reference;
@@ -233,6 +234,9 @@ protected:
      * Detaches all subViews rooted in this View
      */
     void detachAll() { m_subViews.clear(); }
+
+private:
+    inline static char const TAG[] = "View";
 
 private:
     View* m_parentView;

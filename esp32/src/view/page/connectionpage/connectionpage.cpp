@@ -27,7 +27,7 @@ void ConnectionPage::onEvent(ble::ConnectionState const& event) {
 }
 
 void ConnectionPage::onEvent(ble::BondingState const& event) {
-    Serial.println("Received update on bonding state");
+    ESP_LOGD(TAG, "Received update on bonding state");
     std::string content;
     switch (event.phase) {
         case ble::BondingState::BONDED:
@@ -47,7 +47,7 @@ void ConnectionPage::onEvent(ble::BondingState const& event) {
 }
 
 void ConnectionPage::onEvent(Click const& event) {
-    Serial.println("ConnectionPage received click, proceed with advertising");
+    ESP_LOGD(TAG, "ConnectionPage received click, proceed with advertising");
     auto controller = controller::CentralController::getInstance();
     controller->advertise();
     m_text->setContent("Advertising");
@@ -74,7 +74,7 @@ std::unique_ptr<ConnectionPage> ConnectionPage::Factory::create() {
 }
 
 void ConnectionPage::drawOnScreen() {
-    Serial.println("Drawing the Connection Page");
+    ESP_LOGD(TAG, "Drawing the Connection Page");
     m_text->draw();
 }
 }  // namespace view

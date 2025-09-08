@@ -43,13 +43,13 @@ Window::Window(std::unique_ptr<Page>&& firstPage)
     connectionImage->makeVisible(true);
     connectionImage->setOnConnectionState(
         [connectionImage](ble::ConnectionState event) {
-            Serial.println("Disconnection image received a connection event");
+            ESP_LOGD(TAG, "Disconnection image received a connection event");
             if (event.phase == ble::ConnectionState::CONNECTED) {
                 connectionImage->makeVisible(true);
-                Serial.println("connection image is now visible");
+                ESP_LOGD(TAG, "connection image is now visible");
             } else {
                 connectionImage->makeVisible(false);
-                Serial.println("connection image is now invisible");
+                ESP_LOGD(TAG, "connection image is now invisible");
             }
             connectionImage->draw();
         });
@@ -61,14 +61,14 @@ Window::Window(std::unique_ptr<Page>&& firstPage)
     disconnectionImage->makeVisible(!isConnected);
     disconnectionImage->setOnConnectionState(
         [disconnectionImage](ble::ConnectionState event) {
-            Serial.println("Disconnection image received a connection event");
+            ESP_LOGD(TAG, "Disconnection image received a connection event");
             if (event.phase == ble::ConnectionState::DISCONNECTED) {
                 disconnectionImage->makeVisible(true);
-                Serial.println("disconnection image is now visible");
+                ESP_LOGD(TAG, "disconnection image is now visible");
 
             } else {
                 disconnectionImage->makeVisible(false);
-                Serial.println("disconnection image is now invisible");
+                ESP_LOGD(TAG, "disconnection image is now invisible");
             }
             disconnectionImage->draw();
         });

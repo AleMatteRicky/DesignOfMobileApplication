@@ -2,7 +2,7 @@
 
 namespace view {
 void Roll::drawOnScreen() {
-    Serial.println("Drawing a roll");
+    ESP_LOGD(TAG, "Drawing a roll");
 
     View& viewAtCenter = getSubViewAtIndex(m_idxImageAtTheCenter);
 
@@ -26,6 +26,7 @@ void Roll::drawOnScreen() {
 
     auto [_, anticlockwiseImagesOverflow] =
         drawRoll(false, remainingImagesAntiClockWise);
+    ESP_LOGD(TAG, "Roll has been drawned");
 }
 
 std::pair<byte, bool> Roll::drawRoll(bool clockwise, byte numFeaturesToDraw) {

@@ -10,9 +10,14 @@ public:
 
     void onWrite(BLECharacteristic* pCharacteristic,
                  esp_ble_gatts_cb_param_t* param) {
-        std::string value(pCharacteristic->getValue().c_str());
+        std::string const& value = pCharacteristic->getValue();
+        ESP_LOGD(TAG, "Characteristic written with value: '%s'\n",
+                 value.c_str());
         m_handler->onCharacteristicChange(value);
     }
+
+private:
+    inline static char const TAG[] = "CharacteristicCallabck";
 
 private:
     RemoteEventsHandler* m_handler;

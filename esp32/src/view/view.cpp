@@ -4,11 +4,15 @@
 namespace view {
 
 View::~View() {
-    Serial.printf("%s at %p is destroyed\n", m_tag.c_str(), this);
+    ESP_LOGD(TAG, "%s at %p is being destroyed\n", m_tag.c_str(), this);
     auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
     auto inputManager = InputManager::getInstance();
     remoteDispatcher->removeFromAllEvents(*this);
     inputManager->removeFromAllEvents(*this);
+    ESP_LOGD(
+        TAG,
+        "%s at %p has been removed succesfully from all possible dispatchers\n",
+        m_tag.c_str(), this);
 }
 
 void View::applyRecursively(std::function<void(View&)> f) {

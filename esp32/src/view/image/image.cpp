@@ -17,17 +17,9 @@ void Image::drawOnScreen() {
 
     // error when opening the binary image from memory
     if (rc != PNG_SUCCESS) {
-        Serial.println("An error occured while drawing the image");
+        ESP_LOGD(TAG, "An error occured while drawing the image");
         return;
     }
-
-    /*
-    Serial.println("Successfully opened png file");
-    Serial.printf("image specs: (%d x %d), %d bpp, pixel type: %d\n",
-                  png->getWidth(), png->getHeight(), png->getBpp(),
-                  png->getPixelType());
-    */
-
     // setup was a success, proceed
     auto tft = tft::Tft::getTFT_eSPI();
     tft->startWrite();

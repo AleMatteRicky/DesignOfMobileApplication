@@ -25,15 +25,15 @@ public:
         m_handler->onBondingStateChange(
             BondingState{.phase = BondingState::BONDING, .passkey = pass_key});
 
-        Serial.println("========================================");
-        Serial.println("🔐 NEW BLE PAIRING IN PROGRESS");
-        Serial.println("========================================");
-        Serial.printf("PASSKEY: %06lu\n", pass_key);
-        Serial.println("========================================");
-        Serial.println("Enter this 6-digit passkey on your smartphone:");
-        Serial.printf(">>> %06lu <<<\n", pass_key);
-        Serial.println("========================================");
-        Serial.println("Waiting for passkey confirmation...");
+        ESP_LOGD(TAG, "========================================");
+        ESP_LOGD(TAG, "🔐 NEW BLE PAIRING IN PROGRESS");
+        ESP_LOGD(TAG, "========================================");
+        ESP_LOGD(TAG, "PASSKEY: %06lu\n", pass_key);
+        ESP_LOGD(TAG, "========================================");
+        ESP_LOGD(TAG, "Enter this 6-digit passkey on your smartphone:");
+        ESP_LOGD(TAG, ">>> %06lu <<<\n", pass_key);
+        ESP_LOGD(TAG, "========================================");
+        ESP_LOGD(TAG, "Waiting for passkey confirmation...");
     }
 
     /* return true whether the user's input to the device matches pass_key, not
@@ -45,7 +45,7 @@ public:
      * nRFConnect app)
      */
     bool onSecurityRequest() {
-        Serial.println("Security request received.");
+        ESP_LOGD(TAG, "Security request received.");
         return true;
     }
 
@@ -56,17 +56,20 @@ public:
         if (cmpl.success) {
             m_handler->onBondingStateChange(
                 BondingState{.phase = BondingState::BONDED});
-            Serial.println("Authentication Success. Device bonded.");
+            ESP_LOGD(TAG, "Authentication Success. Device bonded.");
         } else {
             m_handler->onBondingStateChange(
                 BondingState{.phase = BondingState::NOTBONDED});
 
-            Serial.printf("Authentication failed\n");
-            Serial.printf("\t\t-code: 0x%02X\n", cmpl.fail_reason);
-            Serial.printf("\t\t-address: %d\n", cmpl.addr_type);
-            Serial.printf("\t\t-authentication mode: %d\n", cmpl.auth_mode);
+            ESP_LOGD(TAG, "Authentication failed\n");
+            ESP_LOGD(TAG, "\t\t-code: 0x%02X\n", cmpl.fail_reason);
+            ESP_LOGD(TAG, "\t\t-address: %d\n", cmpl.addr_type);
+            ESP_LOGD(TAG, "\t\t-authentication mode: %d\n", cmpl.auth_mode);
         }
     }
+
+private:
+    inline static char const TAG[] = "BondingCallabck";
 
 private:
     RemoteEventsHandler* m_handler;

@@ -5,17 +5,22 @@ std::unique_ptr<Page> PageFactoryImpl::createPage(PageType type) {
     // TODO: add here the remaining cases
     switch (type) {
         case PageType::HOME:
-            Serial.println("Creating the home");
+            ESP_LOGD(TAG, "Creating the home page");
             return Homepage::Factory::create();
         case PageType::WEATHER:
+            ESP_LOGD(TAG, "Creating the weather page");
             return WeatherPage::Factory::create();
         case PageType::TRANSLATION:
-            Serial.println("Creating the translation");
+            ESP_LOGD(TAG, "Creating the translation page");
             return TranslationPage::Factory::create();
         case PageType::CONNECTION:
+            ESP_LOGD(TAG, "Creating the connection page");
             return ConnectionPage::Factory::create();
+        case PageType::MESSAGES:
+            ESP_LOGD(TAG, "Creating the messages page");
+            return MessageNotificationPage::Factory::create();
         default:
-            Serial.println("No suitable page is found, fallback to the home");
+            ESP_LOGE(TAG, "No suitable page is found, fallback to the home");
             return Homepage::Factory::create();
     }
 }
