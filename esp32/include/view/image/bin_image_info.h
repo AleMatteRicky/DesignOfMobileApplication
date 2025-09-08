@@ -3,6 +3,11 @@
 #include <Arduino.h>
 #include <cstdint>
 
+#define BIN_IMG(w, h, name)      \
+    BinaryImageInfo {            \
+        w, h, sizeof(name), name \
+    }
+
 namespace view {
 struct BinaryImageInfo {
     uint16_t m_height;
