@@ -416,9 +416,9 @@ private fun PermissionStatusList(
         permissionsRequired.forEach { (perm, mandatory) ->
             val granted = grantedState[perm] == true
             val lineColor = when { //TODO: change colors?
-                granted -> Color.Green
-                mandatory -> Color.Red
-                else -> Color.Gray
+                granted -> theme.surfaceContainerHighest
+                mandatory -> theme.surfaceContainerLow
+                else -> theme.surfaceContainerLowest
             }
 
             Row(

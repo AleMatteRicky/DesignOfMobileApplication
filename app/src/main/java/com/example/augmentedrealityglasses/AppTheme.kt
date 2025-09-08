@@ -19,14 +19,21 @@ private val LightColors = lightColorScheme(
     onBackground = Color.hsl(0f, 0.01f, 0.93f), // close to white used for background
     background = Color.hsl(0f, 0.01f, 0.93f), //equal to onBackground
     onPrimaryContainer = Color.hsl(0f, 0.01f, 1f), // primary info panel
-    onSurface = Color.hsl(0f, 0.01f, 0.05f), // used for selected or interactable components (could be used also black 0)
+    onSurface = Color.hsl(
+        0f,
+        0.01f,
+        0.05f
+    ), // used for selected or interactable components (could be used also black 0)
     inverseSurface = Color.hsl(0f, 0.01f, 1f), //used for download track
     tertiaryContainer = Color.hsl(0f, 0.01f, 1f), //used only for search bar (weather)
     onTertiary = Color.hsl(0f, 0.01f, 0.93f), //model missing
     surfaceContainer = Color.hsl(0f, 0.01f, 0.05f), //only used for glasses in home screen
     surfaceTint = Color.hsl(0f, 0.01f, 0.05f),
     surfaceBright = Color.hsl(0f, 0.01f, 0.93f), //used for notification access
-    outline = Color.hsl(0f, 0.01f, 0.85f)
+    outline = Color.hsl(0f, 0.01f, 0.85f),
+    surfaceContainerLow = Color.hsl(0f, 0.65f, 0.45f), // used for mandatory permissions
+    surfaceContainerLowest = Color.hsl(210f, 0.05f, 0.55f), // used for optional permissions
+    surfaceContainerHighest = Color.hsl(130f, 0.45f, 0.45f) // used for acquired permissions
 )
 
 private val DarkColors = darkColorScheme(
@@ -43,7 +50,10 @@ private val DarkColors = darkColorScheme(
     surfaceContainer = Color.hsl(0f, 0.01f, 0.93f), //only used for glasses in home screen
     surfaceTint = Color.hsl(0f, 0.01f, 0f),
     surfaceBright = Color.hsl(0f, 0.01f, 0.07f), //used for notification access
-    outline = Color.hsl(0f, 0.01f, 0.10f)
+    outline = Color.hsl(0f, 0.01f, 0.10f),
+    surfaceContainerLow = Color.hsl(0f, 0.65f, 0.45f), // used for mandatory permissions
+    surfaceContainerLowest = Color.hsl(210f, 0.05f, 0.55f), // used for optional permissions
+    surfaceContainerHighest = Color.hsl(130f, 0.45f, 0.45f) // used for acquired permissions
 )
 
 
