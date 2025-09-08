@@ -6,7 +6,6 @@
 #include "view/bin_pngs/24/incoming_call.h"
 #include "view/bin_pngs/24/incoming_message.h"
 #include "view/bin_pngs/24/no_connection.h"
-#include "view/image/connection_state.h"
 #include "view/notifications/notification.h"
 
 namespace view {
@@ -79,15 +78,14 @@ Window::Window(std::unique_ptr<view::PageFactory>&& pageFactory)
         RectType{Coordinates{xConnectionImg + connectionImgWidth + offset,
                              yConnectionImg},
                  Size{24, 24}},
-        this, "Incoming call", BIN_IMG(24, 24, incoming_call_24),
-        ble::CallNotification::name);
+        this, BIN_IMG(24, 24, incoming_call_24), ble::CallNotification::name);
 
     Notification* messageNotification = new Notification(
         RectType{
             Coordinates{xConnectionImg + 2 * (connectionImgHeight + offset),
                         yConnectionImg},
             Size{24, 24}},
-        this, "Incoming message", BIN_IMG(24, 24, incoming_message),
+        this, BIN_IMG(24, 24, incoming_message),
         ble::MessageNotification::name);
 
     callNotification->makeVisible(false);

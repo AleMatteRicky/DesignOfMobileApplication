@@ -28,7 +28,7 @@ public:
           m_isVisible{false} {}
 
     ~Notification() override {
-        Serial.println("Destroying notification");
+        ESP_LOGD(TAG, "Destroying notification");
         // cancel to avoid the function 'close' be invoked after the object has
         // been destroyed
         m_timer.cancel();
@@ -43,20 +43,23 @@ public:
     }
 
     void onEvent(ble::CallNotification const& event) override {
+        ESP_LOGD(TAG,
+                 "Notification got a call event with name '%s'. The "
+                 "notification received event: '%s'",
+                 event.name, m_nameOfTheTriggeringEvent.c_str());
         if (event.name == m_nameOfTheTriggeringEvent) {
             doOnEvent();
         }
     }
 
     void onEvent(ble::MessageNotification const& event) override {
+        ESP_LOGD(TAG, "Notification got a message event");
         if (event.name == m_nameOfTheTriggeringEvent) {
             doOnEvent();
         }
     }
 
-    void drawOnScreen() override {
-        m_imageWhenTheEventIsTriggered.draw();
-    }
+    void drawOnScreen() override { m_imageWhenTheEventIsTriggered.draw(); }
 
 private:
     void doOnEvent() {
@@ -64,6 +67,9 @@ private:
         drawOnScreen();
         m_timer.delay(m_durationOfTheNotificationInMs, [this]() { close(); });
     }
+
+private:
+    inline static char const TAG[] = "Notification";
 
 private:
     Image m_imageWhenTheEventIsTriggered;
