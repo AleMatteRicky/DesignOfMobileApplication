@@ -260,32 +260,33 @@ fun DevicesPanel(
                 .fillMaxSize()
                 .padding(bottom = 100.dp) //Padding for AddDevicesButton
         ) {
-            Column {
-                Text(
-                    text = "Your Devices",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colorScheme.primary,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 12.dp)
-                )
+            Row {
+                Column {
+                    Text(
+                        text = "Your Devices",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = colorScheme.primary,
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 12.dp)
+                    )
+                    Spacer(Modifier.height(24.dp))
 
-                Spacer(Modifier.height(24.dp))
-
-                Row {
                     DeviceStatusPanel(
                         connected = connected,
                         onClick = onDeviceStatusPanelClick
                     )
-
-                    DevicesListPanel(
-                        devices = devices,
-                        modifier = Modifier
-                            .fillMaxHeight(),
-                        onDeviceClick = onDeviceClick
-                    )
                 }
+
+                DevicesListPanel(
+                    devices = devices,
+                    modifier = Modifier
+                        .fillMaxHeight(),
+                    onDeviceClick = onDeviceClick
+                )
             }
+
+
         }
     } else {
         Column(
