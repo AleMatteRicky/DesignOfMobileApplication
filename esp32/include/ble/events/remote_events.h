@@ -28,10 +28,4 @@ struct MessageNotification {
 struct CallNotification {
     inline static std::string const name = "call_notification";
 };
-
-struct ChangePage {
-    inline static std::string const name = "changing_page";
-    view::PageType page;
-};
-
 }

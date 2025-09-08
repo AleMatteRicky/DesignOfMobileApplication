@@ -6,7 +6,6 @@ namespace ble {
 using RemoteDispatcher =
     DistributedNotificationManager<ble::ConnectionState,
                                    ble::BondingState,
-                                   ble::ChangePage,
                                    ble::UpdateMessage,
                                    ble::MessageNotification,
                                    ble::CallNotification>;
