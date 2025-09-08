@@ -5,14 +5,9 @@
 namespace png {
 class PngDecoder {
 public:
-    static PNG* getPNG() {
-        if (png)
-            return png;
-        png = new PNG();
-        return png;
-    }
+    static PNG* getPNG() { return &png; }
 
 private:
-    static inline PNG* png = nullptr;
+    static inline PNG png;
 };
 }  // namespace png
