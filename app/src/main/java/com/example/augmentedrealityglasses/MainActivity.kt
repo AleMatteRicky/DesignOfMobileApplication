@@ -19,9 +19,11 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
@@ -178,8 +180,10 @@ class MainActivity : ComponentActivity() {
                             //TODO: adjust animation
                             AnimatedVisibility(
                                 visible = navigationBarVisible.value,
-                                enter = slideInHorizontally { -it } + fadeIn(initialAlpha = 0.3f),
-                                exit = slideOutHorizontally { -it } + fadeOut()
+                                enter = slideInHorizontally { 0 } + expandHorizontally(expandFrom = Alignment.Start) + fadeIn(
+                                    initialAlpha = 0.3f
+                                ),
+                                exit = slideOutHorizontally{ fullWidth -> fullWidth } + shrinkHorizontally() + fadeOut()
                             ) {
                                 SideNavigationBar(
                                     navController,
