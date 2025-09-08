@@ -4,21 +4,17 @@
 
 // Input events
 struct Press {
-    inline static std::string const name = "press";
+    inline static char const name[] = "press";
 };
 
 struct Click {
-    inline static std::string const name = "click";
+    inline static char const name[] = "click";
 };
 
 struct SwipeClockwise {
-    inline static std::string const name = "swipe_clockwise";
+    inline static char const name[] = "swipe_clockwise";
 };
 
 struct SwipeAntiClockwise {
-    inline static std::string const name = "swipe_anti_clockwise";
-};
-
-struct DoubleClick {
-    inline static std::string const name = "double_click";
+    inline static char const name[] = "swipe_anti_clockwise";
 };

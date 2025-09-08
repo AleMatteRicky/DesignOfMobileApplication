@@ -10,8 +10,7 @@
 class InputManager : public NotificationManagerImpl<Press,
                                                     Click,
                                                     SwipeClockwise,
-                                                    SwipeAntiClockwise,
-                                                    DoubleClick> {
+                                                    SwipeAntiClockwise> {
 public:
     InputManager();
 
@@ -24,6 +23,9 @@ public:
     InputManager& operator=(const InputManager&) = delete;
 
 private:
+    inline static char const TAG[] = "InputManager";
+
+private:
     CAP1203 sensor;
 
     static InputManager* instance;
@@ -31,3 +33,18 @@ private:
     //    std::thread inputThread;
     //    std::atomic_bool isActive;
 };
+
+/*
+private:
+    enum USER_ACTION {
+        NONE,
+        LEFT,
+        MIDDLE,
+        RIGHT,
+        SWIPE_CLOCKWISE,
+        SWIPE_ANTI_CLOCKWISE
+    };
+
+    USER_ACTION detectTouchFromLeftToRight();
+    USER_ACTION detectTouchFromRightToLeft();
+*/
