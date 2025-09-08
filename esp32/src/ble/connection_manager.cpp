@@ -1,4 +1,5 @@
 #include "ble/connection_manager.h"
+#include <ArduinoJson.h>
 #include "ble/callback/bondingcallback.h"
 #include "ble/callback/characteristiccallback.h"
 #include "ble/callback/servercallback.h"
@@ -11,13 +12,17 @@ namespace ble {
 ConnectionManager::ConnectionManager()
     : m_connectionState(ConnectionState{ConnectionState::DISCONNECTED}),
       m_bondingState(BondingState{BondingState::NOTBONDED, 0}),
-      m_isAdvertising{false} {
+      m_isAdvertising{false},
+      m_messageDb{std::make_unique<model::ModelList<std::string>>()} {
     // Create the BLE Device
     BLEDevice::init("ESP32 device");
+    // set the maximum supported MTU so that more bytes can be written in one
+    // shot
+    BLEDevice::setMTU(500);
     setupBonding();
     setupConnectionMonitoring();
     setupCharacteristics();
-    Serial.println("ConnectionManager setup correctly\n");
+    ESP_LOGD(TAG, "ConnectionManager setup correctly\n");
 }
 
 void ConnectionManager::setupBonding() {
@@ -68,8 +73,9 @@ void ConnectionManager::setupCharacteristics() {
 }
 
 void ConnectionManager::advertise() {
-    Serial.println("Start advertising");
-    if (m_connectionState.phase == ConnectionState::CONNECTED) {
+    ESP_LOGD(TAG, "Start advertising");
+    ConnectionState currentState = m_connectionState.load();
+    if (currentState.phase == ConnectionState::CONNECTED) {
         disconnect();
     }
     BLEAdvertising* pAdvertising = m_server->getAdvertising();
@@ -91,9 +97,9 @@ void ConnectionManager::disconnect() {
 
 void ConnectionManager::onConnectionStateChange(ConnectionState const& ev) {
     if (ev.phase == ConnectionState::CONNECTED) {
-        Serial.printf("Received network event: device is connected\n");
+        ESP_LOGD(TAG, "Received network event: device is connected\n");
     } else {
-        Serial.printf("Received network event: device is not connected\n");
+        ESP_LOGD(TAG, "Received network event: device is not connected\n");
     }
     m_isAdvertising = false;
     m_connectionState = ev;
@@ -108,19 +114,34 @@ void ConnectionManager::onBondingStateChange(BondingState const& ev) {
 }
 
 void ConnectionManager::onCharacteristicChange(std::string const& msg) {
-    Serial.printf("A message arrived: %s\n", msg.c_str());
+    ESP_LOGD(TAG, "A message arrived: '%s'\n", msg.c_str());
 
-    // TODO: add msg to the buffer until one arrives contianing '$' (terminal
-    // character). From that moment, the content of the buffer can be
-    // interpreted as it refers to a valid message and so it can be parsed.
+    JsonDocument doc;
+    DeserializationError error(deserializeJson(doc, msg));
+    if (error) {
+        ESP_LOGD(TAG, "Error '%s' when deserializing\n", error.c_str());
+        return;
+    }
 
-    // TODO: change with the protocol to know what to do
+    std::string command(doc["command"]);
+
     auto dispatcher = RemoteDispatcher::getInstance();
-    if (msg == "page changed") {
-        // TODO: add logic for converting the string into the enum. For now
-        // let's pretend it is always an HOME
-        dispatcher->notify(ChangePage::name, ChangePage{view::PageType::HOME});
+
+    if (command == "n") {
+        ESP_LOGD(TAG, "Notification arrived", msg);
+        std::string typeOfNotification = doc["source"];
+
+        if (typeOfNotification == "call") {
+            ESP_LOGD(TAG, "Call notification arrived");
+            dispatcher->notify(CallNotification::name, CallNotification());
+        } else {
+            m_messageDb->add(msg);
+            ESP_LOGD(TAG, "Message notification arrived");
+            dispatcher->notify(MessageNotification::name,
+                               MessageNotification());
+        }
     } else {
+        ESP_LOGD(TAG, "notifying about the message");
         dispatcher->notify(UpdateMessage::name, UpdateMessage{msg});
     };
 }
