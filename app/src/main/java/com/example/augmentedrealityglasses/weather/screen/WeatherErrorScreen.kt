@@ -76,13 +76,13 @@ fun WeatherErrorScreen(
 
             Spacer(Modifier.weight(1f))
 
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Button(
                     onClick = onRetry,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(22.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = theme.onSurface,
                         contentColor = theme.inversePrimary
