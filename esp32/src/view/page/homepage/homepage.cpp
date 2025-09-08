@@ -1,21 +1,18 @@
 #include "view/page/homepage/homepage.h"
 
 #include "ble/remote_dispatcher.h"
-#include "controller/controller.h"
+#include "controller/central_controller.h"
 #include "input/input_manager.h"
 #include "utility/resource_monitor.h"
-#include "view/bin_pngs/32/calendar.h"
-#include "view/bin_pngs/32/message.h"
+#include "view/bin_pngs/32/chat.h"
+#include "view/bin_pngs/32/connection_to_smartphone.h"
 #include "view/bin_pngs/32/select-arrow.h"
-#include "view/bin_pngs/32/smart-glasses.h"
 #include "view/bin_pngs/32/translate.h"
 #include "view/bin_pngs/32/weather-forecast.h"
-#include "view/bin_pngs/64/calendar.h"
-#include "view/bin_pngs/64/message.h"
-#include "view/bin_pngs/64/smart-glasses.h"
+#include "view/bin_pngs/64/chat.h"
+#include "view/bin_pngs/64/connection_to_smartphone.h"
 #include "view/bin_pngs/64/translate.h"
 #include "view/bin_pngs/64/weather-forecast.h"
-#include "view/notifications/notification.h"
 
 namespace view {
 std::unique_ptr<Homepage> Homepage::Factory::create() {
@@ -26,9 +23,7 @@ std::unique_ptr<Homepage> Homepage::Factory::create() {
         RectType{Coordinates{SCREEN_WIDTH - 64, SCREEN_HEIGHT / 2 - 16},
                  Size{32, 32}},
         homepage.get(),
-        std::vector<BinaryImageInfo>{
-            BinaryImageInfo{16, 16, sizeof(select_arrow), select_arrow},
-        });
+        std::vector<BinaryImageInfo>{BIN_IMG(16, 16, select_arrow)});
 
     auto remoteDispatcher = ble::RemoteDispatcher::getInstance();
 
@@ -41,48 +36,41 @@ std::unique_ptr<Homepage> Homepage::Factory::create() {
     inputManager->addObserver(SwipeClockwise::name, roll);
     inputManager->addObserver(Click::name, roll);
 
-    Image* translation = new Image(
-        RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
-        std::vector<BinaryImageInfo>{
-            BinaryImageInfo{32, 32, sizeof(translate_32), translate_32},
-            BinaryImageInfo{64, 64, sizeof(translate_64), translate_64}});
+    Image* connectionImage =
+        new Image(RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
+                  std::vector<BinaryImageInfo>{
+                      BIN_IMG(32, 32, connection_to_smartphone_32),
+                      BIN_IMG(64, 64, connection_to_smartphone_64)});
+
+    connectionImage->setOnClick([]() {
+        auto controller = controller::CentralController::getInstance();
+        controller->changePage(PageType::CONNECTION);
+    });
+
+    Image* translation =
+        new Image(RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
+                  std::vector<BinaryImageInfo>{BIN_IMG(32, 32, translate_32),
+                                               BIN_IMG(64, 64, translate_64)});
 
     translation->setOnClick([]() {
         auto controller = controller::CentralController::getInstance();
         controller->changePage(PageType::TRANSLATION);
     });
 
-    Image* weather =
-        new Image(RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
-                  std::vector<BinaryImageInfo>{
-                      BinaryImageInfo{32, 32, sizeof(weather_forecast_32),
-                                      weather_forecast_32},
-                      BinaryImageInfo{64, 64, sizeof(weather_forecast_64),
-                                      weather_forecast_64}});
+    Image* weather = new Image(
+        RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
+        std::vector<BinaryImageInfo>{BIN_IMG(32, 32, weather_forecast_32),
+                                     BIN_IMG(64, 64, weather_forecast_64)});
 
     weather->setOnClick([]() {
         auto controller = controller::CentralController::getInstance();
         controller->changePage(PageType::WEATHER);
     });
 
-    Image* settings = new Image(
-        RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
-        std::vector<BinaryImageInfo>{
-            BinaryImageInfo{32, 32, sizeof(smart_glasses_32), smart_glasses_32},
-            BinaryImageInfo{64, 64, sizeof(smart_glasses_64), smart_glasses_64}}
-
-    );
-
-    settings->setOnClick([]() {
-        auto controller = controller::CentralController::getInstance();
-        controller->changePage(PageType::SETTINGS);
-    });
-
     Image* messages =
         new Image(RectType{Coordinates{0, 0}, Size{64, 64}}, roll,
-                  std::vector<BinaryImageInfo>{
-                      BinaryImageInfo{32, 32, sizeof(message_32), message_32},
-                      BinaryImageInfo{64, 64, sizeof(message_64), message_64}});
+                  std::vector<BinaryImageInfo>{BIN_IMG(32, 32, chat_32),
+                                               BIN_IMG(64, 64, chat_64)});
 
     messages->setOnClick([]() {
         auto controller = controller::CentralController::getInstance();
