@@ -1,6 +1,7 @@
 package com.example.augmentedrealityglasses.weather.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,6 +35,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -145,15 +149,13 @@ fun WeatherScreenLandscape(
                                     .verticalScroll(leftScrollState)
                             ) {
                                 currentCondition?.let { condition ->
-                                    CurrentWeatherBar(
+                                    CurrentWeatherBarLandscape(
                                         condition.temp,
                                         condition.tempMax,
                                         condition.tempMin,
                                         condition.feelsLike,
                                         condition.main,
-                                        condition.iconId,
-                                        0.dp,
-                                        12
+                                        condition.iconId
                                     )
                                 }
 
@@ -418,5 +420,117 @@ private fun ValueWithUnit(
             style = MaterialTheme.typography.bodyMedium,
             color = theme.secondary
         )
+    }
+}
+
+@Composable
+fun CurrentWeatherBarLandscape(
+    temperature: Int,
+    maxTemperature: Int,
+    minTemperature: Int,
+    feelsLike: Int,
+    conditionName: String,
+    iconId: Int,
+    padding: Dp = 0.dp,
+    secondaryTextSize: TextUnit = 16.sp,
+    secondaryIconSize: Dp = 16.dp,
+    weatherIconSize: Dp = 80.dp
+) {
+    val theme = MaterialTheme.colorScheme
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = padding)
+            .background(theme.background),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = "${temperature}°",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 64.sp),
+                        color = theme.primary
+                    )
+
+                    Spacer(Modifier.height(1.dp))
+
+                    Text(
+                        text = conditionName,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp),
+                        color = theme.primary
+                    )
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                Image(
+                    painter = painterResource(id = iconId),
+                    contentDescription = conditionName,
+                    modifier = Modifier.size(weatherIconSize)
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.arrow_upward),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(secondaryIconSize)
+                            .padding(end = 2.dp),
+                        tint = theme.secondary
+                    )
+                    Text(
+                        text = "${maxTemperature}°",
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = secondaryTextSize),
+                        color = theme.secondary
+                    )
+
+                    Spacer(modifier = Modifier.width(2.dp))
+
+                    Text(
+                        text = "/",
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = secondaryTextSize),
+                        color = theme.secondary
+                    )
+
+                    Spacer(modifier = Modifier.width(2.dp))
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.arrow_downward),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(secondaryIconSize)
+                            .padding(end = 2.dp),
+                        tint = theme.secondary
+                    )
+                    Text(
+                        text = "${minTemperature}°",
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = secondaryTextSize),
+                        color = theme.secondary
+                    )
+                }
+
+                Text(
+                    text = "Feels Like: ${feelsLike}°",
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = secondaryTextSize),
+                    color = theme.secondary,
+                    maxLines = 1
+                )
+            }
+        }
     }
 }
