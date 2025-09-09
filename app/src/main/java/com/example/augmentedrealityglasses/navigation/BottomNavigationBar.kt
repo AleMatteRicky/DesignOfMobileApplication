@@ -67,7 +67,7 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
 
         HorizontalDivider(
             thickness = Dp.Hairline,
-            color = MaterialTheme.colorScheme.secondary //todo
+            color = MaterialTheme.colorScheme.secondary
                 .copy(alpha = 0.6f)
         )
 
@@ -82,7 +82,7 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier) {
                 val selected = currentDestination == item.route
 
                 NavigationBarItem(
-                    icon = { //todo fill
+                    icon = {
                         Icon(
                             painter = item.icon,
                             contentDescription = item.label,

@@ -118,7 +118,6 @@ class HomeViewModel(
     }
 
     fun disconnectDevice() {
-        //FIXME: switch isExtDeviceConnected flag to false
         proxy.disconnect()
     }
 
@@ -208,7 +207,6 @@ class HomeViewModel(
         }
     }
 
-    //FIXME
     @SuppressLint("MissingPermission")
     fun scan(
         timeout: Duration = 10.seconds,

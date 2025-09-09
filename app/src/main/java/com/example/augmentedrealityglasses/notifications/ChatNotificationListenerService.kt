@@ -107,7 +107,7 @@ class ChatNotificationListenerService : NotificationListenerService() {
                 val last = messages.last()
                 val text = last.text?.toString()?.trim().orEmpty()
                 val sender = last.person?.name?.toString() ?: last.sender?.toString()
-                //TODO: add conv?
+
                 //val conv = style.conversationTitle?.toString()
                 if (text.isNotEmpty()) {
                     val cleanedText = sanitize(replaceEmojisWithPlaceholder(cleanBidi(text)))

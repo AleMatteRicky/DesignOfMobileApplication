@@ -312,7 +312,7 @@ class WeatherViewModel(
 
         json.put("time", time)
         json.put("temperature", temperature)
-        //json.put("wind", wind) //FIXME: decide whether to put or not
+        //json.put("wind", wind)
         json.put("iconName", iconName)
         json.put("pressure", pressure)
 
@@ -530,7 +530,7 @@ class WeatherViewModel(
                             permissions.getOrDefault(
                                 ACCESS_COARSE_LOCATION,
                                 false
-                            ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
+                            ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
                             else -> {
                                 continuation.resume(GeolocationResult.NoPermissionGranted)
                                 return@addOnSuccessListener

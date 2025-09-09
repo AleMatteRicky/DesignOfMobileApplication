@@ -50,7 +50,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.augmentedrealityglasses.update.UpdateWrapper
 import com.example.augmentedrealityglasses.notifications.ChatNotificationListenerService
 
-//todo check interaction shadow border
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
@@ -189,7 +188,7 @@ fun AppearancePanel(
                 )
             }
 
-            HorizontalDivider(color = Color.LightGray) //TODO: adjust color
+            HorizontalDivider(color = Color.LightGray)
 
             Row(
                 modifier = Modifier
@@ -300,7 +299,7 @@ fun NotificationFiltersPanel(
                 }
             )
 
-            HorizontalDivider(color = Color.LightGray) //TODO: adjust color?
+            HorizontalDivider(color = Color.LightGray)
 
             AppToggleRow(
                 title = "Sms",
@@ -311,7 +310,7 @@ fun NotificationFiltersPanel(
                 }
             )
 
-            HorizontalDivider(color = Color.LightGray) //TODO: adjust color or remove it?
+            HorizontalDivider(color = Color.LightGray)
 
             if (!hasNotificationAccess) {
                 NotificationAccessPanel()
@@ -325,7 +324,7 @@ fun NotificationFiltersPanel(
                     }
                 )
 
-                HorizontalDivider(color = Color.LightGray) //TODO: adjust color?
+                HorizontalDivider(color = Color.LightGray)
 
                 AppToggleRow(
                     title = "Telegram",
@@ -336,7 +335,7 @@ fun NotificationFiltersPanel(
                     }
                 )
 
-                HorizontalDivider(color = Color.LightGray) //TODO: adjust color?
+                HorizontalDivider(color = Color.LightGray)
 
                 AppToggleRow(
                     title = "Gmail",
@@ -347,7 +346,7 @@ fun NotificationFiltersPanel(
                     }
                 )
 
-                HorizontalDivider(color = Color.LightGray) //TODO: adjust color?
+                HorizontalDivider(color = Color.LightGray)
 
                 AppToggleRow(
                     title = "Outlook",
@@ -433,7 +432,7 @@ fun NotificationAccessPanel() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(theme.surfaceBright, RoundedCornerShape(12.dp)) //TODO: adjust color
+            .background(theme.surfaceBright, RoundedCornerShape(12.dp))
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -447,7 +446,7 @@ fun NotificationAccessPanel() {
         Text(
             text = "Enable notification access to forward applications messages.",
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray //TODO: adjust color
+            color = theme.secondary
         )
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Button(

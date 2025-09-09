@@ -466,7 +466,6 @@ fun LocationManagerBar(
     }
 }
 
-//TODO: Add gradient to the right side
 @Composable
 fun DailyForecastsPanel(
     forecasts: List<WeatherCondition>,
@@ -498,7 +497,7 @@ fun DailyForecastsPanel(
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
                 thickness = 1.dp,
-                color = Color.LightGray //TODO: adjust color
+                color = Color.LightGray
             )
             LazyRow(
                 // Enables snapping to the start of each item during horizontal scroll.
@@ -599,7 +598,7 @@ fun MultipleDaysForecastsPanel(
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
                 thickness = 1.dp,
-                color = Color.LightGray //TODO: adjust color
+                color = Color.LightGray
             )
 
             forecasts.forEach { forecast ->
@@ -733,7 +732,6 @@ fun AdditionalInfosGrid(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            //TODO: add attribution: https://www.flaticon.com/free-icon/gauge_4284060?related_id=4283902&origin=search
             StatBox(
                 title = "Pressure",
                 iconRes = R.drawable.pressure,
@@ -772,7 +770,6 @@ fun AdditionalInfosGrid(
                 modifier = Modifier.weight(1f)
             )
 
-            //TODO: add attribution: https://www.flaticon.com/free-icon/wind_2529971?term=wind&page=3&position=43&origin=search&related_id=2529971
             StatBox(
                 title = "Wind Speed",
                 iconRes = R.drawable.wind,
@@ -927,7 +924,7 @@ private fun SunriseSunsetBox(
                             .padding(vertical = 10.dp, horizontal = 15.dp)
                             .fillMaxWidth(),
                         thickness = 1.dp,
-                        color = Color.LightGray //TODO: adjust color
+                        color = Color.LightGray
                     )
 
                     Row(verticalAlignment = Alignment.CenterVertically) {

@@ -161,7 +161,7 @@ fun SearchLocationsScreen(
                 modifier = Modifier
                     .height(56.dp)
                     .fillMaxWidth()
-                    //.border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)) //TODO: adjust color?
+                    //.border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
                     .widthIn(max = 280.dp) //Limit the text field width
                     .focusRequester(focusRequester) //Link the focus requester
             )
@@ -200,7 +200,7 @@ fun SearchLocationsScreen(
                         HorizontalDivider(
                             modifier = Modifier.fillMaxWidth(),
                             thickness = 0.6.dp,
-                            color = Color.LightGray //TODO: adjust color?
+                            color = Color.LightGray
                         )
                     }
                 }
