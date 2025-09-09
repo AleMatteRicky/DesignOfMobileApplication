@@ -11,7 +11,7 @@ TranslationPage::TranslationPage()
     : Page::Page(RectType{Coordinates{0, 0}, Size{SCREEN_WIDTH, SCREEN_HEIGHT}},
                  nullptr),
       m_text(new TextArea(
-          RectType{Coordinates{0, 40}, Size{SCREEN_WIDTH, SCREEN_HEIGHT - 40}},
+          RectType{Coordinates{0, 60}, Size{SCREEN_WIDTH, SCREEN_HEIGHT - 60}},
           this,
           "No data arrived yet")) {
     m_text->wrapTextVertically(true);
