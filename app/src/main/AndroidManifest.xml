@@ -29,8 +29,18 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Permissions for detecting changes in the phone state and incoming calls -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+
+    <!-- Permissions to be notified about message arrivals and their meaning.
+        It requires setting uses-feature to false because not all devices can support it (e.g. chromebooks) -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
     <application
-        android:name=".App"
+        android:name=".container.App"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -51,9 +61,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name=".notifications.ChatNotificationListenerService"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
     <uses-feature
-        android:name="android.hardware.microphone"
-        android:required="false" />
+            android:name="android.hardware.microphone"
+            android:required="false" />
+    <uses-feature
+            android:name="android.hardware.telephony"
+            android:required="false" />
 
 </manifest>

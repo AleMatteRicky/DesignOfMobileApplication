@@ -1,18 +1,14 @@
 package com.example.augmentedrealityglasses.ble.screens
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanSettings
-import android.content.pm.PackageManager
-import android.os.ParcelUuid
-import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,130 +18,66 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.augmentedrealityglasses.ble.device.SERVICE_UUID
-import com.example.augmentedrealityglasses.ble.viewmodels.FindDeviceViewModel
-import kotlinx.coroutines.delay
-
-private val TAG = "FindDeviceScreen"
+import com.example.augmentedrealityglasses.home.HomeViewModel
+import com.example.augmentedrealityglasses.ui.theme.Icon
+import com.example.augmentedrealityglasses.ble.characteristic.checkBluetoothConnectPermission
 
 @Composable
 fun FindDeviceScreen(
-    viewModel: FindDeviceViewModel,
+    viewModel: HomeViewModel,
+    showFindDevicePanel: MutableState<Boolean>,
+    modifier: Modifier,
     navigateOnError: () -> Unit,
-    navigateOnConnect: () -> Unit,
+    navigateOnFeatures: () -> Unit
 ) {
-    val notGranted = ActivityCompat.checkSelfPermission(
-        LocalContext.current,
-        Manifest.permission.BLUETOOTH_CONNECT
-    ) != PackageManager.PERMISSION_GRANTED
+    checkBluetoothConnectPermission(LocalContext.current)
 
-    require(
-        !notGranted
+    val scanning by viewModel.isScanning.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
+
+    val devicesOfferingTheService by viewModel.scannedDevices.collectAsState()
+
+    // use of remember to not change the reference of scanSettings during recomposition, which would trick the framework into considering the variable as changed
+    val scanSettings: ScanSettings = remember {
+        ScanSettings.Builder().setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+            .setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
+    }
+
+    BluetoothScanEffect(
+        viewModel,
+        null,
+        scanSettings,
     )
 
-    val context = LocalContext.current
-    val bluetoothManager: BluetoothManager =
-        checkNotNull(context.getSystemService(BluetoothManager::class.java))
-    val adapter: BluetoothAdapter? = bluetoothManager.getAdapter()
-    if (adapter == null) {
-        Log.d(TAG, "adapter is null => the device does not support bluetooth")
-        // TODO: for now left as is. Generally, the current screen should be popped out.
-        navigateOnError()
-        return
-    }
-
-    // variable to know whether to continue scanning or not
-    var scanning by remember {
-        mutableStateOf(true)
-    }
-
-    // TODO. add virtual view to manage the state
-    val myConnect: (BluetoothDevice) -> Unit = {
-        Log.d(TAG, "Selected device: $it ")
-        scanning = false
-        viewModel.connect(it)
-        navigateOnConnect()
-    }
-
-    val devices = remember {
-        mutableStateListOf<BluetoothDevice>()
-    }
-
-    val pairedDevices = remember {
-        mutableStateListOf(*adapter.bondedDevices.toTypedArray())
-    }
-
-    // TODO: use as a single value
-    val serverDevices = remember {
-        mutableStateListOf<BluetoothDevice>()
-    }
-    val scanSettings: ScanSettings = ScanSettings.Builder()
-        .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-        .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
-        .build()
-
-    // TODO: change the function to start the connection with the selected device
-    if (scanning) {
-        BluetoothScanEffect(
-            scanSettings = scanSettings,
-            onScanFailed = {
-                scanning = false
-                Log.w(TAG, "Scan failed with error: $it")
-            },
-            onDeviceFound = { scanResult ->
-                Log.d(
-                    TAG,
-                    "found device: name -> ${scanResult.device.name} address -> ${scanResult.device.address}"
-                )
-                if (!devices.contains(scanResult.device)) {
-                    devices.add(scanResult.device)
-                }
-
-                // If we find our GATT server sample let's highlight it
-                val serviceUuids = scanResult.scanRecord?.serviceUuids.orEmpty()
-                if (serviceUuids.contains(ParcelUuid(SERVICE_UUID))) {
-                    if (!serverDevices.contains(scanResult.device)) {
-                        serverDevices.add(scanResult.device)
-                    }
-                }
-            },
-        )
-
-        // to not execute the code again when the UI recomposes
-        LaunchedEffect(Unit) {
-            delay(15000)
-            scanning = false
-        }
-    }
-
-    Column(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .clip(shape = RoundedCornerShape(22.dp))
+            .background(colorScheme.tertiaryContainer)
+    ) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -154,48 +86,73 @@ fun FindDeviceScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = "Available devices", style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = "Available Devices",
+                style = MaterialTheme.typography.bodyLarge,
+                color = colorScheme.primary
+            )
+
             if (scanning) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    modifier = Modifier.size(27.dp),
+                    strokeWidth = 3.dp,
+                    color = colorScheme.primary,
+                    trackColor = colorScheme.inverseSurface
+                )
             } else {
-                IconButton(
-                    onClick = {
-                        devices.clear()
-                        scanning = true
-                    },
+                Box(
+                    modifier = Modifier
+                        .size(27.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {
+                                viewModel.scan(filters = null, settings = scanSettings)
+                            }
+                        ), contentAlignment = Alignment.Center
                 ) {
-                    Icon(imageVector = Icons.Rounded.Refresh, contentDescription = null)
+                    androidx.compose.material3.Icon(
+                        painter = painterResource(id = Icon.REFRESH.getID()),
+                        contentDescription = "refresh scanning for new devices",
+                        tint = colorScheme.primary,
+                        modifier = Modifier.size(27.dp)
+                    )
                 }
             }
         }
 
         LazyColumn(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (devices.isEmpty()) {
+            if (devicesOfferingTheService.isEmpty()) {
                 item {
-                    Text(text = "No devices found")
+                    Text(
+                        text = "No devices found",
+                        color = colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
                 }
-            }
-            items(devices) { item ->
-                BluetoothDeviceItem(
-                    bluetoothDevice = item,
-                    isSampleServer = serverDevices.contains(item),
-                    onConnect = myConnect,
-                )
             }
 
-            if (pairedDevices.isNotEmpty()) {
-                item {
-                    Text(text = "Saved devices", style = MaterialTheme.typography.titleSmall)
-                }
-                items(pairedDevices) {
-                    BluetoothDeviceItem(
-                        bluetoothDevice = it,
-                        onConnect = myConnect,
-                    )
-                }
+            items(devicesOfferingTheService.filter {
+                it.name != null
+            }) { item ->
+                BluetoothDeviceItem(
+                    bluetoothDevice = item,
+                    onConnect = {
+                        if (viewModel.connect(it)) {
+                            showFindDevicePanel.value = false
+                            navigateOnFeatures()
+                        } else {
+                            //TODO
+                        }
+                    },
+                )
             }
         }
     }
@@ -208,69 +165,61 @@ internal fun BluetoothDeviceItem(
     isSampleServer: Boolean = false,
     onConnect: (BluetoothDevice) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .padding(vertical = 8.dp)
-            .fillMaxWidth()
-            .clickable { onConnect(bluetoothDevice) },
-        horizontalArrangement = Arrangement.SpaceBetween,
+    val colorScheme = MaterialTheme.colorScheme
+
+    Card(
+        onClick = { onConnect(bluetoothDevice) },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.tertiaryContainer,
+            contentColor = colorScheme.surfaceContainer
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 4.dp
+        ),
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            bluetoothDevice.name ?: "N/A",
-            style = if (isSampleServer) {
-                TextStyle(fontWeight = FontWeight.Bold)
-            } else {
-                TextStyle(fontWeight = FontWeight.Normal)
-            },
-        )
-        Text(bluetoothDevice.address)
-        val state = when (bluetoothDevice.bondState) {
+        Row(
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text( //todo check font
+                bluetoothDevice.name ?: "N/A",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 16.sp),
+                color = colorScheme.primary
+            )
+            //Text(bluetoothDevice.address)
+
+            /*val state = when (bluetoothDevice.bondState) {
             BluetoothDevice.BOND_BONDED -> "Paired"
             BluetoothDevice.BOND_BONDING -> "Pairing"
             else -> "None"
         }
         Text(text = state)
+         */
 
+        }
     }
 }
 
 @SuppressLint("MissingPermission")
 @Composable
 private fun BluetoothScanEffect(
+    viewModel: HomeViewModel,
+    filters: List<ScanFilter>?,
     scanSettings: ScanSettings,
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
-    onScanFailed: (Int) -> Unit,
-    onDeviceFound: (device: ScanResult) -> Unit,
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
-    val context = LocalContext.current
-    val adapter = context.getSystemService(BluetoothManager::class.java).adapter
-
-    if (adapter == null) {
-        onScanFailed(ScanCallback.SCAN_FAILED_INTERNAL_ERROR)
-        return
-    }
-
-    val currentOnDeviceFound by rememberUpdatedState(onDeviceFound)
-
-    DisposableEffect(lifecycleOwner, scanSettings) {
-        val leScanCallback: ScanCallback = object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                super.onScanResult(callbackType, result)
-                currentOnDeviceFound(result)
-            }
-
-            override fun onScanFailed(errorCode: Int) {
-                super.onScanFailed(errorCode)
-                onScanFailed(errorCode)
-            }
-        }
-
+    DisposableEffect(lifecycleOwner, filters, scanSettings) {
         val observer = LifecycleEventObserver { _, event ->
             // Start scanning once the app is in foreground and stop when in background
             if (event == Lifecycle.Event.ON_START) {
-                adapter.bluetoothLeScanner.startScan(null, scanSettings, leScanCallback)
+                viewModel.scan(filters = filters, settings = scanSettings)
             } else if (event == Lifecycle.Event.ON_STOP) {
-                adapter.bluetoothLeScanner.stopScan(leScanCallback)
+                viewModel.stopScanning()
             }
         }
 
@@ -280,7 +229,7 @@ private fun BluetoothScanEffect(
         // When the effect leaves the Composition, remove the observer and stop scanning
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
-            adapter.bluetoothLeScanner.stopScan(leScanCallback)
+            viewModel.stopScanning()
         }
     }
 }
