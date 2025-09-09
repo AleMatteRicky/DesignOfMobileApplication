@@ -20,8 +20,8 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.BluetoothUpdateStatus
+import com.example.augmentedrealityglasses.container.App
+import com.example.augmentedrealityglasses.update.BluetoothUpdateStatus
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.internet.ConnectivityStatus
@@ -31,7 +31,6 @@ import com.example.augmentedrealityglasses.translation.ui.getFullLengthName
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModel
 import com.google.mlkit.common.model.RemoteModelManager
-import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.TranslateRemoteModel
 import com.google.mlkit.nl.translate.Translation
@@ -44,7 +43,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
-import java.util.concurrent.atomic.AtomicInteger
 
 //todo remove connection during translation
 

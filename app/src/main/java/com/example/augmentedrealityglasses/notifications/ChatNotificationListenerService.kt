@@ -5,7 +5,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.container.App
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.settings.NotificationSource
 import kotlinx.coroutines.CoroutineScope

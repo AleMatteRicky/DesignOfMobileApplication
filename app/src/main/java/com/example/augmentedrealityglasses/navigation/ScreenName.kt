@@ -1,10 +1,8 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.navigation
 
 enum class ScreenName {
     HOME,
     FIND_DEVICE,
-    ERROR_SCREEN,
-    CONNECT_SCREEN,
     WEATHER_HOME_SCREEN,
     WEATHER_SEARCH_LOCATIONS,
     TRANSLATION_HOME_SCREEN,

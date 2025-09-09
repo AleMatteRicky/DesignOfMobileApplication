@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.home
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -58,6 +58,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.example.augmentedrealityglasses.R
+import com.example.augmentedrealityglasses.update.UpdateWrapper
 import com.example.augmentedrealityglasses.ble.ESP32Proxy
 import com.example.augmentedrealityglasses.ble.screens.FindDeviceScreen
 
@@ -359,7 +361,7 @@ fun DeviceStatusPanel(
                     color = Color.Transparent
                 ) {
                     Icon(
-                        painter = painterResource(id = Icon.SMART_GLASSES.getID()), //FIXME: change icon
+                        painter = painterResource(id = com.example.augmentedrealityglasses.ui.theme.Icon.SMART_GLASSES.getID()), //FIXME: change icon
                         contentDescription = null,
                         modifier = if (isLandscape) Modifier
                             .size(58.dp)

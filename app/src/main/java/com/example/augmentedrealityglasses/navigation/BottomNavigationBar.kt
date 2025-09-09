@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.navigation
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.augmentedrealityglasses.R
 
 @Composable
 fun BottomNavigationBar(navController: NavController, modifier: Modifier) {

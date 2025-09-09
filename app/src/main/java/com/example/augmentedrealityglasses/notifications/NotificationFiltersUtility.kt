@@ -1,7 +1,7 @@
 package com.example.augmentedrealityglasses.notifications
 
 import android.content.Context
-import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.container.App
 import com.example.augmentedrealityglasses.cache.DefaultTimeProvider
 import com.example.augmentedrealityglasses.settings.NotificationSource
 import com.example.augmentedrealityglasses.settings.SettingsUIState

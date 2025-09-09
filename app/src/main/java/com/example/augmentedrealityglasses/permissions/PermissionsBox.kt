@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.permissions
 
 import android.app.Activity
 import android.content.Intent
@@ -38,7 +38,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -50,6 +49,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.augmentedrealityglasses.R
 
 /**
  * Composable that handles multiple runtime permissions.

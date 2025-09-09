@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.augmentedrealityglasses.R
 
 private val LightColors = lightColorScheme(
     primary = Color.hsl(0f, 0.01f, 0.05f),   // primary text color
@@ -121,6 +122,9 @@ private val AppTypography = Typography(
 
     )
 
+/**
+ * The theme used by the application
+ */
 @Composable
 fun AppTheme(
     isDarkThemeSelected: Boolean,

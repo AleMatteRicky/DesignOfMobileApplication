@@ -21,7 +21,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import com.example.augmentedrealityglasses.Icon
+import com.example.augmentedrealityglasses.ui.theme.Icon
 import com.example.augmentedrealityglasses.internet.ConnectivityStatus
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 

@@ -5,7 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.example.augmentedrealityglasses.App
+import com.example.augmentedrealityglasses.container.App
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.settings.NotificationSource
 import org.json.JSONObject

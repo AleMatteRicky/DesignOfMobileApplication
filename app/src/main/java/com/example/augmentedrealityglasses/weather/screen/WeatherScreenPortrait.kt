@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.augmentedrealityglasses.R
-import com.example.augmentedrealityglasses.UpdateWrapper
+import com.example.augmentedrealityglasses.update.UpdateWrapper
 import com.example.augmentedrealityglasses.translation.ui.LoadingAnimation
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.state.DayCondition

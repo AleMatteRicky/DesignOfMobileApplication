@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.update
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -50,10 +50,10 @@ fun UpdateWrapper(
         ) {
             if (bluetoothUpdateStatus == BluetoothUpdateStatus.DEVICE_CONNECTED) {
                 bluetoothBannerText = "Device connected via Bluetooth."
-                bluetoothBannerIconId = Icon.BLUETOOTH_CONNECTED.getID()
+                bluetoothBannerIconId = com.example.augmentedrealityglasses.ui.theme.Icon.BLUETOOTH_CONNECTED.getID()
             } else {
                 bluetoothBannerText = "Device disconnected from Bluetooth."
-                bluetoothBannerIconId = Icon.BLUETOOTH_DISABLED.getID()
+                bluetoothBannerIconId = com.example.augmentedrealityglasses.ui.theme.Icon.BLUETOOTH_DISABLED.getID()
             }
         }
 
@@ -130,7 +130,7 @@ fun UpdateWrapper(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Image(
-                            painter = painterResource(id = Icon.ERROR.getID()),
+                            painter = painterResource(id = com.example.augmentedrealityglasses.ui.theme.Icon.ERROR.getID()),
                             contentDescription = "Error icon",
                             Modifier.size(16.dp)
                         )

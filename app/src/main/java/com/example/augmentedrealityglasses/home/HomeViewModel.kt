@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.home
 
 import android.Manifest.permission.BLUETOOTH_CONNECT
 import android.annotation.SuppressLint
@@ -20,6 +20,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.augmentedrealityglasses.container.App
+import com.example.augmentedrealityglasses.update.BluetoothUpdateStatus
 import com.example.augmentedrealityglasses.ble.ESP32Proxy
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState

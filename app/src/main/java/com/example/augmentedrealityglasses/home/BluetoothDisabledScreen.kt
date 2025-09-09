@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.home
 
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.augmentedrealityglasses.R
 
 @Composable
 fun BluetoothDisabledScreen(

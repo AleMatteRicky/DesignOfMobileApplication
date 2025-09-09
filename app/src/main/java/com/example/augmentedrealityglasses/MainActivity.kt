@@ -75,8 +75,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
-import com.example.augmentedrealityglasses.ble.screens.ConnectScreen
-import com.example.augmentedrealityglasses.ble.viewmodels.ConnectViewModel
+import com.example.augmentedrealityglasses.container.App
+import com.example.augmentedrealityglasses.home.BLENotSupportedScreen
+import com.example.augmentedrealityglasses.home.BluetoothDisabledScreen
+import com.example.augmentedrealityglasses.home.HomeScreen
+import com.example.augmentedrealityglasses.home.HomeViewModel
+import com.example.augmentedrealityglasses.navigation.BottomNavigationBar
+import com.example.augmentedrealityglasses.navigation.ScreenName
+import com.example.augmentedrealityglasses.navigation.SideNavigationBar
+import com.example.augmentedrealityglasses.permissions.PermissionsBox
 import com.example.augmentedrealityglasses.settings.SettingsScreen
 import com.example.augmentedrealityglasses.settings.SettingsViewModel
 import com.example.augmentedrealityglasses.settings.ThemeMode
@@ -84,6 +91,8 @@ import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.ui.screen.TranslationHomeScreen
 import com.example.augmentedrealityglasses.translation.ui.screen.TranslationLanguageSelectionScreen
 import com.example.augmentedrealityglasses.translation.ui.screen.TranslationResultScreen
+import com.example.augmentedrealityglasses.ui.theme.AppTheme
+import com.example.augmentedrealityglasses.ui.theme.Icon
 import com.example.augmentedrealityglasses.weather.screen.SearchLocationsScreen
 import com.example.augmentedrealityglasses.weather.screen.WeatherScreenRoot
 import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
@@ -183,7 +192,7 @@ class MainActivity : ComponentActivity() {
                                 enter = slideInHorizontally { 0 } + expandHorizontally(expandFrom = Alignment.Start) + fadeIn(
                                     initialAlpha = 0.3f
                                 ),
-                                exit = slideOutHorizontally{ fullWidth -> fullWidth } + shrinkHorizontally() + fadeOut()
+                                exit = slideOutHorizontally { fullWidth -> fullWidth } + shrinkHorizontally() + fadeOut()
                             ) {
                                 SideNavigationBar(
                                     navController,
@@ -337,7 +346,7 @@ class MainActivity : ComponentActivity() {
                                             applicationContext.registerReceiver(
                                                 receiver,
                                                 filter,
-                                                Context.RECEIVER_NOT_EXPORTED
+                                                RECEIVER_NOT_EXPORTED
                                             )
                                         } else {
                                             applicationContext.registerReceiver(
@@ -379,37 +388,6 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 }
-                            }
-                            composable(
-                                ScreenName.CONNECT_SCREEN.name,
-                                enterTransition = {
-                                    fadeIn(
-                                        animationSpec = tween(
-                                            screenTransitionDuration
-                                        )
-                                    )
-                                },
-                                exitTransition = {
-                                    fadeOut(
-                                        animationSpec = tween(
-                                            screenTransitionDuration
-                                        )
-                                    )
-                                },
-                            ) {
-                                ConnectScreen(
-                                    viewModel = viewModel(factory = ConnectViewModel.Factory),
-                                    onNavigateToFeature = { screen ->
-                                        navController.navigate(screen)
-                                    },
-                                    onNavigateAfterClosingTheConnection = {
-                                        navController.navigate(ScreenName.FIND_DEVICE.name) {
-                                            popUpTo(ScreenName.CONNECT_SCREEN.name) {
-                                                inclusive = true
-                                            }
-                                        }
-                                    }
-                                )
                             }
 
                             navigation(

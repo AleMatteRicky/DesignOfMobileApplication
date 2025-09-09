@@ -22,8 +22,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.augmentedrealityglasses.Icon
-import com.example.augmentedrealityglasses.UpdateWrapper
+import com.example.augmentedrealityglasses.ui.theme.Icon
+import com.example.augmentedrealityglasses.update.UpdateWrapper
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
 import com.example.augmentedrealityglasses.translation.ui.LanguageRole
 import com.example.augmentedrealityglasses.translation.ui.LanguageRow

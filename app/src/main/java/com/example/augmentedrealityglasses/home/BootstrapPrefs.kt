@@ -1,4 +1,4 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.home
 
 import android.content.Context
 import com.example.augmentedrealityglasses.settings.ThemeMode

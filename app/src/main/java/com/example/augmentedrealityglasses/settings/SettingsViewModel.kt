@@ -9,9 +9,9 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.augmentedrealityglasses.App
-import com.example.augmentedrealityglasses.BluetoothUpdateStatus
-import com.example.augmentedrealityglasses.BootstrapPrefs
+import com.example.augmentedrealityglasses.container.App
+import com.example.augmentedrealityglasses.update.BluetoothUpdateStatus
+import com.example.augmentedrealityglasses.home.BootstrapPrefs
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.cache.Cache

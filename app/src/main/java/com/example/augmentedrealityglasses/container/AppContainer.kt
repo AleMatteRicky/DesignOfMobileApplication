@@ -1,8 +1,9 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.container
 
 import android.content.Context
 import android.os.Build
 import android.telephony.TelephonyManager
+import com.example.augmentedrealityglasses.home.BootstrapPrefs
 import com.example.augmentedrealityglasses.ble.ESP32Proxy
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.cache.Cache

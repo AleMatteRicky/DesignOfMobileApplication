@@ -1,4 +1,6 @@
-package com.example.augmentedrealityglasses
+package com.example.augmentedrealityglasses.ui.theme
+
+import com.example.augmentedrealityglasses.R
 
 
 //this enum can be useful in order to have multiple variant of the icons in a simple way

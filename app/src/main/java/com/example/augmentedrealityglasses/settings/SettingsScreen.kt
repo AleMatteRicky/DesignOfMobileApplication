@@ -47,7 +47,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.augmentedrealityglasses.UpdateWrapper
+import com.example.augmentedrealityglasses.update.UpdateWrapper
 import com.example.augmentedrealityglasses.notifications.ChatNotificationListenerService
 
 //todo check interaction shadow border
