@@ -23,16 +23,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.augmentedrealityglasses.ui.theme.Icon
 import com.example.augmentedrealityglasses.translation.TranslationViewModel
+import com.example.augmentedrealityglasses.translation.TranslationViewModelContract
 
 
 @Composable
 fun LanguageRow(
     modifier: Modifier,
-    viewModel: TranslationViewModel,
+    viewModel: TranslationViewModelContract,
     languageTag: String?,
     onBack: () -> Boolean,
     isDownloaded: Boolean
@@ -67,6 +69,7 @@ fun LanguageRow(
 
     Row(
         modifier
+            .testTag("LANG_ROW_${languageTag ?: "null"}")
             .padding(horizontal = 10.dp)
             .background(
                 color = if (isSelected) colorScheme.onSurface else colorScheme.onBackground,
@@ -110,6 +113,7 @@ fun LanguageRow(
                         if (isDownloaded) Icon.DOWNLOAD_COMPLETED.getID() else Icon.DOWNLOAD.getID()
 
                     IconButton(
+                        modifier = Modifier.testTag("DOWNLOAD_BTN_${languageTag}"),
                         onClick = {
                             if (!isDownloaded) {
                                 viewModel.downloadLanguageModel(languageTag)
@@ -124,7 +128,9 @@ fun LanguageRow(
                     }
                 } else {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(27.dp),
+                        modifier = Modifier
+                            .size(27.dp)
+                            .testTag("PROGRESS_${languageTag}"),
                         strokeWidth = 3.dp,
                         color = colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.inverseOnSurface,
