@@ -44,17 +44,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
-//todo remove connection during translation
-
 class TranslationViewModel(
-    private val systemLanguage: String,
     private val application: Application,
     private val bleManager: RemoteDeviceManager
-) : AndroidViewModel(application) {
+) : AndroidViewModel(application), TranslationViewModelContract {
 
     private val _uiState = MutableStateFlow(TranslationUiState())
 
-    val uiState = _uiState.asStateFlow()
+    override val uiState = _uiState.asStateFlow()
 
     var recorder: SpeechRecognizer? = null
 
@@ -115,7 +112,6 @@ class TranslationViewModel(
                 val application = this[APPLICATION_KEY] as App
                 val bleManager = application.container.proxy
                 TranslationViewModel(
-                    systemLanguage = TranslateLanguage.ITALIAN,
                     application = application,
                     bleManager = bleManager
                 )
@@ -136,8 +132,6 @@ class TranslationViewModel(
         }
     }
 
-    //todo add exception handling for all the synchronous methods
-
     fun stopRecording() {
         recorder?.stopListening()
         recorder?.destroy()
@@ -148,7 +142,7 @@ class TranslationViewModel(
         }
     }
 
-    fun selectTargetLanguage(targetLanguage: String?) {
+    override fun selectTargetLanguage(targetLanguage: String?) {
         _uiState.update {
             _uiState.value.copy(
                 targetLanguage = targetLanguage,
@@ -167,7 +161,7 @@ class TranslationViewModel(
         }
     }
 
-    fun selectSourceLanguage(sourceLanguage: String?) {
+    override fun selectSourceLanguage(sourceLanguage: String?) {
         _uiState.update {
             _uiState.value.copy(
                 sourceLanguage = sourceLanguage,
@@ -289,7 +283,7 @@ class TranslationViewModel(
 
     }
 
-    fun downloadLanguageModel(languageTag: String) {
+    override fun downloadLanguageModel(languageTag: String) {
         viewModelScope.launch {
             val currentlyDownloadingLanguageTags = _uiState.value.currentlyDownloadingLanguageTags
             currentlyDownloadingLanguageTags.update { currentlyDownloadingLanguageTags.value + languageTag }
@@ -343,23 +337,6 @@ class TranslationViewModel(
     fun setSelectingLanguageRole(languageRole: LanguageRole?) { //needed to communicate the selecting type of language to the translation language selection screen
         _uiState.update { _uiState.value.copy(selectingLanguageRole = languageRole) }
     }
-
-    /*
-    private suspend fun identifySourceLanguage(): Boolean { //True if the identification is successful, False otherwise
-        val languageIdentification = LanguageIdentification.getClient()
-        val tag = languageIdentification.identifyLanguage(_uiState.value.recognizedText).await()
-        if (tag != "und") {
-            //uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
-            return true
-        } else {
-            if (_uiState.value.sourceLanguage != null) {
-                //uiState = uiState.copy(sourceLanguage = null) //todo possible future improvement
-            }
-            Log.e("Undefined Language", "Exception")
-            return false
-        }
-    }
-     */
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private fun initializeSpeechRecognizer() {
@@ -564,5 +541,25 @@ class TranslationViewModel(
     fun isMicrophoneAvailable(): Boolean {
         return application.packageManager.hasSystemFeature(PackageManager.FEATURE_MICROPHONE)
     }
+
+
+    //feasible future improvement: suggest a recommended language from which translate
+
+    /*
+    private suspend fun identifySourceLanguage(): Boolean { //True if the identification is successful, False otherwise
+        val languageIdentification = LanguageIdentification.getClient()
+        val tag = languageIdentification.identifyLanguage(_uiState.value.recognizedText).await()
+        if (tag != "und") {
+            //uiState = uiState.copy(sourceLanguage = TranslateLanguage.fromLanguageTag(tag))
+            return true
+        } else {
+            if (_uiState.value.sourceLanguage != null) {
+                //uiState = uiState.copy(sourceLanguage = null)
+            }
+            Log.e("Undefined Language", "Exception")
+            return false
+        }
+    }
+     */
 
 }

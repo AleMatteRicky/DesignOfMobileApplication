@@ -26,7 +26,7 @@ data class APIWeather(
 
     val icon: String,
 
-    val description: String //FIXME: maybe delete this
+    val description: String
 ) {
     val id: Int
         get() = _id.toInt()
@@ -55,7 +55,7 @@ data class APIMain(
 
     val humidity: Int
 ) {
-    //TODO: handle "exceptions"
+
     val temp: Int
         get() = _temp.toDoubleOrNull()?.roundToInt() ?: 0
 

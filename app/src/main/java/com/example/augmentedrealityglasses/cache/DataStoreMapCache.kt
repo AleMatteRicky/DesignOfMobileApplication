@@ -1,6 +1,5 @@
 package com.example.augmentedrealityglasses.cache
 
-import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
@@ -28,10 +27,10 @@ import java.io.File
  */
 class DataStoreMapCache(
     private val file: File,
-    private val externalScope: CoroutineScope? = null,
+    externalScope: CoroutineScope? = null,
     // JSON instance used for serialization/deserialization.
     // Configured to ignore unknown keys by default for forward compatibility.
-    override val json: Json = Json { ignoreUnknownKeys = true } //TODO: check this
+    override val json: Json = Json { ignoreUnknownKeys = true }
 ) : Cache {
 
     private val job = SupervisorJob()

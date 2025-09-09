@@ -86,7 +86,6 @@ fun HomeScreen(
     var showFindDevicePanel = remember { mutableStateOf(false) }
 
 
-    //FIXME: allow users to refresh data?
     LaunchedEffect(Unit) {
         viewModel.refreshBondedDevices(context, adapter)
     }
@@ -125,7 +124,6 @@ fun HomeScreen(
 
                 Column {
                     DevicesPanel(
-                        //TODO: do not show the connected device in the "Previously connected devices" panel
                         devices = viewModel.bondedDevices,
                         connected = viewModel.isExtDeviceConnected,
                         onDeviceClick = {
@@ -361,7 +359,7 @@ fun DeviceStatusPanel(
                     color = Color.Transparent
                 ) {
                     Icon(
-                        painter = painterResource(id = com.example.augmentedrealityglasses.ui.theme.Icon.SMART_GLASSES.getID()), //FIXME: change icon
+                        painter = painterResource(id = com.example.augmentedrealityglasses.ui.theme.Icon.SMART_GLASSES.getID()),
                         contentDescription = null,
                         modifier = if (isLandscape) Modifier
                             .size(58.dp)
@@ -455,7 +453,7 @@ fun DevicesListPanel(
                     color = colorScheme.primary
                 )
 
-                HorizontalDivider( //todo
+                HorizontalDivider(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 8.dp),
@@ -508,7 +506,7 @@ fun DeviceRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.bluetooth_connected), //FIXME: change icon
+                painter = painterResource(id = R.drawable.bluetooth_connected),
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
                 tint = colorScheme.primary

@@ -15,8 +15,6 @@ object Constants {
     const val NUMBER_OF_TIMESTAMPS_FORECAST = "40" //max value: 40
 
     const val API_UNIT_OF_MEASUREMENT = "metric"
-    const val TEMPERATURE_UNIT = "°C"
-    const val PRESSURE_UNIT = "hPa"
 
     const val MAX_AGE_WEATHER_CACHE_POLICY_MILLS = 30 * 60 * 1000L //30 minutes
     const val WEATHER_CACHE_KEY = "weather_infos"

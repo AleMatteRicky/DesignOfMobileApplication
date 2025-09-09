@@ -18,18 +18,18 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.augmentedrealityglasses.container.App
-import com.example.augmentedrealityglasses.update.BluetoothUpdateStatus
 import com.example.augmentedrealityglasses.ble.devicedata.RemoteDeviceManager
 import com.example.augmentedrealityglasses.ble.peripheral.gattevent.ConnectionState
 import com.example.augmentedrealityglasses.cache.Cache
 import com.example.augmentedrealityglasses.cache.CachePolicy
 import com.example.augmentedrealityglasses.cache.DefaultTimeProvider
+import com.example.augmentedrealityglasses.container.App
+import com.example.augmentedrealityglasses.update.BluetoothUpdateStatus
 import com.example.augmentedrealityglasses.weather.constants.Constants
 import com.example.augmentedrealityglasses.weather.network.APIResult
 import com.example.augmentedrealityglasses.weather.network.APIWeatherCondition
 import com.example.augmentedrealityglasses.weather.network.APIWeatherForecasts
-import com.example.augmentedrealityglasses.weather.network.WeatherRepositoryImpl
+import com.example.augmentedrealityglasses.weather.network.WeatherRepository
 import com.example.augmentedrealityglasses.weather.state.GeolocationResult
 import com.example.augmentedrealityglasses.weather.state.WeatherCondition
 import com.example.augmentedrealityglasses.weather.state.WeatherLocation
@@ -56,7 +56,7 @@ import java.util.Locale
 import kotlin.coroutines.resume
 
 class WeatherViewModel(
-    private val repository: WeatherRepositoryImpl,
+    private val repository: WeatherRepository,
     private val proxy: RemoteDeviceManager,
     private val cache: Cache,
     private val cachePolicy: CachePolicy
@@ -312,7 +312,7 @@ class WeatherViewModel(
 
         json.put("time", time)
         json.put("temperature", temperature)
-        //json.put("wind", wind) //FIXME: decide whether to put or not
+        //json.put("wind", wind)
         json.put("iconName", iconName)
         json.put("pressure", pressure)
 
@@ -530,7 +530,7 @@ class WeatherViewModel(
                             permissions.getOrDefault(
                                 ACCESS_COARSE_LOCATION,
                                 false
-                            ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY //FIXME: loading is too long
+                            ) -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
                             else -> {
                                 continuation.resume(GeolocationResult.NoPermissionGranted)
                                 return@addOnSuccessListener

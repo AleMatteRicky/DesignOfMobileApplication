@@ -108,7 +108,7 @@ dependencies {
     implementation("com.google.mlkit:language-id:17.0.0")
     implementation("androidx.datastore:datastore:1.1.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    implementation ("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     // Unit test
     testImplementation(libs.junit)
@@ -116,4 +116,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("com.google.truth:truth:1.4.4")
+    androidTestImplementation("com.google.truth:truth:1.4.4")
+    testImplementation(kotlin("test"))
+    testImplementation("org.robolectric:robolectric:4.13")
 }

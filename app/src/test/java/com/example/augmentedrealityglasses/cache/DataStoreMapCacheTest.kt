@@ -89,4 +89,42 @@ class DataStoreMapCacheTest {
         val v = cache.getIfValid("k", policy, String.serializer(), time)
         assertThat(v).isNull()
     }
+
+    @Test
+    fun getIfValidWithNeverExpiresPolicy() = runTest {
+        val cache = newCache()
+        val time = FakeTimeProvider(0L)
+
+        cache.set("k", "v", String.serializer(), time)
+
+        val policy = NeverExpires
+        time.advanceBy(100000L)
+
+        val v = cache.getIfValid("k", policy, String.serializer(), time)
+
+        assertThat(v).isEqualTo("v")
+
+        time.advanceBy(100000L)
+
+        assertThat(v).isEqualTo("v")
+    }
+
+    @Test
+    fun getIfValidWithAlwaysRefreshPolicy() = runTest {
+        val cache = newCache()
+        val time = FakeTimeProvider(0L)
+
+        cache.set("k", "v", String.serializer(), time)
+
+        val policy = AlwaysRefresh
+
+        time.advanceBy(100000L)
+
+        val v = cache.getIfValid("k", policy, String.serializer(), time)
+        assertThat(v).isNull()
+
+        time.advanceBy(100000L)
+
+        assertThat(v).isNull()
+    }
 }

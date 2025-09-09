@@ -148,8 +148,6 @@ fun FindDeviceScreen(
                         if (viewModel.connect(it)) {
                             showFindDevicePanel.value = false
                             navigateOnFeatures()
-                        } else {
-                            //TODO
                         }
                     },
                 )
@@ -186,7 +184,7 @@ internal fun BluetoothDeviceItem(
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text( //todo check font
+            Text(
                 bluetoothDevice.name ?: "N/A",
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 16.sp),
                 color = colorScheme.primary

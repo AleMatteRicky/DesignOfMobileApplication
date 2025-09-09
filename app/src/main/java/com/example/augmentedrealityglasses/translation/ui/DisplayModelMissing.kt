@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,7 +61,9 @@ fun DisplayModelMissing(onClickDownload: () -> Unit, resetVisibility: () -> Unit
                     )
                     Spacer(modifier = Modifier.height(8.dp)) //could be removed
                     Button(
-                        onClickDownload, colors = ButtonDefaults.buttonColors(
+                        modifier = Modifier.testTag("MODEL_MISSING_DOWNLOAD"),
+                        onClick = onClickDownload,
+                        colors = ButtonDefaults.buttonColors(
                             containerColor = colorScheme.primary,
                             contentColor = colorScheme.primary
                         ),

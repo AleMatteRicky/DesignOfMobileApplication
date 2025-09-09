@@ -72,5 +72,5 @@ enum class Icon {
         }
     };
 
-    abstract fun getID(): Int //todo add a parameter which determines the theme of the app
+    abstract fun getID(): Int
 }

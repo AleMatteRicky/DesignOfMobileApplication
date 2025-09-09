@@ -99,7 +99,6 @@ import com.example.augmentedrealityglasses.weather.viewmodel.WeatherViewModel
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-//TODO: delete all unused files/composables/...
 class MainActivity : ComponentActivity() {
     private val TAG = "myActivity"
 
@@ -186,7 +185,6 @@ class MainActivity : ComponentActivity() {
                                 ScreenName.FIND_DEVICE.name
                             )
                         ) {
-                            //TODO: adjust animation
                             AnimatedVisibility(
                                 visible = navigationBarVisible.value,
                                 enter = slideInHorizontally { 0 } + expandHorizontally(expandFrom = Alignment.Start) + fadeIn(
@@ -198,7 +196,7 @@ class MainActivity : ComponentActivity() {
                                     navController,
                                     Modifier
                                         .fillMaxHeight()
-                                        .width(70.dp) //TODO: adjust size
+                                        .width(70.dp)
                                 )
                             }
                         }
@@ -253,7 +251,6 @@ class MainActivity : ComponentActivity() {
                                         )
                                     val adapter: BluetoothAdapter? = bluetoothManager.adapter
 
-                                    // TODO: make the control at the beginning not making clickable the icon in case bluetooth is not supported, instead of checking it here
                                     require(adapter != null) {
                                         "Bluetooth must be supported by this device"
                                     }
@@ -361,7 +358,6 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
 
-                                    //TODO: refine title and message
                                     PermissionsBox(
                                         title = "Welcome",
                                         message = "In order to communicate with the external device, you need to grant these permissions",
@@ -423,7 +419,6 @@ class MainActivity : ComponentActivity() {
                                         } else {
                                             mapOf()
                                         }
-                                    //TODO: add screen for "microphone not available" case
                                     PermissionsBox(
                                         message = "To enable speech-to-text transcription and translation, please grant microphone permission.",
                                         permissionsRequired = permissionsForRecording,
@@ -550,7 +545,6 @@ class MainActivity : ComponentActivity() {
                                         factory = WeatherViewModel.Factory
                                     )
 
-                                    //TODO: refine title and message
                                     PermissionsBox(
                                         permissionsRequired = mapOf(
                                             Pair(
@@ -645,7 +639,7 @@ class MainActivity : ComponentActivity() {
                 this,
                 arrayOf(Manifest.permission.RECORD_AUDIO),
                 10
-            ) //todo replace 10 with a constant
+            )
             //graceful degrade the translation feature
             //override onRequestPermissionsResult with code related to this permission
         }
@@ -692,7 +686,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//TODO: fix UI lag on changing theme mode
 @Composable
 fun SystemBarsFromTheme(
     isTranslationPermissionGranted: Boolean,

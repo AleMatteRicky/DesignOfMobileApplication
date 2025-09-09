@@ -40,7 +40,7 @@ private fun getWeatherIconId(conditionId: Int, iconName: String): Int {
 
     val isDay = iconName.contains("d")
 
-    return weatherIconMap[conditionId to isDay] ?: R.drawable.clear //TODO: handle exception
+    return weatherIconMap[conditionId to isDay] ?: R.drawable.clear
 }
 
 
@@ -194,14 +194,14 @@ data class DayCondition(
  * Returns the appropriate icon ID to represent the day's weather based on a list of conditions.
  */
 fun getDailyIconForConditions(conditions: List<WeatherCondition>): Int {
-    var iconId = R.drawable.clear //TODO: handle
+    var iconId = R.drawable.clear
 
     val conditionId =
         conditions.map { condition -> condition.conditionId }.groupingBy { it }.eachCount()
             .maxByOrNull { it.value }?.key
 
     if (conditionId != null) {
-        iconId = weatherIconMap[conditionId to true] ?: R.drawable.clear //TODO: handle
+        iconId = weatherIconMap[conditionId to true] ?: R.drawable.clear
     }
 
     return iconId
