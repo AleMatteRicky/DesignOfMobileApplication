@@ -249,16 +249,6 @@ void TextArea::drawOnScreen() {
         hide(m_oldFrame, curFrameSz);
 
     m_cursorCoordinatesFirstCharacterPrinted = cursorCoordinates;
-
-    /*
-    if (m_center)
-        // TODO: fix, use getCoordinates() instead
-        m_cursorCoordinatesFirstCharacterPrinted =
-            m_cursorCoordinatesAfterAddingTheLastCharacter;
-    else
-        // needed when the text is switched from centered to not centered
-        m_cursorCoordinatesFirstCharacterPrinted = Coordinates::none;
-    */
 }
 
 void TextArea::hideGlyph(char const* glyph) {
