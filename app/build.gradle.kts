@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
-    id("jacoco")
 }
 
 android {
@@ -109,7 +108,7 @@ dependencies {
     implementation("com.google.mlkit:language-id:17.0.0")
     implementation("androidx.datastore:datastore:1.1.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-    implementation ("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     // Unit test
     testImplementation(libs.junit)
@@ -119,41 +118,5 @@ dependencies {
     testImplementation("com.google.truth:truth:1.4.4")
     androidTestImplementation("com.google.truth:truth:1.4.4")
     testImplementation(kotlin("test"))
-}
-
-
-// Jacoco task to measure coverage
-
-tasks.register<JacocoReport>("jacocoFullReport") {
-    dependsOn("testDebugUnitTest", "connectedDebugAndroidTest")
-
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-        csv.required.set(false)
-    }
-
-    val fileFilter = listOf(
-        "**/R.class",
-        "**/R$*.class",
-        "**/BuildConfig.*",
-        "**/Manifest*.*",
-        "**/*Test*.*"
-    )
-
-    val debugTree = fileTree("${buildDir}/intermediates/javac/debug") {
-        exclude(fileFilter)
-    }
-
-    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
-    classDirectories.setFrom(debugTree)
-
-    executionData.setFrom(
-        fileTree(buildDir) {
-            include(
-                "jacoco/testDebugUnitTest.exec",
-                "outputs/code-coverage/connected/*coverage.ec"
-            )
-        }
-    )
+    testImplementation("org.robolectric:robolectric:4.13")
 }
