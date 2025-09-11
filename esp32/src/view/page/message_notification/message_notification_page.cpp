@@ -180,8 +180,12 @@ void MessageNotificationPage::onEvent(SwipeClockwise const& event) {
     if (m_isFocused) {
         ESP_LOGD(TAG, "Message is focused, deliver to it the clockwise swipe");
         m_messages[m_idxFocusedMessage]->onEvent(event);
-    } else if (m_idxFocusedMessage + 1 < m_messagesSz) {
+        return;
+    }
+
+    if (m_idxFocusedMessage + 1 < m_messagesSz) {
         ESP_LOGD(TAG, "Message is not focused, swiping");
+        m_messages[m_idxFocusedMessage]->clearFromScreen();
         m_idxFocusedMessage += 1;
         setUpTitle(std::vector<std::string>());
         draw();
@@ -191,8 +195,14 @@ void MessageNotificationPage::onEvent(SwipeClockwise const& event) {
 void MessageNotificationPage::onEvent(SwipeAntiClockwise const& event) {
     if (m_isFocused) {
         m_messages[m_idxFocusedMessage]->onEvent(event);
-    } else if (m_idxFocusedMessage - 1 >= 0) {
+        return;
+    }
+
+    if (m_idxFocusedMessage - 1 >= 0) {
+        // clear previous message
+        m_messages[m_idxFocusedMessage]->clearFromScreen();
         m_idxFocusedMessage -= 1;
+        setUpTitle(std::vector<std::string>());
         draw();
     }
 }
