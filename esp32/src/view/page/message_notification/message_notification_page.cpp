@@ -40,9 +40,17 @@ void MessageNotificationPage::updateScreenWithNewMessages() {
 
     ESP_LOGD(TAG, "There are %u new messages: ", newMessages.size());
 
+    byte oldIdx{m_idxFocusedMessage};
+
+    // reset the idx of the current message to the first one to print the title
+    // correctly
+    m_idxFocusedMessage = 0;
     setUpTitle(newMessages);
 
+    // set the index back to its original value to be able to delete it
+    m_idxFocusedMessage = oldIdx;
     setUpMessages(newMessages);
+    m_idxFocusedMessage = 0;
 }
 
 void MessageNotificationPage::setUpTitle(
