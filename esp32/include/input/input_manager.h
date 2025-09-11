@@ -30,6 +30,7 @@ private:
 
     static InputManager* instance;
 
+    int64_t const m_timeMs{150};
     //    std::thread inputThread;
     //    std::atomic_bool isActive;
 };

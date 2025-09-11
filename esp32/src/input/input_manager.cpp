@@ -38,27 +38,43 @@ instead:  - left: pressing right: double click
 */
 
 void InputManager::handleInput() {
-    if (sensor.isRightSwipePulled()) {
-        notify(SwipeClockwise::name, SwipeClockwise());
-        ESP_LOGD(TAG, "Right Swipe");
-        return;
-    }
-
-    if (sensor.isLeftSwipePulled()) {
-        notify(SwipeAntiClockwise::name, SwipeAntiClockwise());
-        ESP_LOGD(TAG, "Left Swipe");
-        return;
-    }
-
     if (sensor.isLeftTouched()) {
         ESP_LOGD(TAG, "Left");
-        notify(Press::name, Press());
+        while (sensor.isLeftTouched() == true)
+            ;
+        notify(SwipeAntiClockwise::name, SwipeAntiClockwise());
+        return;
+    }
+
+    if (sensor.isRightTouched()) {
+        ESP_LOGD(TAG, "Right");
+        while (sensor.isRightTouched() == true)
+            ;
+        notify(SwipeClockwise::name, SwipeClockwise());
         return;
     }
 
     if (sensor.isMiddleTouched()) {
-        notify(Click::name, Click());
         ESP_LOGD(TAG, "Middle");
+        auto start = std::chrono::high_resolution_clock::now();
+        while (sensor.isMiddleTouched() == true)
+            ;
+        auto end = std::chrono::high_resolution_clock::now();
+
+        int64_t elapsed_ms =
+            std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
+                .count();
+
+        ESP_LOGD(TAG, "elapsedMs = %lld\ttimeMs = %ld", elapsed_ms, m_timeMs);
+
+        if (elapsed_ms >= m_timeMs) {
+            ESP_LOGD(TAG, "Press");
+            notify(Press::name, Press());
+            return;
+        }
+
+        ESP_LOGD(TAG, "Click");
+        notify(Click::name, Click());
         return;
     }
 }
