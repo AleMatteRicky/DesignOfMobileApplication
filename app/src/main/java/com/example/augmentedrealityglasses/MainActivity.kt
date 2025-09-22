@@ -76,6 +76,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.example.augmentedrealityglasses.container.App
+import com.example.augmentedrealityglasses.credits.CreditScreen
 import com.example.augmentedrealityglasses.home.BLENotSupportedScreen
 import com.example.augmentedrealityglasses.home.BluetoothDisabledScreen
 import com.example.augmentedrealityglasses.home.HomeScreen
@@ -162,7 +163,8 @@ class MainActivity : ComponentActivity() {
                                         ScreenName.TRANSLATION_RESULT_SCREEN.name,
                                         ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
                                         ScreenName.WEATHER_SEARCH_LOCATIONS.name,
-                                        ScreenName.FIND_DEVICE.name
+                                        ScreenName.FIND_DEVICE.name,
+                                        ScreenName.CREDITS.name
                                     )
                                 ) {
                                     BottomNavigationBar(
@@ -182,7 +184,8 @@ class MainActivity : ComponentActivity() {
                                 ScreenName.TRANSLATION_RESULT_SCREEN.name,
                                 ScreenName.TRANSLATION_LANGUAGE_SELECTION_SCREEN.name,
                                 ScreenName.WEATHER_SEARCH_LOCATIONS.name,
-                                ScreenName.FIND_DEVICE.name
+                                ScreenName.FIND_DEVICE.name,
+                                ScreenName.CREDITS.name
                             )
                         ) {
                             AnimatedVisibility(
@@ -622,8 +625,27 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 SettingsScreen(
                                     viewModel = settingsViewModel,
-                                    isChangeThemeClicked = isChangeThemeClicked
+                                    isChangeThemeClicked = isChangeThemeClicked,
+                                    onOpenCredits = { navController.navigate(ScreenName.CREDITS.name) }
                                 )
+                            }
+
+                            composable(
+                                ScreenName.CREDITS.name,
+                                enterTransition = {
+                                    fadeIn(
+                                        animationSpec = tween(screenTransitionDuration)
+                                    )
+                                },
+                                exitTransition = {
+                                    fadeOut(
+                                        animationSpec = tween(
+                                            screenTransitionDuration
+                                        )
+                                    )
+                                }
+                            ) {
+                                CreditScreen()
                             }
                         }
                     }

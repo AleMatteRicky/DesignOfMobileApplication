@@ -47,13 +47,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.augmentedrealityglasses.update.UpdateWrapper
 import com.example.augmentedrealityglasses.notifications.ChatNotificationListenerService
+import com.example.augmentedrealityglasses.update.UpdateWrapper
 
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    isChangeThemeClicked: MutableState<Boolean>
+    isChangeThemeClicked: MutableState<Boolean>,
+    onOpenCredits: () -> Unit
 ) {
     //Main UI state
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -115,6 +116,25 @@ fun SettingsScreen(
                 onEnableNotificationSource = { viewModel.onEnableNotificationSource(it) },
                 onDisableNotificationSource = { viewModel.onDisableNotificationSource(it) }
             )
+
+            Spacer(Modifier.height(4.dp))
+
+            Button(
+                onClick = onOpenCredits,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = theme.tertiaryContainer,
+                    contentColor = theme.primary
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Credits",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 16.sp
+                    )
+                )
+            }
 
             Spacer(Modifier.height(8.dp))
         }
