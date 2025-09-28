@@ -1,0 +1,13 @@
+package com.example.augmentedrealityglasses.navigation
+
+enum class ScreenName {
+    HOME,
+    FIND_DEVICE,
+    WEATHER_HOME_SCREEN,
+    WEATHER_SEARCH_LOCATIONS,
+    TRANSLATION_HOME_SCREEN,
+    TRANSLATION_RESULT_SCREEN,
+    TRANSLATION_LANGUAGE_SELECTION_SCREEN,
+    SETTINGS,
+    CREDITS
+}
