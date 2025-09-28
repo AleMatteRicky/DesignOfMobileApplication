@@ -4,48 +4,31 @@
 #include "SparkFun_CAP1203.h"
 #include "input/input_events.h"
 #include "notifications/notification_manager.h"
+#include <string>
 
 #include <Wire.h>
 
-class InputManager : public NotificationManagerImpl<Press,
-                                                    Click,
-                                                    SwipeClockwise,
-                                                    SwipeAntiClockwise> {
+class InputManager
+    : public NotificationManagerImpl<Press, Click, SwipeClockwise,
+                                     SwipeAntiClockwise> {
 public:
-    InputManager();
+  InputManager();
 
-    void handleInput();
+  void handleInput();
 
-    static InputManager* getInstance();
+  static InputManager *getInstance();
 
-    InputManager(const InputManager&) = delete;
+  InputManager(const InputManager &) = delete;
 
-    InputManager& operator=(const InputManager&) = delete;
-
-private:
-    inline static char const TAG[] = "InputManager";
+  InputManager &operator=(const InputManager &) = delete;
 
 private:
-    CAP1203 sensor;
+  inline static char const TAG[] = "InputManager";
 
-    static InputManager* instance;
+private:
+  CAP1203 sensor;
 
-    int64_t const m_timeMs{150};
-    //    std::thread inputThread;
-    //    std::atomic_bool isActive;
+  static InputManager *instance;
+
+  int64_t const m_timeMs{100};
 };
-
-/*
-private:
-    enum USER_ACTION {
-        NONE,
-        LEFT,
-        MIDDLE,
-        RIGHT,
-        SWIPE_CLOCKWISE,
-        SWIPE_ANTI_CLOCKWISE
-    };
-
-    USER_ACTION detectTouchFromLeftToRight();
-    USER_ACTION detectTouchFromRightToLeft();
-*/
